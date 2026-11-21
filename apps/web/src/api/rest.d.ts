@@ -271,6 +271,10 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "partial" | "failed" | "never";
+            /** Suspected Errors */
+            suspected_errors: {
+                [key: string]: number;
+            };
         };
         /** QualityResponse */
         QualityResponse: {

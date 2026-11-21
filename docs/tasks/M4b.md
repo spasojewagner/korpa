@@ -31,15 +31,23 @@ against the contract in this file: do not change the JSON shapes without asking 
   including overall `0` first; points are ordered by month and have one current provisional point.
 - **Signals** are prompts for review, never accusations; each carries the rule that produced it.
   - `jump`: a format's regular price rose ≥ 25 % against that format's previous regular price for the same
-    product (consecutive `price_changes` rows) within the last 30 days, including both
+    product (consecutive `price_changes` rows), with price / previous <= 3,
+    within the last 30 days, including both
     `as_of - 30 days` and `as_of`; the preceding observation may be older than the window.
   - `outlier`: a format's current effective price is ≥ 1.5 × the median current effective price of the same
-    product in at least 3 other formats. The format being checked is excluded from its reference.
+    product in at least 3 other formats, with price / median <= 3.
+    The format being checked is excluded from its reference.
   - Effective prices use discounts active on `as_of` (inclusive start/end). Future-dated lists
     and changes are ignored. Medians follow the existing discrete convention (lower middle
     observed price for even counts). Ratios require a positive reference; zero references
     produce no signal. Apply thresholds before rounding the ratio to two decimals.
-  - Order newest date first; ties use type, barcode and format id ascending for stable limits.
+  - Both upper bounds are inclusive, matching the index's [1/3, 3] trimming. Compare integer
+    prices by cross-multiplication before rounding. Candidates above 3 are probable data errors:
+    exclude them from signals and count each rule candidate per retailer under
+    `suspected_errors.price_outlier` in `/api/quality` and `quality.json` (empty object when none).
+    Existing validation errors, deviations and status are unchanged.
+  - Order date descending, then unrounded ratio descending, then barcode ascending; remaining
+    ties use type and format id ascending for stable limits.
 
 ## Contract
 Static files written by `export_static` next to `categories.json` and `quality.json`, and identical REST

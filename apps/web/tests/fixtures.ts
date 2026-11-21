@@ -24,7 +24,7 @@ export const quality: Schemas['QualityResponse'] = {
   as_of: asOf,
   retailers: [{
     id: 1, name: 'Alfa', slug: 'alfa', status: 'partial', http_status: 200, rows_total: 1000, rows_valid: 930,
-    errors: { price: 70 }, errors_by_rule: { price: 70 }, deviations: { price_decimals: 120 }, profile: 'compat-2026-11.2',
+    errors: { price: 70 }, suspected_errors: {}, errors_by_rule: { price: 70 }, deviations: { price_decimals: 120 }, profile: 'compat-2026-11.2',
     finished_at: '2026-11-21T03:00:00Z', list_date: '2026-11-20', days_since_list_date: 1,
   }],
 }
