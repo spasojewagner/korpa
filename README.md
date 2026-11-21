@@ -130,8 +130,11 @@ Exact mappings, live observations, and the before/after Metro benchmark are in
 
 ## PostgreSQL integration tests
 
+REST endpoints, search rules, curl examples, and the dedicated 720k-price performance run are
+documented in [the REST API guide](docs/rest-api.md).
+
 Tests write only to a dedicated database named `korpa_test`. They refuse other database names.
-Without `TEST_DATABASE_URL`, fifteen database integration tests are skipped; CI always sets it.
+Without `TEST_DATABASE_URL`, database integration tests are skipped; CI always sets it.
 
 ```sh
 docker compose -f infra/docker-compose.yml up -d --wait

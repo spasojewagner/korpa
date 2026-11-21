@@ -45,6 +45,9 @@ products = sa.Table(
     sa.Column("unit", sa.Text, nullable=False),
     sa.Column("category_code", sa.ForeignKey("categories.code"), nullable=False),
     sa.Column("search_tsv", TSVECTOR),
+    sa.Column(
+        "search_norm", sa.Text, sa.Computed("korpa_norm(name || ' ' || brand)", persisted=True)
+    ),
     sa.CheckConstraint("barcode ~ '^[0-9]{13}$'"),
 )
 sa.Index(
@@ -54,6 +57,12 @@ sa.Index(
     postgresql_ops={"name": "gin_trgm_ops"},
 )
 sa.Index("ix_products_search", products.c.search_tsv, postgresql_using="gin")
+sa.Index(
+    "ix_products_search_norm_trgm",
+    products.c.search_norm,
+    postgresql_using="gin",
+    postgresql_ops={"search_norm": "gin_trgm_ops"},
+)
 product_names = sa.Table(
     "product_names",
     metadata,
@@ -79,6 +88,7 @@ prices_current = sa.Table(
     sa.CheckConstraint("regular >= 0 AND unit_price >= 0"),
     sa.CheckConstraint("discounted IS NULL OR discounted BETWEEN 0 AND regular"),
 )
+sa.Index("ix_prices_current_barcode", prices_current.c.barcode)
 price_changes = sa.Table(
     "price_changes",
     metadata,

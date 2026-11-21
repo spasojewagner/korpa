@@ -1,0 +1,19 @@
+{
+  "measured_on": "2026-11-21",
+  "samples": 50,
+  "warmups": 10,
+  "transport": "loopback HTTP, complete JSON responses",
+  "products": 12000,
+  "formats": 60,
+  "prices_current": 720000,
+  "results": {
+    "search": {
+      "p95_ms": 27.865,
+      "median_ms": 17.523
+    },
+    "basket_20": {
+      "p95_ms": 19.122,
+      "median_ms": 10.732
+    }
+  }
+}
