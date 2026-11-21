@@ -54,7 +54,7 @@ Free-tier constraints and how the design handles them:
 | `monthly_prices` | barcode, month, min/median/max regular, min discounted, n_formats | older months, one row per product |
 | `monthly_price_history` (view) | same columns | `monthly_prices` + live months aggregated; read by GraphQL `monthlyPrices` |
 | `ingest_runs` | id, retailer_id, started_at, finished_at, http_status, rows_total, rows_valid, errors_json | one per retailer per run |
-| `index_monthly` | month, category_code, value, n_products | materialized category index |
+| `index_monthly` | month, category_code (0–25), value (nullable), n_products, n_excluded | completed-month fixed-base index; current month computed on read |
 
 Money is INTEGER para (×100); dates are DATE.
 

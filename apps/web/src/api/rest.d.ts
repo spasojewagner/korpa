@@ -33,6 +33,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/index": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Price Index */
+        get: operations["price_index_api_index_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/quality": {
         parameters: {
             query?: never;
@@ -157,6 +174,46 @@ export interface components {
             n_products: number;
             /** Name */
             name: string;
+        };
+        /** IndexCategory */
+        IndexCategory: {
+            /** Code */
+            code: number;
+            /** Name */
+            name: string;
+            /** Points */
+            points: components["schemas"]["IndexPoint"][];
+        };
+        /** IndexPoint */
+        IndexPoint: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /** N Excluded */
+            n_excluded: number;
+            /** N Products */
+            n_products: number;
+            /** Provisional */
+            provisional: boolean;
+            /** Value */
+            value: number | null;
+        };
+        /** IndexResponse */
+        IndexResponse: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /**
+             * Base Month
+             * Format: date
+             */
+            base_month: string;
+            /** Categories */
+            categories: components["schemas"]["IndexCategory"][];
         };
         /** QualityItem */
         QualityItem: {
@@ -376,6 +433,107 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryItem"][];
+                };
+            };
+            /** @description Unprocessable Entity */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Detail */
+                        detail: string;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: string | (string | number)[];
+                        }[] | null;
+                        /** Instance */
+                        instance: string;
+                        /** Status */
+                        status: number;
+                        /** Title */
+                        title: string;
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                    };
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Detail */
+                        detail: string;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: string | (string | number)[];
+                        }[] | null;
+                        /** Instance */
+                        instance: string;
+                        /** Status */
+                        status: number;
+                        /** Title */
+                        title: string;
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                    };
+                };
+            };
+            /** @description Service Unavailable */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": {
+                        /** Detail */
+                        detail: string;
+                        /** Errors */
+                        errors?: {
+                            [key: string]: string | (string | number)[];
+                        }[] | null;
+                        /** Instance */
+                        instance: string;
+                        /** Status */
+                        status: number;
+                        /** Title */
+                        title: string;
+                        /**
+                         * Type
+                         * @default about:blank
+                         */
+                        type: string;
+                    };
+                };
+            };
+        };
+    };
+    price_index_api_index_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IndexResponse"];
                 };
             };
             /** @description Unprocessable Entity */

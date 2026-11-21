@@ -17,8 +17,9 @@ Render: korpa-api (infra/render.yaml), auto-deploys main; sleeps after 15 min id
 Vercel: korpa, root directory apps/web, deployed only from the workflow (no Git integration).
 ```
 
-The site reads `/data/categories.json` and `/data/quality.json` first, so Home and the data quality page never
-wait for a sleeping API. Search, product and basket call the API; the first request after idle takes about a minute.
+The site reads `/data/categories.json`, `/data/quality.json` and `/data/index.json` first, so Home,
+the data quality page and price index never wait for a sleeping API. The ingest refreshes completed-month
+indices after history compaction; the export and `GET /api/index` add the provisional current month on read. Search, product and basket call the API; the first request after idle takes about a minute.
 
 ## Settings (names only; values are entered in the dashboards, never committed)
 

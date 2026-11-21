@@ -11,9 +11,19 @@ against the contract in this file: do not change the JSON shapes without asking 
   For month *m*, take products of the category present in the base month and in *m*; price relative
   r = P(m) / P(base); drop relatives outside [1/3, 3] as probable data errors (count them);
   index = 100 × exp(mean(ln r)). Publish only with ≥ 30 matched products, otherwise `value: null`.
+- A product whose median regular price is 0 (or missing) in the base month or in month *m*
+  has no defined relative; exclude it and count it in `n_excluded`, together with relatives
+  outside [1/3, 3]. Consider products observed in either of the two compared months.
+- `n_products` is the number of products whose relative enters the mean, after all exclusions.
+  The ≥ 30 threshold applies to `n_products`; below it `value` is null, while both counts
+  are still reported. These same rules apply to the provisional point and overall code `0`.
 - **Overall index**: same formula over all products, reported as category code `0`, name "Sve kategorije".
 - **Provisional point** for the current month: same formula with P = median of `prices_current.regular`
   for the product on `as_of`, flagged `provisional: true`. It is computed on read, never stored.
+- Index values are rounded to four decimal places. Before any monthly history exists, `base_month` is the
+  current month's first day and all points are unpublished (`value: null`); current products
+  have missing base prices and are counted as exclusions. Categories are ordered by code,
+  including overall `0` first; points are ordered by month and have one current provisional point.
 - **Signals** are prompts for review, never accusations; each carries the rule that produced it.
   - `jump`: a format's regular price rose ≥ 25 % against that format's previous regular price for the same
     product (consecutive `price_changes` rows) within the last 30 days.

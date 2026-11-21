@@ -72,3 +72,32 @@ def test_retries_are_in_per_retailer_report(failure: bool) -> None:
     report = json.loads(result.output)
     assert report["retries"] == (2 if failure else 1)
     assert report["errors"] == ({"download": 1} if failure else {})
+
+
+@pytest.mark.parametrize("dry_run", [False, True])
+def test_index_refresh_runs_after_compaction_only_for_writes(dry_run: bool) -> None:
+    from unittest.mock import MagicMock
+
+    source = RetailerSource("demo", "Demo", "id", "https://example.org/cene.csv", "sodl")
+    order = MagicMock()
+    with (
+        patch("korpa_ingest.cli.create_engine"),
+        patch("korpa_ingest.cli.validators", return_value=(None, None)),
+        patch("korpa_ingest.cli.persist"),
+        patch("korpa_ingest.cli.PortalClient.discover", return_value=[source]),
+        patch(
+            "korpa_ingest.cli.PortalClient.download",
+            return_value=Download(200, (FIXTURES / "good.csv").read_bytes()),
+        ),
+        patch("korpa_ingest.cli.compact_monthly") as compact,
+        patch("korpa_ingest.cli.refresh_index") as refresh,
+    ):
+        order.attach_mock(compact, "compact")
+        order.attach_mock(refresh, "refresh")
+        result = CliRunner().invoke(
+            app, ["ingest", "--retailer", "demo"] + (["--dry-run"] if dry_run else [])
+        )
+    assert result.exit_code == 0, result.output
+    assert [call[0] for call in order.mock_calls] == ([] if dry_run else ["compact", "refresh"])
+    if not dry_run:
+        assert compact.call_args == refresh.call_args

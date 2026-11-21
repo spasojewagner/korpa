@@ -195,6 +195,106 @@
         "title": "CategoryItem",
         "type": "object"
       },
+      "IndexCategory": {
+        "properties": {
+          "code": {
+            "maximum": 25.0,
+            "minimum": 0.0,
+            "title": "Code",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/IndexPoint"
+            },
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "points"
+        ],
+        "title": "IndexCategory",
+        "type": "object"
+      },
+      "IndexPoint": {
+        "properties": {
+          "month": {
+            "format": "date",
+            "title": "Month",
+            "type": "string"
+          },
+          "n_excluded": {
+            "minimum": 0.0,
+            "title": "N Excluded",
+            "type": "integer"
+          },
+          "n_products": {
+            "minimum": 0.0,
+            "title": "N Products",
+            "type": "integer"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "month",
+          "value",
+          "n_products",
+          "n_excluded",
+          "provisional"
+        ],
+        "title": "IndexPoint",
+        "type": "object"
+      },
+      "IndexResponse": {
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "base_month": {
+            "format": "date",
+            "title": "Base Month",
+            "type": "string"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/IndexCategory"
+            },
+            "maxItems": 26,
+            "title": "Categories",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "base_month",
+          "categories"
+        ],
+        "title": "IndexResponse",
+        "type": "object"
+      },
       "QualityItem": {
         "properties": {
           "days_since_list_date": {
@@ -959,6 +1059,252 @@
           }
         },
         "summary": "Categories"
+      }
+    },
+    "/api/index": {
+      "get": {
+        "operationId": "price_index_api_index_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "title": "Detail",
+                      "type": "string"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "integer"
+                                      }
+                                    ]
+                                  },
+                                  "type": "array"
+                                }
+                              ]
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    },
+                    "instance": {
+                      "title": "Instance",
+                      "type": "string"
+                    },
+                    "status": {
+                      "maximum": 599.0,
+                      "minimum": 100.0,
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "500": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "title": "Detail",
+                      "type": "string"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "integer"
+                                      }
+                                    ]
+                                  },
+                                  "type": "array"
+                                }
+                              ]
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    },
+                    "instance": {
+                      "title": "Instance",
+                      "type": "string"
+                    },
+                    "status": {
+                      "maximum": 599.0,
+                      "minimum": 100.0,
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "properties": {
+                    "detail": {
+                      "title": "Detail",
+                      "type": "string"
+                    },
+                    "errors": {
+                      "anyOf": [
+                        {
+                          "items": {
+                            "additionalProperties": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "items": {
+                                    "anyOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "integer"
+                                      }
+                                    ]
+                                  },
+                                  "type": "array"
+                                }
+                              ]
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ],
+                      "title": "Errors"
+                    },
+                    "instance": {
+                      "title": "Instance",
+                      "type": "string"
+                    },
+                    "status": {
+                      "maximum": 599.0,
+                      "minimum": 100.0,
+                      "title": "Status",
+                      "type": "integer"
+                    },
+                    "title": {
+                      "title": "Title",
+                      "type": "string"
+                    },
+                    "type": {
+                      "default": "about:blank",
+                      "title": "Type",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "status",
+                    "detail",
+                    "instance"
+                  ],
+                  "title": "Problem",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Price Index"
       }
     },
     "/api/quality": {

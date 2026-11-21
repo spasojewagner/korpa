@@ -3,13 +3,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from korpa_api import repository
+from korpa_api import analytics, repository
 from korpa_api.database import session
 from korpa_api.pricing import belgrade_today
 from korpa_api.schemas import (
     BasketRequest,
     BasketResponse,
     CategoryItem,
+    IndexResponse,
     QualityResponse,
     SearchParams,
     SearchResponse,
@@ -43,3 +44,8 @@ async def categories(database: Database) -> list[CategoryItem]:
 @router.get("/quality", response_model=QualityResponse)
 async def quality(database: Database) -> QualityResponse:
     return await repository.quality(database, belgrade_today())
+
+
+@router.get("/index", response_model=IndexResponse)
+async def price_index(database: Database) -> IndexResponse:
+    return await analytics.price_index(database, belgrade_today())

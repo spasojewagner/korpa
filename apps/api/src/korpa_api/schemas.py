@@ -133,3 +133,23 @@ class QualityItem(BaseModel):
 class QualityResponse(BaseModel):
     retailers: list[QualityItem]
     as_of: date
+
+
+class IndexPoint(BaseModel):
+    month: date
+    value: float | None = Field(allow_inf_nan=False)
+    n_products: int = Field(ge=0)
+    n_excluded: int = Field(ge=0)
+    provisional: bool
+
+
+class IndexCategory(BaseModel):
+    code: int = Field(ge=0, le=25)
+    name: str
+    points: list[IndexPoint]
+
+
+class IndexResponse(BaseModel):
+    as_of: date
+    base_month: date
+    categories: list[IndexCategory] = Field(max_length=26)

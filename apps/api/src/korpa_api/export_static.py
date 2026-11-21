@@ -1,7 +1,7 @@
 """Write the static JSON the web app reads before it calls the API.
 
 Run nightly after ingest: `python -m korpa_api.export_static --out apps/web/public/data`.
-The files have exactly the shape of GET /api/categories and GET /api/quality.
+The files have exactly the shape of GET /api/categories, GET /api/quality and GET /api/index.
 """
 
 import argparse
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
-from korpa_api import repository
+from korpa_api import analytics, repository
 from korpa_api.database import async_database_url
 from korpa_api.pricing import belgrade_today
 from korpa_api.schemas import CategoryItem
@@ -24,13 +24,16 @@ async def export(out: Path) -> list[Path]:
     try:
         async with AsyncSession(engine) as session, session.begin():
             await session.execute(sa.text("SET TRANSACTION READ ONLY"))
+            as_of = belgrade_today()
             categories = await repository.categories(session)
-            quality = await repository.quality(session, belgrade_today())
+            quality = await repository.quality(session, as_of)
+            index = await analytics.price_index(session, as_of)
     finally:
         await engine.dispose()
     payloads = {
         "categories.json": TypeAdapter(list[CategoryItem]).dump_python(categories, mode="json"),
         "quality.json": quality.model_dump(mode="json"),
+        "index.json": index.model_dump(mode="json"),
     }
     out.mkdir(parents=True, exist_ok=True)
     written = []

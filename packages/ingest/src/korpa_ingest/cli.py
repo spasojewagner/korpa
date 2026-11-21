@@ -7,6 +7,8 @@ from typing import Annotated
 import httpx
 import typer
 from dotenv import load_dotenv
+from korpa_api.analytics import refresh_index
+from korpa_api.pricing import belgrade_today
 from sqlalchemy import create_engine
 
 from korpa_ingest.compat import PROFILE
@@ -106,7 +108,9 @@ def ingest(
                 )
                 failed |= bool(parsed.report.errors)
         if engine is not None:
-            compact_monthly(engine, datetime.now(UTC).date())
+            as_of = belgrade_today()
+            compact_monthly(engine, as_of)
+            refresh_index(engine, as_of)
     except StorageLimitError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(2) from exc
