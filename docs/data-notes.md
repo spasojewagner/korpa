@@ -34,62 +34,153 @@ The adapter selects CSV resources whose URL contains `cene_proizvoda` or `cene-p
 Distinct matching resources or datasets for one publisher are reported as ambiguous, never chosen
 by arbitrary ordering. Historical files with unrecognized names are not automatically imported.
 
+## Compatibility profile `compat-2026-11`
+
+The CLI explicitly selects this approved profile. `read_csv` without a profile still provides
+strict contract validation. No barcode, product text, price, date, or empty field is repaired.
+
+Exact value mappings:
+
+| Field | Source | Canonical | Deviation counter |
+| --- | --- | --- | --- |
+| VRSTA_CENOVNIKA | `MESECNI_PRESEK` | `MESEČNI_PRESEK` | `list_type_ascii` |
+| VRSTA_CENOVNIKA | `VAZECI_CENOVNIK` | `VAŽEĆI_CENOVNIK` | `list_type_ascii` |
+| Jedinica mere | ASCII case-insensitive exact `kg`, `g`, `l`, `ml`, `kom`, `pak` | lowercase unit | `unit_case` |
+
+No other aliases are accepted: `kom.`, `lit`, `GR`, `JED`, `KO`, `M`, padded values, and
+unlisted list types remain errors. Canonical values do not increase deviation counters.
+
+### Lidl's observed header and explicit header aliases
+
+Exact decoded first line (the file is UTF-8 and uses semicolons):
+
+```text
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca – formata;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snižena cena;Datum početka sniženja;Datum kraja sniženja;Stopa PDV;VRSTA_CENOVNIKA
+```
+
+Lidl's en dash in column 7 is the sole non-identity header alias. It maps one-to-one; the file
+can be accepted. Header cells are whitespace-trimmed and matched only through this table.
+Column order may differ, but every canonical column must occur exactly once. Missing,
+duplicate, additional, or unknown columns reject the entire file. A noncanonical accepted
+header (alias, whitespace, or reordered columns) increments `header_alias` once per file.
+
+| Accepted header after trimming | Canonical column |
+| --- | --- |
+| `KATEGORIJA` | `KATEGORIJA` |
+| `NAZIV KATEGORIJE` | `NAZIV KATEGORIJE` |
+| `Naziv proizvoda` | `Naziv proizvoda` |
+| `Robna marka` | `Robna marka` |
+| `Barkod proizvoda` | `Barkod proizvoda` |
+| `Jedinica mere` | `Jedinica mere` |
+| `Naziv trgovca - formata` | `Naziv trgovca - formata` |
+| `Naziv trgovca – formata` | `Naziv trgovca - formata` |
+| `Datum cenovnika` | `Datum cenovnika` |
+| `Redovna cena` | `Redovna cena` |
+| `Cena po jedinici mere` | `Cena po jedinici mere` |
+| `Snižena cena` | `Snižena cena` |
+| `Datum početka sniženja` | `Datum početka sniženja` |
+| `Datum kraja sniženja` | `Datum kraja sniženja` |
+| `Stopa PDV` | `Stopa PDV` |
+| `VRSTA_CENOVNIKA` | `VRSTA_CENOVNIKA` |
+
+Every applied value mapping is counted, including mappings on rows that fail another rule.
+`errors` retains the first failing rule per invalid row for backward compatibility;
+`errors_by_rule` counts each independently failing rule once per row, so it may sum to more
+than the number of rejected rows. Dependent comparisons run only when their input fields
+parse successfully. Deviations alone never invalidate a row. A new mapping needs a new
+profile identifier and a maintainer decision.
+
 ## Five live downloads and local ingest reports
 
-The full exact dataset and resource URLs, response validators, download sizes, error counts,
-and conditional response statuses are retained in [portal-observations.json](portal-observations.json).
-All five downloads were parsed locally and produced one `ingest_runs` row each in PostgreSQL.
-No raw CSV was put in the database or committed.
+Re-run on 21 November 2026 with `compat-2026-11`. Full exact dataset/resource URLs, SHA-256
+hashes, response validators, download sizes, rule counts, and timings are retained in
+[portal-observations.json](portal-observations.json). All five files were downloaded, fully
+processed, and imported into a fresh local PostgreSQL 16 database. Raw CSVs were not committed
+or stored in persistent database tables; COPY stages contain only validated normalized rows.
 
-| Publisher slug | Parsed data records | Accepted | First validation errors |
-| --- | ---: | ---: | --- |
-| `beltorg-doo-1` | 2,075 | 0 | `list_type` |
-| `lidl` | 12,628 | 0 | `header` |
-| `luki-komerc-d-o-o` | 25,181 | 0 | `list_type`, `unit` |
-| `metro-cash-carry-doo-beograd` | 38,039 | 0 | `unit` |
-| `yuhor-d-o-o` | 4,612 | 0 | `list_type` |
+| Publisher slug | Source records | Accepted | Deviations | Errors (first failing rule) |
+| --- | ---: | ---: | --- | --- |
+| `beltorg-doo-1` | 2,075 | 1,799 | list_type_ascii: 2,075 | conflicting_duplicate: 276 |
+| `lidl` | 12,628 | 9,781 | list_type_ascii: 12,628; header_alias: 1 | unit: 2,684; price: 84; conflicting_duplicate: 79 |
+| `luki-komerc-d-o-o` | 25,181 | 24,990 | list_type_ascii: 25,181 | unit: 76; price: 97; conflicting_duplicate: 18 |
+| `metro-cash-carry-doo-beograd` | 38,039 | 20,372 | list_type_ascii: 38,039; unit_case: 33,770 | price: 13,292; unit: 4,269; conflicting_duplicate: 106 |
+| `yuhor-d-o-o` | 4,612 | 4,268 | list_type_ascii: 4,612 | price: 312; conflicting_duplicate: 32 |
+| **Total** | **82,535** | **61,210** | **116,306 applied mappings** | **21,325 rejected records** |
 
-Errors are grouped by the first failing rule per row, so `unit` can mask an additional invalid
-list type. Header mismatch rejects the file. A schema-compliant fixture exercises successful
-current-price and monthly-snapshot writes in PostgreSQL tests; fixture success is not real-data
-acceptance. The roadmap's requirement for usable data from at least five retailers is **not met**.
+These are source-record counts, not distinct current listings. Exact duplicates remain valid
+source records but collapse to one write; conflicting duplicate identities are all rejected.
+Current listings after the imports: Beltorg 667, Lidl 2,466, Luki 6,318, Metro 5,077, Yuhor 1,080.
+All five publishers now have usable current prices and retained monthly observations.
 
-Four resource servers returned Last-Modified; Luki, Metro, and Yuhor also returned ETag.
-Conditional requests actually returned **304** for all four. Lidl returned neither validator.
-Do not assume support across hosts. The client prefers If-None-Match, otherwise
-If-Modified-Since, and handles 304 without reparsing or rewriting prices. Validators are persisted
-only for clean imports; a source URL change invalidates stored validators.
+The extra rule report exposes masked failures: Metro has 16,593 `price` failures and 4,269
+`unit` failures, in addition to 106 conflicting records; Lidl has 99 `price` failures rather
+than the first-error count of 84; Luki has 113 rather than 97. Prices such as `100` or `1000.1`
+remain errors because only exact two-decimal prices were approved. These quality signals do
+not establish legal non-compliance.
 
-The five datasets declare `license: sodl`. The portal license registry is available at:
+Four resource servers supplied Last-Modified; Luki, Metro, and Yuhor also supplied ETag.
+Actual conditional requests returned **304** for all four; Lidl supplied neither validator.
+The client prefers If-None-Match, otherwise If-Modified-Since. Validators are stored after an
+accepted header and complete processing even when individual rows fail. They are bound to
+both the exact source URL and parsing profile; a profile change forces a new full download.
+Rejected headers, malformed CSVs, and encoding/download errors cannot refresh the cache.
+A 304 retains the previous file's totals, quality counters, validators, and shrink baseline;
+it does not rerun writes or withdrawals.
+
+The five datasets declare `license: sodl`. The verified portal registry identifies it as
+`Српска лиценца за отворене податке`, maintained by ITE, with a null license URL:
 https://data.gov.rs/api/1/datasets/licenses/
-The exact license text and attribution wording must be reviewed before public redistribution.
-The app already links the portal and displays the required independence disclaimer; it does not
-claim a single license applies to every resource. The adapter reports each dataset's license.
+The full license text and attribution wording still need review before public redistribution.
+The app links the portal and displays the required independence disclaimer; it does not assume
+a single license applies to every resource.
 
-## Contract question requiring a maintainer decision
+## Atomic writes, withdrawals, and storage
 
-Published files commonly use `MESECNI_PRESEK` and `VAZECI_CENOVNIK`, whereas AGENTS.md requires
-`MESEČNI_PRESEK` and `VAŽEĆI_CENOVNIK`. Uppercase units such as `KG` also occur. Some column
-headers differ. These values are rejected and counted, not transliterated, lowercased, or repaired.
-Should explicitly documented source variants be accepted through a versioned compatibility
-adapter, or should the contract stay strict until publishers change their files? This decision
-is left open in the ingest PR; no compatibility mapping has been introduced.
+The writer uses COPY into a transaction-local temporary table followed by a fixed number of
+INSERT ... SELECT ... ON CONFLICT statements. Canonical descriptions remain first seen;
+retailer product names update from the latest source observation. Money remains integer para.
+Intra-file price changes are compared with window functions before the current-price upsert.
+Older lists cannot revert newer prices. Monthly observations remain immutable.
 
-## Persistence decisions and remaining limits
+An accepted, fully processed file containing current-list rows replaces this retailer's
+current listings: absent valid current `(format, barcode)` keys are withdrawn. Monthly-only,
+rejected-header, truncated, and 304 responses cannot withdraw listings. A stale source cannot
+delete listings newer than the source's latest current date. Other retailers and historical
+observations are unaffected by withdrawal.
 
-- Canonical product/category descriptions are first seen; retailer-specific names are upserted
-  separately. Products are matched only by their exact 13-character barcode.
-- Imports are atomic per publisher and serialized with a transaction advisory lock. Older
-  lists cannot revert newer current prices. Conflicting duplicates within one date are rejected.
-- Identical duplicate rows count as valid source records but collapse to one write.
-- Daily history stores the last changed price for a format/barcode/source date. Repeating an
-  identical price does not append history. Monthly observations remain immutable.
-- Current prices are upserted; absence from a later file does not yet delete a product. A policy
-  for complete-file replacement and withdrawn listings is still needed before comparison pages.
-- Daily history older than 120 days is removed. Monthly observations are retained. Size is logged
-  before and after each ingest, warns at 70%, and rejects/rolls back writes at 90% of 1 GB.
-- The 700k-row/100–200 MB estimate is unverified because real rows fail the supplied contract.
-  The implementation uses indexed per-row upserts; benchmark and batch optimization are still
-  needed before nightly operation at the largest forecast scale.
-- Raw-download artifact retention, scheduled ingestion, static JSON exports, API product reads,
-  and deployment belong to later phases. No retailer HTML is scraped.
+Before replacement, `rows_valid` is compared to the previous fully processed accepted run's
+count. Below 50% triggers `suspicious_shrink`; current prices and their history are left
+unchanged, and no withdrawals occur. Exactly 50% is allowed. Shrink rejections and rejected
+files do not reset the baseline, so repeated suspicious files cannot bypass the guard.
+304 audits retain the represented file's counts. Monthly snapshots can still be imported
+from a suspicious mixed file without changing current prices.
+
+Publisher writes are atomic and serialized through transaction advisory locks. Database size
+is logged before/after import, warned at 70% of 1 GB, and the transaction is rejected/rolled
+back at 90%. The independent 120-day daily-history retention policy remains active; monthly
+observations are retained permanently. No raw CSV is stored in persistent tables.
+
+## Performance measurement
+
+Local Docker PostgreSQL 16, sequential imports, same machine and the same Metro bytes
+(SHA-256 in the observation file). Both isolated Metro comparisons started with empty databases;
+network time is excluded from both Metro parse/write comparisons. The old writer was taken
+from commit `e4832ed6349dfcfade8e63c4bd52131625c8c9f0` and fed the same approved-profile rows.
+
+| Measurement | Original per-row writer | COPY and set-based writer |
+| --- | ---: | ---: |
+| Metro source records / accepted | 38,039 / 20,372 | 38,039 / 20,372 |
+| Metro parsing + normalization | 1.364 s | 0.775 s |
+| Metro transaction | 40.891 s | 3.894 s |
+| Metro total parse + write | **42.255 s** | **4.668 s** |
+
+The complete fresh-database five-retailer run took **18.690 s**, including **0.850 s** discovery,
+all sequential downloads, parsing, writes, retention, and audits. This meets the local 60 s
+target. Conditional support probes were performed after the timed run. No previously stored
+HTTP validators were supplied and no files were skipped. Metro in that shared five-retailer
+run took 1.869 s for parsing/writing because earlier chains had already populated some shared
+products; that figure is not used as the isolated cold comparison.
+
+These are observed local wall times, not a network latency guarantee. The larger forecast of
+700k current rows remains a separate scale benchmark. Scheduled ingestion, raw-download
+artifact retention, static JSON exports, product APIs, and deployment belong to later phases.

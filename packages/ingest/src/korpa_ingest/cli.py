@@ -9,6 +9,7 @@ import typer
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
+from korpa_ingest.compat import PROFILE
 from korpa_ingest.db import database_url
 from korpa_ingest.normalize import normalize
 from korpa_ingest.portal import Download, PortalClient
@@ -68,12 +69,12 @@ def ingest(
                     )
                     download = portal.download(source, etag, modified)
                     parsed = (
-                        normalize(read_csv(download.content))
+                        normalize(read_csv(download.content, profile=PROFILE))
                         if download.status != 304
-                        else (Parsed([], Report()))
+                        else (Parsed([], Report(profile=PROFILE)))
                     )
                 except (httpx.HTTPError, ValueError) as exc:
-                    report = Report()
+                    report = Report(profile=PROFILE)
                     report.error("download")
                     if isinstance(exc, httpx.HTTPStatusError):
                         download = Download(exc.response.status_code, b"")

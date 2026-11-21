@@ -16,9 +16,9 @@ open data portal. Korpa turns those files into a tool people can actually use:
 > Independent project built on open data. Not affiliated with any government body.
 
 ## Status
-Project foundation and strict ingestion pipeline are implemented. Live files from five publishers
-were downloaded and audited, but none matched the supplied contract. Usable five-retailer data
-remains blocked on the contract decision described in [data notes](docs/data-notes.md).
+Project foundation and ingestion are implemented. The approved `compat-2026-11` profile
+imported usable prices from five live publishers: 61,210 valid source records in 18.69 seconds.
+Every accepted publisher variant is counted in [data notes](docs/data-notes.md).
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design and roadmap.
 
 ## Stack
@@ -96,14 +96,20 @@ With the virtual environment activated, `korpa ingest ...` works directly. Choos
 of `--retailer <publisher-slug>` and `--all`. Discovery uses the portal's organization slug,
 not a guessed chain name. An unknown slug prints available options. The portal client discovers
 unambiguous consolidated CSV resources, strips a UTF-8 BOM, detects comma/semicolon/tab, and
-requires the exact header order and spellings in AGENTS.md.
+uses the approved `compat-2026-11` profile: only two ASCII list types, exact unit case
+normalization, and the documented Lidl header alias are mapped. Headers map by name, with
+all 15 columns present exactly once; whitespace and ordering may differ. The Python reader
+still supports strict mode by omitting its explicit profile argument.
 
 Each command prints one JSON report per selected retailer: source URL, dataset ID, license,
 HTTP status, total and valid rows, grouped errors, and up to five source line numbers per error.
-The first failing rule is counted per invalid row. Invalid files/rows are reported even when
+`errors` counts the first failing rule per invalid row; `errors_by_rule` also reports every
+independently failing rule once per row. `deviations` counts all approved mappings, including
+those on otherwise invalid rows, and `profile` identifies the interpretation. Rows with only
+deviations are valid. Invalid files/rows are reported even when
 valid rows from the same source are written. Conflicting duplicate prices are rejected.
 Dry-run never opens a database connection or persists HTTP validators. Exit status is 0 for
-clean imports/304, 1 for data/download/discovery errors, and 2 for CLI usage or storage-limit
+clean imports/304 reports, 1 for data/download/discovery errors, and 2 for CLI usage or storage-limit
 errors. No network call is made by fixture tests.
 
 Current prices, names and formats are upserted atomically per retailer. Price history changes
@@ -111,14 +117,20 @@ only when price values change; old daily history expires after 120 days. Monthly
 are retained permanently. Raw CSV data is never stored in the database. Database size is logged
 before/after each run, warned at 70% of 1 GB, and writes are rolled back at 90%.
 
-The current live-data mismatch is intentional validation output, not a successful import of
-usable prices. Exact observations and unresolved compatibility questions are in
+Accepted, fully processed current files also withdraw absent current listings for that
+retailer. If the valid count falls below half the previous accepted run, `suspicious_shrink`
+keeps all previous current prices and disables withdrawal. Historical observations are never
+removed by withdrawal. Validators are cached for fully processed accepted-header files even
+with invalid rows; changing the profile or resource URL forces a full download. A 304 retains
+the previous quality report without rewriting prices.
+
+Exact mappings, live observations, and the before/after Metro benchmark are in
 [data notes](docs/data-notes.md) and [the recorded report](docs/portal-observations.json).
 
 ## PostgreSQL integration tests
 
 Tests write only to a dedicated database named `korpa_test`. They refuse other database names.
-Without `TEST_DATABASE_URL`, seven database integration tests are skipped; CI always sets it.
+Without `TEST_DATABASE_URL`, fifteen database integration tests are skipped; CI always sets it.
 
 ```sh
 docker compose -f infra/docker-compose.yml up -d --wait

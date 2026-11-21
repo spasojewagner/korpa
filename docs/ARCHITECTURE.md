@@ -43,7 +43,7 @@ Free-tier constraints and how the design handles them:
 
 | Table | Columns | Notes |
 |---|---|---|
-| `retailers` | id, name, slug, dataset_id, resource_url, last_etag, last_seen_at | one per publisher |
+| `retailers` | id, name, slug, dataset_id, resource_url, last_etag, last_modified, validator_profile, last_seen_at | one per publisher |
 | `retail_formats` | id, retailer_id, name | from `Naziv trgovca - formata` |
 | `categories` | code (1–25), name | |
 | `products` | barcode CHAR(13) PK, name, brand, unit, category_code, search_tsv | canonical name per barcode |

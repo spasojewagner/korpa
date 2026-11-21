@@ -1,5 +1,28 @@
 {
   "observed_on": "2026-11-21",
+  "profile": "compat-2026-11",
+  "benchmark": {
+    "mode": "empty local PostgreSQL 16 database, sequential HTTP downloads and imports, no validators; includes discovery",
+    "all_five_seconds": 18.6895,
+    "discovery_seconds": 0.8497,
+    "baseline_metro": {
+      "records": 38039,
+      "accepted": 20372,
+      "parse_seconds": 1.3636991000021226,
+      "baseline_write_seconds": 40.8911506000004,
+      "baseline_parse_write_seconds": 42.254849700002524
+    },
+    "bulk_metro_parse_write_seconds": 1.869,
+    "baseline_commit": "e4832ed6349dfcfade8e63c4bd52131625c8c9f0",
+    "bulk_metro_cold": {
+      "records": 38039,
+      "accepted": 20372,
+      "parse_seconds": 0.7745,
+      "write_seconds": 3.8936,
+      "parse_write_seconds": 4.6682,
+      "mode": "same cached bytes, empty PostgreSQL database, no network in either writer timing"
+    }
+  },
   "retailers": [
     {
       "retailer": "beltorg-doo-1",
@@ -9,20 +32,30 @@
       "etag": null,
       "last_modified": "Fri, 20 Nov 2026 18:57:58 GMT",
       "bytes": 323328,
+      "sha256": "a60c919b40aed39ae75c4379cc35c5b024d70b06c142a50298ff6f12dd7a20d0",
+      "download_seconds": 0.4295,
+      "parse_seconds": 0.05,
+      "write_seconds": 0.3803,
       "rows_total": 2075,
-      "rows_valid": 0,
+      "rows_valid": 1799,
       "errors": {
-        "list_type": 2075
+        "conflicting_duplicate": 276
       },
       "sample_lines": {
-        "list_type": [
-          2,
-          3,
-          4,
-          5,
-          6
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0
         ]
       },
+      "errors_by_rule": {
+        "conflicting_duplicate": 276
+      },
+      "deviations": {
+        "list_type_ascii": 2075
+      },
+      "profile": "compat-2026-11",
       "conditional_status": 304
     },
     {
@@ -33,16 +66,49 @@
       "etag": null,
       "last_modified": null,
       "bytes": 1897040,
+      "sha256": "1fb558f010f161333147228f6b3707970ba44e24604e2c19aa309599797f81ff",
+      "download_seconds": 1.6488,
+      "parse_seconds": 0.4859,
+      "write_seconds": 1.9334,
       "rows_total": 12628,
-      "rows_valid": 0,
+      "rows_valid": 9781,
       "errors": {
-        "header": 12628
+        "unit": 2684,
+        "price": 84,
+        "conflicting_duplicate": 79
       },
       "sample_lines": {
-        "header": [
+        "unit": [
+          17,
+          19,
+          24,
+          33,
+          44
+        ],
+        "price": [
+          500,
+          501,
+          542,
+          543,
+          605
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
           0
         ]
-      }
+      },
+      "errors_by_rule": {
+        "unit": 2684,
+        "price": 99,
+        "conflicting_duplicate": 79
+      },
+      "deviations": {
+        "header_alias": 1,
+        "list_type_ascii": 12628
+      },
+      "profile": "compat-2026-11"
     },
     {
       "retailer": "luki-komerc-d-o-o",
@@ -52,28 +118,49 @@
       "etag": "\"3ba5d4-660aef7f44cfa\"",
       "last_modified": "Fri, 20 Nov 2026 06:01:00 GMT",
       "bytes": 3909076,
+      "sha256": "d4edddd7196c0cf92e662559d052cbed069327c9cbe0aabd0ecf810d4f071e58",
+      "download_seconds": 2.7247,
+      "parse_seconds": 0.7251,
+      "write_seconds": 2.3838,
       "rows_total": 25181,
-      "rows_valid": 0,
+      "rows_valid": 24990,
       "errors": {
-        "list_type": 25105,
-        "unit": 76
+        "unit": 76,
+        "price": 97,
+        "conflicting_duplicate": 18
       },
       "sample_lines": {
-        "list_type": [
-          2,
-          3,
-          4,
-          5,
-          6
-        ],
         "unit": [
           37,
           176,
           181,
           1028,
           1029
+        ],
+        "price": [
+          291,
+          293,
+          535,
+          536,
+          539
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0,
+          0
         ]
       },
+      "errors_by_rule": {
+        "unit": 76,
+        "price": 113,
+        "conflicting_duplicate": 18
+      },
+      "deviations": {
+        "list_type_ascii": 25181
+      },
+      "profile": "compat-2026-11",
       "conditional_status": 304
     },
     {
@@ -84,20 +171,49 @@
       "etag": "\"6affe670-525803\"",
       "last_modified": "Fri, 20 Nov 2026 06:19:28 GMT",
       "bytes": 5396483,
+      "sha256": "c5dba69174be4502719f26432e8ec848a2f9e57c332ecf9112e791ce47481187",
+      "download_seconds": 4.1482,
+      "parse_seconds": 0.9241,
+      "write_seconds": 0.9449,
       "rows_total": 38039,
-      "rows_valid": 0,
+      "rows_valid": 20372,
       "errors": {
-        "unit": 38039
+        "price": 13292,
+        "unit": 4269,
+        "conflicting_duplicate": 106
       },
       "sample_lines": {
-        "unit": [
-          2,
+        "price": [
           3,
-          4,
-          5,
-          6
+          18,
+          20,
+          22,
+          24
+        ],
+        "unit": [
+          7,
+          40,
+          56,
+          66,
+          84
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0
         ]
       },
+      "errors_by_rule": {
+        "price": 16593,
+        "unit": 4269,
+        "conflicting_duplicate": 106
+      },
+      "deviations": {
+        "list_type_ascii": 38039,
+        "unit_case": 33770
+      },
+      "profile": "compat-2026-11",
       "conditional_status": 304
     },
     {
@@ -108,20 +224,39 @@
       "etag": "\"c3682-65f96fcf65880\"",
       "last_modified": "Fri, 06 Nov 2026 07:59:14 GMT",
       "bytes": 800386,
+      "sha256": "69d6b404fb78adc43e0000b5257e8537a2787a72a9a22875e86aaa411813b79b",
+      "download_seconds": 0.6067,
+      "parse_seconds": 0.1822,
+      "write_seconds": 0.2579,
       "rows_total": 4612,
-      "rows_valid": 0,
+      "rows_valid": 4268,
       "errors": {
-        "list_type": 4612
+        "price": 312,
+        "conflicting_duplicate": 32
       },
       "sample_lines": {
-        "list_type": [
-          2,
-          3,
-          4,
-          5,
-          6
+        "price": [
+          84,
+          96,
+          142,
+          272,
+          274
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0
         ]
       },
+      "errors_by_rule": {
+        "price": 312,
+        "conflicting_duplicate": 32
+      },
+      "deviations": {
+        "list_type_ascii": 4612
+      },
+      "profile": "compat-2026-11",
       "conditional_status": 304
     }
   ]

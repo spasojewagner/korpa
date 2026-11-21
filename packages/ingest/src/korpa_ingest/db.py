@@ -18,6 +18,7 @@ retailers = sa.Table(
     sa.Column("resource_url", sa.Text, nullable=False),
     sa.Column("last_etag", sa.Text),
     sa.Column("last_modified", sa.Text),
+    sa.Column("validator_profile", sa.Text),
     sa.Column("last_seen_at", sa.DateTime(timezone=True)),
 )
 retail_formats = sa.Table(

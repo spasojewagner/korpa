@@ -9,6 +9,7 @@ from unittest.mock import patch
 import pytest
 import sqlalchemy as sa
 from korpa_ingest import db
+from korpa_ingest.compat import PROFILE
 from korpa_ingest.normalize import normalize
 from korpa_ingest.portal import Download, RetailerSource
 from korpa_ingest.reader import Parsed, Report, read_csv
@@ -47,7 +48,7 @@ def clean_database(engine: Engine) -> None:
 
 
 def fixture_rows() -> Parsed:
-    parsed = normalize(read_csv((FIXTURES / "good.csv").read_bytes()))
+    parsed = normalize(read_csv((FIXTURES / "good.csv").read_bytes(), profile=PROFILE))
     today = date.today()
     parsed.rows = [
         row.model_copy(
@@ -78,7 +79,13 @@ def test_idempotence_and_price_changes(engine: Engine) -> None:
     changed = current.model_copy(
         update={"regular": 13500, "list_date": date.today() + timedelta(1)}
     )
-    persist(engine, SOURCE, Parsed([changed], Report(1, 1)), DOWNLOAD, datetime.now(UTC))
+    persist(
+        engine,
+        SOURCE,
+        Parsed([changed], Report(1, 1, profile=PROFILE), True, True, True),
+        DOWNLOAD,
+        datetime.now(UTC),
+    )
     assert count(engine, db.price_changes) == 2
     with engine.connect() as connection:
         assert connection.execute(sa.select(db.prices_current.c.regular)).scalar_one() == 13500
@@ -118,9 +125,9 @@ def test_stale_import_cannot_revert_current_and_monthly_is_permanent(engine: Eng
 
 
 def test_mixed_report_and_304_are_audited(engine: Engine) -> None:
-    parsed = normalize(read_csv((FIXTURES / "mixed.csv").read_bytes()))
+    parsed = normalize(read_csv((FIXTURES / "mixed.csv").read_bytes(), profile=PROFILE))
     persist(engine, SOURCE, parsed, DOWNLOAD, datetime.now(UTC))
-    assert validators(engine, SOURCE) == (None, None)
+    assert validators(engine, SOURCE) == (DOWNLOAD.etag, DOWNLOAD.last_modified)
     with engine.connect() as connection:
         report = connection.execute(sa.select(db.ingest_runs)).mappings().one()
         assert report["rows_total"] == 3
@@ -160,3 +167,138 @@ def test_retention_keeps_monthly_history(engine: Engine) -> None:
     persist(engine, SOURCE, parsed, DOWNLOAD, datetime.now(UTC))
     assert count(engine, db.price_changes) == 0
     assert count(engine, db.monthly_snapshots) == 1
+
+
+def current_file(n: int, *, regular: int = 10000, day: date | None = None) -> Parsed:
+    row = next(row for row in fixture_rows().rows if row.kind == "VAŽEĆI_CENOVNIK")
+    rows = [
+        row.model_copy(
+            update={
+                "barcode": f"{i:013d}",
+                "regular": regular,
+                "list_date": day or date.today(),
+            }
+        )
+        for i in range(1, n + 1)
+    ]
+    return Parsed(rows, Report(n, n, profile=PROFILE), True, True, True)
+
+
+def test_withdrawals_remove_only_missing_current_listings(engine: Engine) -> None:
+    initial = current_file(3)
+    # A withdrawn product's monthly observation must survive too.
+    initial.rows.append(
+        initial.rows[-1].model_copy(
+            update={
+                "kind": "MESEČNI_PRESEK",
+                "list_date": date.today().replace(day=1),
+            }
+        )
+    )
+    initial.report.rows_total += 1
+    initial.report.rows_valid += 1
+    persist(engine, SOURCE, initial, DOWNLOAD, datetime.now(UTC))
+    initial_history = count(engine, db.price_changes)
+    replacement = current_file(2)
+    persist(engine, SOURCE, replacement, DOWNLOAD, datetime.now(UTC))
+    assert count(engine, db.prices_current) == 2
+    assert count(engine, db.price_changes) == initial_history
+    assert count(engine, db.monthly_snapshots) == 1
+    assert not replacement.report.errors  # exactly 50% is accepted
+
+
+def test_suspicious_shrink_keeps_prices_and_history(engine: Engine) -> None:
+    persist(engine, SOURCE, current_file(5), DOWNLOAD, datetime.now(UTC))
+    replacement = current_file(2, regular=99999)
+    persist(engine, SOURCE, replacement, DOWNLOAD, datetime.now(UTC))
+    assert count(engine, db.prices_current) == 5
+    assert count(engine, db.price_changes) == 5
+    assert replacement.report.rows_valid == 2
+    assert replacement.report.errors == {"suspicious_shrink": 1}
+    with engine.connect() as c:
+        assert set(c.execute(sa.select(db.prices_current.c.regular)).scalars()) == {10000}
+    # Repeated bad imports cannot lower the baseline and bypass protection.
+    again = current_file(2, regular=99999)
+    persist(engine, SOURCE, again, DOWNLOAD, datetime.now(UTC))
+    assert again.report.errors == {"suspicious_shrink": 1}
+    assert count(engine, db.prices_current) == 5
+
+
+def test_bad_header_and_monthly_only_files_cannot_withdraw(engine: Engine) -> None:
+    persist(engine, SOURCE, current_file(4), DOWNLOAD, datetime.now(UTC))
+    rejected = Parsed([], Report(4, 0, profile=PROFILE))
+    rejected.report.error("header", count=4)
+    persist(engine, SOURCE, rejected, Download(200, b"", '"bad"'), datetime.now(UTC))
+    assert count(engine, db.prices_current) == 4
+    monthly = fixture_rows()
+    monthly.rows = [r for r in monthly.rows if r.kind == "MESEČNI_PRESEK"]
+    monthly.has_current = False
+    monthly.report.rows_valid = 1
+    persist(engine, SOURCE, monthly, DOWNLOAD, datetime.now(UTC))
+    assert count(engine, db.prices_current) == 4
+    assert count(engine, db.monthly_snapshots) == 1
+
+
+def test_withdrawals_do_not_touch_other_retailers_or_newer_prices(engine: Engine) -> None:
+    other = RetailerSource("other", "Other", "other-id", "https://example.org/other.csv", "sodl")
+    persist(engine, SOURCE, current_file(4), DOWNLOAD, datetime.now(UTC))
+    persist(engine, other, current_file(4), DOWNLOAD, datetime.now(UTC))
+    stale = current_file(2, day=date.today() - timedelta(1))
+    persist(engine, SOURCE, stale, DOWNLOAD, datetime.now(UTC))
+    assert count(engine, db.prices_current) == 8
+
+
+def test_validator_profile_and_rejected_file_do_not_poison_cache(engine: Engine) -> None:
+    persist(engine, SOURCE, current_file(1), DOWNLOAD, datetime.now(UTC))
+    assert validators(engine, SOURCE) == (DOWNLOAD.etag, DOWNLOAD.last_modified)
+    assert validators(engine, SOURCE, profile="future-profile") == (None, None)
+    rejected = Parsed([], Report(profile=PROFILE))
+    rejected.report.error("encoding")
+    persist(engine, SOURCE, rejected, Download(200, b"", '"bad"'), datetime.now(UTC))
+    assert validators(engine, SOURCE) == (DOWNLOAD.etag, DOWNLOAD.last_modified)
+    changed_url = RetailerSource(
+        "demo", "Demo", "dataset-id", "https://example.org/new.csv", "sodl"
+    )
+    assert validators(engine, changed_url) == (None, None)
+
+
+def test_304_retains_report_validators_and_withdrawal_baseline(engine: Engine) -> None:
+    initial = current_file(5)
+    initial.report.deviations["unit_case"] = 5
+    persist(engine, SOURCE, initial, DOWNLOAD, datetime.now(UTC))
+    audit = Parsed([], Report(profile=PROFILE))
+    persist(engine, SOURCE, audit, Download(304, b""), datetime.now(UTC))
+    assert audit.report.rows_valid == 5
+    assert audit.report.deviations == {"unit_case": 5}
+    assert validators(engine, SOURCE) == (DOWNLOAD.etag, DOWNLOAD.last_modified)
+    shrink = current_file(2)
+    persist(engine, SOURCE, shrink, DOWNLOAD, datetime.now(UTC))
+    assert shrink.report.errors == {"suspicious_shrink": 1}
+    assert count(engine, db.prices_current) == 5
+
+
+def test_304_uses_cached_file_report_after_an_intervening_download_failure(engine: Engine) -> None:
+    persist(engine, SOURCE, current_file(5), DOWNLOAD, datetime.now(UTC))
+    failed = Parsed([], Report(profile=PROFILE))
+    failed.report.error("download")
+    persist(engine, SOURCE, failed, Download(503, b""), datetime.now(UTC))
+    cached = Parsed([], Report(profile=PROFILE))
+    persist(engine, SOURCE, cached, Download(304, b""), datetime.now(UTC))
+    assert cached.report.rows_valid == 5
+    assert not cached.report.errors
+    assert count(engine, db.prices_current) == 5
+
+
+def test_set_based_history_keeps_all_changed_dates(engine: Engine) -> None:
+    initial = current_file(1)
+    persist(engine, SOURCE, initial, DOWNLOAD, datetime.now(UTC))
+    base = initial.rows[0]
+    rows = [
+        base.model_copy(update={"regular": price, "list_date": date.today() + timedelta(days=i)})
+        for i, price in enumerate([10000, 11000, 11000, 12000])
+    ]
+    incoming = Parsed(rows, Report(4, 4, profile=PROFILE), True, True, True)
+    persist(engine, SOURCE, incoming, DOWNLOAD, datetime.now(UTC))
+    assert count(engine, db.price_changes) == 3
+    with engine.connect() as c:
+        assert c.execute(sa.select(db.prices_current.c.regular)).scalar_one() == 12000

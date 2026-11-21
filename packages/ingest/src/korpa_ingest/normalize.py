@@ -16,4 +16,5 @@ def normalize(parsed: Parsed) -> Parsed:
         else:
             rows.append(group[0])
     # Monthly rows cannot overwrite a newer current product description.
-    return Parsed(sorted(rows, key=lambda row: (row.list_date, row.kind)), parsed.report)
+    parsed.rows = sorted(rows, key=lambda row: (row.list_date, row.kind))
+    return parsed
