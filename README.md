@@ -16,8 +16,8 @@ open data portal. Korpa turns those files into a tool people can actually use:
 > Independent project built on open data. Not affiliated with any government body.
 
 ## Status
-Project foundation and ingestion are implemented. The approved `compat-2026-11` profile
-imported usable prices from five live publishers: 61,210 valid source records in 18.69 seconds.
+Project foundation and ingestion are implemented. The active `compat-2026-11.2` profile
+imported usable prices from five live publishers: 76,673 valid source records of 82,546 checked.
 Every accepted publisher variant is counted in [data notes](docs/data-notes.md).
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the design and roadmap.
 
@@ -96,8 +96,9 @@ With the virtual environment activated, `korpa ingest ...` works directly. Choos
 of `--retailer <publisher-slug>` and `--all`. Discovery uses the portal's organization slug,
 not a guessed chain name. An unknown slug prints available options. The portal client discovers
 unambiguous consolidated CSV resources, strips a UTF-8 BOM, detects comma/semicolon/tab, and
-uses the approved `compat-2026-11` profile: only two ASCII list types, exact unit case
-normalization, and the documented Lidl header alias are mapped. Headers map by name, with
+uses the approved `compat-2026-11.2` profile: two ASCII list types, exact unit case
+normalization, the aliases `kom.`/`gr`/`lit`, exact padding of zero/one-decimal prices,
+and the documented Lidl header alias are mapped. Headers map by name, with
 all 15 columns present exactly once; whitespace and ordering may differ. The Python reader
 still supports strict mode by omitting its explicit profile argument.
 

@@ -1,12 +1,15 @@
 """Approved source mappings; additions require a new profile identifier."""
 
-PROFILE = "compat-2026-11"
+PROFILE = "compat-2026-11.2"
+LEGACY_PROFILE = "compat-2026-11"
+PROFILES = frozenset({LEGACY_PROFILE, PROFILE})
 STRICT_PROFILE = "strict-v1"
 LIST_TYPES = {
     "MESECNI_PRESEK": "MESEČNI_PRESEK",
     "VAZECI_CENOVNIK": "VAŽEĆI_CENOVNIK",
 }
 UNITS = frozenset({"kg", "g", "l", "ml", "kom", "pak"})
+UNIT_ALIASES = {"kom.": "kom", "gr": "g", "lit": "l"}
 # Identity entries are explicit too: every input column must map exactly once.
 HEADER_ALIASES = {
     "KATEGORIJA": "KATEGORIJA",
