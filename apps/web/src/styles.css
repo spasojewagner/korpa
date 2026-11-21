@@ -1,6 +1,6 @@
 @import '@fontsource-variable/source-sans-3/wght.css';
 @import 'tailwindcss';
-@import '../../../docs/design/theme.css';
+@import './styles/theme.css';
 
 body { margin: 0; font-size: var(--text-base); line-height: 1.6; }
 .skip-link { position: absolute; left: 1rem; top: -5rem; background: var(--color-paper); padding: 1rem; }

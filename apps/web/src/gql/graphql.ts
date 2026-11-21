@@ -2,7 +2,7 @@
 type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };
 
 export type Incremental<T> = T | { [P in keyof T]?: P extends ' $fragmentName' | '__typename' ? T[P] : never };
-import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-node/core';
+import type { DocumentTypeDecoration } from '@graphql-typed-document-node/core';
 export type ProductCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -13,7 +13,7 @@ export type ProductDetailQueryVariables = Exact<{
 }>;
 
 
-export type ProductDetailQuery = { asOf: string, product: { barcode: string, name: string, brand: string, unit: string, category: { code: number, name: string }, names: Array<{ rawName: string, retailer: { id: number, name: string, slug: string } }>, prices: Array<{ regularPara: number, discountedPara: number | null, effectivePara: number, unitPricePara: number, vat: number, discountFrom: string | null, discountTo: string | null, listDate: string, asOf: string, format: { id: number, name: string, retailer: { id: number, name: string, slug: string } } }>, cheapest: { effectivePara: number, listDate: string, asOf: string, format: { id: number, name: string } } | null, history: Array<{ month: string, regularPara: number, discountedPara: number | null, listDate: string, asOf: string }>, changes: Array<{ changedOn: string, regularPara: number, discountedPara: number | null, listDate: string, asOf: string }> } | null };
+export type ProductDetailQuery = { asOf: string, product: { barcode: string, name: string, brand: string, unit: string, category: { code: number, name: string }, names: Array<{ rawName: string, retailer: { id: number, name: string, slug: string } }>, prices: Array<{ regularPara: number, discountedPara: number | null, effectivePara: number, unitPricePara: number, discountFrom: string | null, discountTo: string | null, listDate: string, format: { id: number, name: string, retailer: { id: number, name: string, slug: string } } }>, history: Array<{ month: string, regularPara: number }> } | null };
 
 export type ProductsSummaryQueryVariables = Exact<{
   barcodes: Array<string> | string;
@@ -22,7 +22,86 @@ export type ProductsSummaryQueryVariables = Exact<{
 
 export type ProductsSummaryQuery = { asOf: string, products: Array<{ barcode: string, name: string, brand: string, unit: string } | null> };
 
+export class TypedDocumentString<TResult, TVariables>
+  extends String
+  implements DocumentTypeDecoration<TResult, TVariables>
+{
+  __apiType?: NonNullable<DocumentTypeDecoration<TResult, TVariables>['__apiType']>;
+  private value: string;
+  public __meta__?: Record<string, unknown> | undefined;
 
-export const ProductCategoriesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProductCategories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"categories"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<ProductCategoriesQuery, ProductCategoriesQueryVariables>;
-export const ProductDetailDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProductDetail"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"barcode"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"asOf"}},{"kind":"Field","name":{"kind":"Name","value":"product"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"barcode"},"value":{"kind":"Variable","name":{"kind":"Name","value":"barcode"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"barcode"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"brand"}},{"kind":"Field","name":{"kind":"Name","value":"unit"}},{"kind":"Field","name":{"kind":"Name","value":"category"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"code"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"names"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"rawName"}},{"kind":"Field","name":{"kind":"Name","value":"retailer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"prices"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"regularPara"}},{"kind":"Field","name":{"kind":"Name","value":"discountedPara"}},{"kind":"Field","name":{"kind":"Name","value":"effectivePara"}},{"kind":"Field","name":{"kind":"Name","value":"unitPricePara"}},{"kind":"Field","name":{"kind":"Name","value":"vat"}},{"kind":"Field","name":{"kind":"Name","value":"discountFrom"}},{"kind":"Field","name":{"kind":"Name","value":"discountTo"}},{"kind":"Field","name":{"kind":"Name","value":"listDate"}},{"kind":"Field","name":{"kind":"Name","value":"asOf"}},{"kind":"Field","name":{"kind":"Name","value":"format"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"retailer"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}}]}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"cheapest"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"effectivePara"}},{"kind":"Field","name":{"kind":"Name","value":"listDate"}},{"kind":"Field","name":{"kind":"Name","value":"asOf"}},{"kind":"Field","name":{"kind":"Name","value":"format"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"history"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"months"},"value":{"kind":"IntValue","value":"1"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"month"}},{"kind":"Field","name":{"kind":"Name","value":"regularPara"}},{"kind":"Field","name":{"kind":"Name","value":"discountedPara"}},{"kind":"Field","name":{"kind":"Name","value":"listDate"}},{"kind":"Field","name":{"kind":"Name","value":"asOf"}}]}},{"kind":"Field","name":{"kind":"Name","value":"changes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"days"},"value":{"kind":"IntValue","value":"1"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"changedOn"}},{"kind":"Field","name":{"kind":"Name","value":"regularPara"}},{"kind":"Field","name":{"kind":"Name","value":"discountedPara"}},{"kind":"Field","name":{"kind":"Name","value":"listDate"}},{"kind":"Field","name":{"kind":"Name","value":"asOf"}}]}}]}}]}}]} as unknown as DocumentNode<ProductDetailQuery, ProductDetailQueryVariables>;
-export const ProductsSummaryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ProductsSummary"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"barcodes"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"asOf"}},{"kind":"Field","name":{"kind":"Name","value":"products"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"barcodes"},"value":{"kind":"Variable","name":{"kind":"Name","value":"barcodes"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"barcode"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"brand"}},{"kind":"Field","name":{"kind":"Name","value":"unit"}}]}}]}}]} as unknown as DocumentNode<ProductsSummaryQuery, ProductsSummaryQueryVariables>;
+  constructor(value: string, __meta__?: Record<string, unknown> | undefined) {
+    super(value);
+    this.value = value;
+    this.__meta__ = __meta__;
+  }
+
+  override toString(): string & DocumentTypeDecoration<TResult, TVariables> {
+    return this.value;
+  }
+}
+
+export const ProductCategoriesDocument = new TypedDocumentString(`
+    query ProductCategories {
+  categories {
+    code
+    name
+  }
+}
+    `) as unknown as TypedDocumentString<ProductCategoriesQuery, ProductCategoriesQueryVariables>;
+export const ProductDetailDocument = new TypedDocumentString(`
+    query ProductDetail($barcode: String!) {
+  asOf
+  product(barcode: $barcode) {
+    barcode
+    name
+    brand
+    unit
+    category {
+      code
+      name
+    }
+    names {
+      rawName
+      retailer {
+        id
+        name
+        slug
+      }
+    }
+    prices {
+      regularPara
+      discountedPara
+      effectivePara
+      unitPricePara
+      discountFrom
+      discountTo
+      listDate
+      format {
+        id
+        name
+        retailer {
+          id
+          name
+          slug
+        }
+      }
+    }
+    history(months: 12) {
+      month
+      regularPara
+    }
+  }
+}
+    `) as unknown as TypedDocumentString<ProductDetailQuery, ProductDetailQueryVariables>;
+export const ProductsSummaryDocument = new TypedDocumentString(`
+    query ProductsSummary($barcodes: [String!]!) {
+  asOf
+  products(barcodes: $barcodes) {
+    barcode
+    name
+    brand
+    unit
+  }
+}
+    `) as unknown as TypedDocumentString<ProductsSummaryQuery, ProductsSummaryQueryVariables>;

@@ -6,6 +6,12 @@ export function formatPrice(para: number): string {
   return money.format(para / 100)
 }
 
+const count = new Intl.NumberFormat('sr-Latn-RS')
+const percent = new Intl.NumberFormat('sr-Latn-RS', { style: 'percent', maximumFractionDigits: 0 })
+
+export const formatNumber = (value: number): string => count.format(value)
+export const formatPercent = (ratio: number): string => percent.format(ratio)
+
 /** ISO calendar date 'YYYY-MM-DD' → '19.11.2026.' Parsed as a plain date, so no time zone shift. */
 export function formatDate(iso: string): string {
   const [year, month, day] = iso.slice(0, 10).split('-')

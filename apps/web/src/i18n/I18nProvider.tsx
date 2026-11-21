@@ -12,6 +12,8 @@ export interface I18n {
   t: (key: CopyKey, vars?: Vars) => string
   /** Plural copy; `n` is available as {n}. */
   tp: (key: PluralKey, n: number, vars?: Vars) => string
+  /** Any other UI text from the copy files (e.g. code labels) in the current script. */
+  tr: (text: string) => string
 }
 
 const rules = new Intl.PluralRules('sr-Latn')
@@ -45,6 +47,7 @@ export function createI18n(script: Script, setScript: (script: Script) => void =
       const form = forms[rules.select(n)] ?? forms.other
       return fill(inScript(form), { ...vars, n })
     },
+    tr: inScript,
   }
 }
 

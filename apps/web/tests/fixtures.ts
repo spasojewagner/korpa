@@ -1,0 +1,64 @@
+import type { ProductDetailQuery, ProductsSummaryQuery } from '../src/gql/graphql'
+import type { Schemas } from '../src/lib/api'
+
+const asOf = '2026-11-21'
+const alfa = { id: 1, name: 'Alfa', slug: 'alfa' }
+const beta = { id: 2, name: 'Beta', slug: 'beta' }
+export const MILK = '8600000000001'
+
+export const search: Schemas['SearchResponse'] = {
+  as_of: asOf,
+  total: 2,
+  items: [
+    { barcode: MILK, name: 'Mleko 2,8% 1 l', brand: 'Imlek', unit: 'l', category_code: 2, min_effective_para: 13999,
+      max_effective_para: 16999, n_formats: 2, any_discount: true, list_date: '2026-11-20' },
+    { barcode: '8600000000002', name: 'Mleko 0,9% 1 l', brand: 'Imlek', unit: 'l', category_code: 2, min_effective_para: 12999,
+      max_effective_para: 12999, n_formats: 1, any_discount: false, list_date: '2026-11-20' },
+  ],
+}
+
+export const categories: Schemas['CategoryItem'][] = [{ code: 2, name: 'Mleko i mlečni proizvodi', n_products: 2 }]
+
+export const quality: Schemas['QualityResponse'] = {
+  as_of: asOf,
+  retailers: [{
+    id: 1, name: 'Alfa', slug: 'alfa', status: 'partial', http_status: 200, rows_total: 1000, rows_valid: 930,
+    errors: { price: 70 }, errors_by_rule: { price: 70 }, deviations: { price_decimals: 120 }, profile: 'compat-2026-11.2',
+    finished_at: '2026-11-21T03:00:00Z', list_date: '2026-11-20', days_since_list_date: 1,
+  }],
+}
+
+export const product: ProductDetailQuery = {
+  asOf,
+  product: {
+    barcode: MILK, name: 'Mleko 2,8% 1 l', brand: 'Imlek', unit: 'l',
+    category: { code: 2, name: 'Mleko i mlečni proizvodi' },
+    names: [{ rawName: 'MLEKO 2,8% 1L IMLEK', retailer: alfa }],
+    prices: [
+      { regularPara: 15999, discountedPara: 13999, effectivePara: 13999, unitPricePara: 13999, discountFrom: '2026-11-15',
+        discountTo: '2026-11-30', listDate: '2026-11-20', format: { id: 1, name: 'Alfa Hiper', retailer: alfa } },
+      { regularPara: 16999, discountedPara: null, effectivePara: 16999, unitPricePara: 16999, discountFrom: null,
+        discountTo: null, listDate: '2026-11-20', format: { id: 2, name: 'Beta Market', retailer: beta } },
+    ],
+    history: [
+      { month: '2026-09-01', regularPara: 15499 },
+      { month: '2026-10-01', regularPara: 15999 },
+      { month: '2026-11-01', regularPara: 15999 },
+    ],
+  },
+}
+
+export const summary: ProductsSummaryQuery = {
+  asOf,
+  products: [{ barcode: MILK, name: 'Mleko 2,8% 1 l', brand: 'Imlek', unit: 'l' }],
+}
+
+export const basket: Schemas['BasketResponse'] = {
+  as_of: asOf,
+  retailers: [
+    { ...alfa, formats: [{ id: 1, name: 'Alfa Hiper', total_para: 13999, found_barcodes: [MILK], missing_barcodes: [],
+      complete: true, rank: 1, list_date_min: '2026-11-20', list_date_max: '2026-11-20' }] },
+    { ...beta, formats: [{ id: 2, name: 'Beta Market', total_para: 12999, found_barcodes: ['8600000000002'],
+      missing_barcodes: [MILK], complete: false, rank: 2, list_date_min: '2026-11-20', list_date_max: '2026-11-20' }] },
+  ],
+}
