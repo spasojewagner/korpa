@@ -3,6 +3,8 @@
 **Transparentnost cena namirnica u Srbiji, iz otvorenih podataka.**
 Open-data price transparency for Serbian groceries.
 
+**Uživo:** https://ai-korpa.vercel.app · API: https://korpa-api.onrender.com/docs
+
 Since September 2026, Serbian retailers must publish their price lists as machine-readable CSV files on the national
 open data portal. Korpa turns those files into a tool people can actually use:
 

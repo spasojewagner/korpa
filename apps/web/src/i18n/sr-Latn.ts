@@ -158,6 +158,7 @@ export const codeLabels: Record<string, string> = {
   discount: 'neispravno sniženje',
   required_text: 'prazno obavezno polje',
   column_count: 'pogrešan broj kolona',
+  conflicting_duplicate: 'isti proizvod dvaput sa različitim cenama',
   nul_character: 'nedozvoljen znak',
   header: 'neispravno zaglavlje',
   encoding: 'pogrešno kodiranje',
