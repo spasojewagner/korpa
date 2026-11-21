@@ -1,4 +1,4 @@
-.PHONY: dev test e2e lint build
+.PHONY: dev test e2e lint build seed-bench bench
 
 dev:
 	docker compose -f infra/docker-compose.yml up -d --wait
@@ -20,3 +20,9 @@ lint:
 
 build:
 	npm --prefix apps/web run build
+
+seed-bench:
+	uv run --extra dev python -m korpa_api.bench seed
+
+bench:
+	uv run --extra dev python -m korpa_api.bench measure
