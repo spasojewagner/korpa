@@ -81,7 +81,7 @@ Any other variant stays an error. A new mapping needs a maintainer decision and 
 
 ## Secrets
 Never commit secrets. Use `.env` (git-ignored) and keep `.env.example` with names only:
-`DATABASE_URL`, `PORTAL_BASE_URL`, `CORS_ORIGINS`, `LLM_PROVIDER`, `LLM_API_KEY` (M5 only).
+`DATABASE_URL`, `PORTAL_BASE_URL`, `CORS_ORIGINS`, `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL` (M5 only).
 
 ## Quality gates (CI must enforce)
 - lint, typecheck, unit tests and build pass.

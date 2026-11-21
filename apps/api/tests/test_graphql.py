@@ -432,6 +432,8 @@ def test_schema_export_contains_rest_paths_without_graphql() -> None:
         "/api/quality",
         "/api/index",
         "/api/signals",
+        "/api/ai/status",
+        "/api/ai/basket",
     }
 
 

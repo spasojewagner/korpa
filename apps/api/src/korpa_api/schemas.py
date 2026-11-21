@@ -177,3 +177,25 @@ class SignalItem(BaseModel):
 class SignalsResponse(BaseModel):
     as_of: date
     items: list[SignalItem] = Field(max_length=200)
+
+
+class AiBasketRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    sentence: str = Field(min_length=3, max_length=300)
+
+
+class AiBasketItem(BaseModel):
+    phrase: str
+    query: str
+    qty: int
+    candidates: list[SearchItem]
+
+
+class AiBasketResponse(BaseModel):
+    as_of: date
+    model: str
+    items: list[AiBasketItem]
+
+
+class AiStatus(BaseModel):
+    enabled: bool
