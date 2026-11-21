@@ -7,22 +7,27 @@ against the contract in this file: do not change the JSON shapes without asking 
 ## Method (this text is shown to users; keep code and docs consistent with it)
 - **Price per product and month** = median regular price across the retail formats that list it
   (`monthly_price_history.median_regular`). Discounts are excluded: the index tracks regular prices.
-- **Category index** (Jevons, fixed base): base month = first month with data (now 2026-11) = 100.
+- **Category index** (Jevons, fixed base): base month = first month with data (currently 2026-09) = 100.
   For month *m*, take products of the category present in the base month and in *m*; price relative
   r = P(m) / P(base); drop relatives outside [1/3, 3] as probable data errors (count them);
   index = 100 × exp(mean(ln r)). Publish only with ≥ 30 matched products, otherwise `value: null`.
-- A product whose median regular price is 0 (or missing) in the base month or in month *m*
-  has no defined relative; exclude it and count it in `n_excluded`, together with relatives
-  outside [1/3, 3]. Consider products observed in either of the two compared months.
+- Match only products present in both the base month and month *m* (an inner join).
+  Missing products are unmatched and count in neither `n_products` nor `n_excluded`.
+  Among matched products, a zero median in either month makes the relative undefined;
+  exclude and count it in `n_excluded`, together with relatives outside [1/3, 3].
+- Final monthly observations include every snapshot with month <= the current month's first
+  day. A `MESEČNI_PRESEK` taken on the 1st is final even in the current calendar month.
 - `n_products` is the number of products whose relative enters the mean, after all exclusions.
   The ≥ 30 threshold applies to `n_products`; below it `value` is null, while both counts
   are still reported. These same rules apply to the provisional point and overall code `0`.
 - **Overall index**: same formula over all products, reported as category code `0`, name "Sve kategorije".
 - **Provisional point** for the current month: same formula with P = median of `prices_current.regular`
-  for the product on `as_of`, flagged `provisional: true`. It is computed on read, never stored.
+  for the product on `as_of`, flagged `provisional: true`, with `month` equal to the full
+  `as_of` date. It is computed on read, never stored, and follows the current month's final
+  snapshot when one exists. On the 1st, both dates can match; the final point comes first.
 - Index values are rounded to four decimal places. Before any monthly history exists, `base_month` is the
-  current month's first day and all points are unpublished (`value: null`); current products
-  have missing base prices and are counted as exclusions. Categories are ordered by code,
+  current month's first day and all points are unpublished (`value: null`); without matched
+  products both counts are zero. Categories are ordered by code,
   including overall `0` first; points are ordered by month and have one current provisional point.
 - **Signals** are prompts for review, never accusations; each carries the rule that produced it.
   - `jump`: a format's regular price rose ≥ 25 % against that format's previous regular price for the same
@@ -32,19 +37,22 @@ against the contract in this file: do not change the JSON shapes without asking 
 
 ## Contract
 Static files written by `export_static` next to `categories.json` and `quality.json`, and identical REST
-responses (`GET /api/index`, `GET /api/signals`). Money in para, dates ISO.
+responses (`GET /api/index`, `GET /api/signals`). Money in para, dates ISO. The export refreshes
+final indices before reading, so a deployment without ingestion also publishes final snapshots.
 
 ```jsonc
 // index.json  ==  GET /api/index
 {
-  "as_of": "2026-12-02",
-  "base_month": "2026-11-01",
+  "as_of": "2026-11-21",
+  "base_month": "2026-09-01",
   "categories": [
     {
       "code": 0, "name": "Sve kategorije",
       "points": [
-        { "month": "2026-11-01", "value": 100.0, "n_products": 61234, "n_excluded": 0, "provisional": false },
-        { "month": "2026-12-01", "value": 101.4, "n_products": 59876, "n_excluded": 12, "provisional": true }
+        { "month": "2026-09-01", "value": 100.0, "n_products": 61234, "n_excluded": 0, "provisional": false },
+        { "month": "2026-10-01", "value": 100.7, "n_products": 60000, "n_excluded": 10, "provisional": false },
+        { "month": "2026-11-01", "value": 101.0, "n_products": 60000, "n_excluded": 10, "provisional": false },
+        { "month": "2026-11-21", "value": 101.4, "n_products": 59876, "n_excluded": 12, "provisional": true }
       ]
     }
   ]

@@ -10,7 +10,9 @@ import json
 from pathlib import Path
 
 import sqlalchemy as sa
+from korpa_ingest.db import database_url
 from pydantic import TypeAdapter
+from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from korpa_api import analytics, repository
@@ -20,11 +22,16 @@ from korpa_api.schemas import CategoryItem
 
 
 async def export(out: Path) -> list[Path]:
+    as_of = belgrade_today()
+    writer = create_engine(database_url())
+    try:
+        await asyncio.to_thread(analytics.refresh_index, writer, as_of)
+    finally:
+        writer.dispose()
     engine = create_async_engine(async_database_url())
     try:
         async with AsyncSession(engine) as session, session.begin():
             await session.execute(sa.text("SET TRANSACTION READ ONLY"))
-            as_of = belgrade_today()
             categories = await repository.categories(session)
             quality = await repository.quality(session, as_of)
             index = await analytics.price_index(session, as_of)

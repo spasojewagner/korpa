@@ -21,10 +21,9 @@ _HISTORY = """
 """
 _CALCULATION = """
     , pairs AS (
-        SELECT coalesce(m.month, t.month) AS month, coalesce(b.barcode, t.barcode) AS barcode,
+        SELECT t.month, t.barcode,
                b.price AS base_price, t.price AS target_price
-        FROM months m CROSS JOIN base b
-        FULL JOIN targets t ON t.month = m.month AND t.barcode = b.barcode
+        FROM base b INNER JOIN targets t ON t.barcode = b.barcode
     ), relatives AS (
         SELECT r.month, p.category_code,
             CASE WHEN r.base_price > 0 AND r.target_price > 0
@@ -45,20 +44,20 @@ _CALCULATION = """
 """
 _COMPLETED = """
     , targets AS (SELECT barcode, month, median_regular AS price FROM history
-                  WHERE month < :current_month),
+                  WHERE month <= :current_month),
     months AS (SELECT DISTINCT month FROM targets)
 """
 _PROVISIONAL = """
     , targets AS (
-        SELECT barcode, CAST(:current_month AS date) AS month,
+        SELECT barcode, CAST(:as_of AS date) AS month,
                percentile_disc(0.5) WITHIN GROUP (ORDER BY regular) AS price
         FROM prices_current WHERE list_date <= :as_of GROUP BY barcode
-    ), months AS (SELECT CAST(:current_month AS date) AS month)
+    ), months AS (SELECT CAST(:as_of AS date) AS month)
 """
 
 
 def refresh_index(engine: Engine, as_of: date) -> None:
-    """Upsert only completed months after compaction; current prices are never stored here."""
+    """Upsert final monthly snapshots, including this month; never store current-price points."""
     current_month = as_of.replace(day=1)
     with engine.begin() as connection:
         check_budget(connection)
@@ -69,7 +68,7 @@ def refresh_index(engine: Engine, as_of: date) -> None:
         )
         # Also removes accidental future/provisional cache rows from older deployments.
         connection.execute(
-            db.index_monthly.delete().where(db.index_monthly.c.month >= current_month)
+            db.index_monthly.delete().where(db.index_monthly.c.month > current_month)
         )
         if base_month is None:
             connection.execute(db.index_monthly.delete())
@@ -111,7 +110,9 @@ async def price_index(session: AsyncSession, as_of: date) -> IndexResponse:
     completed = (
         await session.execute(
             sa.select(db.index_monthly)
-            .where(db.index_monthly.c.month >= base_month, db.index_monthly.c.month < current_month)
+            .where(
+                db.index_monthly.c.month >= base_month, db.index_monthly.c.month <= current_month
+            )
             .order_by(db.index_monthly.c.month, db.index_monthly.c.category_code)
         )
     ).mappings()
