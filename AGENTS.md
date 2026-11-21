@@ -81,6 +81,8 @@ Never commit secrets. Use `.env` (git-ignored) and keep `.env.example` with name
 ## Workflow
 - Small PRs, one task each, conventional commits, PR description: what, why, how to test.
 - If something here or in the task is unclear, stop and ask in the PR instead of guessing.
+- No tool or AI attribution anywhere: no `Co-authored-by` trailers, no "Generated with ..." lines, no tool names or
+  task links in commits, branch names, PR/issue text or files. The maintainer is the only author.
 
 ## Out of scope for v1
 User accounts, emails/notifications, store maps, mobile apps, scraping retailer websites.
