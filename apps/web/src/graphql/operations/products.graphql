@@ -1,0 +1,4 @@
+query ProductsSummary($barcodes: [String!]!) {
+  asOf
+  products(barcodes: $barcodes) { barcode name brand unit }
+}

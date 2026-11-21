@@ -1,0 +1,75 @@
+type Category {
+  code: Int!
+  name: String!
+}
+
+"""Date (isoformat)"""
+scalar Date
+
+type Format {
+  id: Int!
+  name: String!
+  retailer: Retailer!
+}
+
+type MonthlySnapshot {
+  regularPara: Int!
+  discountedPara: Int
+  listDate: Date!
+  asOf: Date!
+  format: Format!
+  month: Date!
+}
+
+type Price {
+  regularPara: Int!
+  discountedPara: Int
+  effectivePara: Int!
+  unitPricePara: Int!
+  vat: Int!
+  discountFrom: Date
+  discountTo: Date
+  listDate: Date!
+  asOf: Date!
+  format: Format!
+}
+
+type PriceChange {
+  regularPara: Int!
+  discountedPara: Int
+  listDate: Date!
+  asOf: Date!
+  format: Format!
+  changedOn: Date!
+}
+
+type Product {
+  barcode: String!
+  name: String!
+  brand: String!
+  unit: String!
+  category: Category!
+  names: [PublishedName!]!
+  prices: [Price!]!
+  cheapest: Price
+  history(months: Int! = 12): [MonthlySnapshot!]!
+  changes(days: Int! = 30): [PriceChange!]!
+}
+
+type PublishedName {
+  rawName: String!
+  retailer: Retailer!
+}
+
+type Query {
+  asOf: Date!
+  product(barcode: String!): Product
+  products(barcodes: [String!]!): [Product]!
+  categories: [Category!]!
+}
+
+type Retailer {
+  id: Int!
+  name: String!
+  slug: String!
+}

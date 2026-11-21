@@ -1,0 +1,15 @@
+schema: src/graphql/schema.graphql
+documents: src/graphql/operations/*.graphql
+generates:
+  src/gql/:
+    preset: client
+    presetConfig:
+      fragmentMasking: false
+    config:
+      useTypeImports: true
+      defaultScalarType: unknown
+      strictScalars: true
+      scalars:
+        Date:
+          input: string
+          output: string

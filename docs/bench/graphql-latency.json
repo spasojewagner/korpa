@@ -1,0 +1,23 @@
+{
+  "measured_on": "2026-11-21",
+  "samples": 50,
+  "warmups": 10,
+  "transport": "loopback HTTP, complete JSON responses",
+  "rows": {
+    "products": 12000,
+    "retail_formats": 60,
+    "prices_current": 720000,
+    "monthly_snapshots": 0
+  },
+  "query": "query Benchmark($codes: [String!]!) {\n  products(barcodes: $codes) {\n    barcode\n    prices { format { retailer { name } } }\n    history(months: 1) { month }\n  }\n}",
+  "results": {
+    "products_1": {
+      "p95_ms": 35.581,
+      "median_ms": 24.672
+    },
+    "products_20": {
+      "p95_ms": 205.819,
+      "median_ms": 163.58
+    }
+  }
+}

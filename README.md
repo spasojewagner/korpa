@@ -79,9 +79,9 @@ npm --prefix apps/web run build
 npm --prefix apps/web run e2e
 ```
 
-CI installs locked dependencies and enforces Python lint/types/tests, migrations, frontend
-lint/types/tests, production build, and the keyboard browser smoke test. Product API, GraphQL,
-comparison pages, analytics, and deployment are later phases.
+CI installs locked dependencies and enforces schema/client drift checks, Python lint/types/tests,
+migrations, frontend lint/types/tests, production build, and the keyboard browser smoke test.
+Comparison pages, analytics, and deployment are later phases.
 
 ## Ingest
 
@@ -132,6 +132,12 @@ Exact mappings, live observations, and the before/after Metro benchmark are in
 
 REST endpoints, search rules, curl examples, and the dedicated 720k-price performance run are
 documented in [the REST API guide](docs/rest-api.md).
+
+The query-only `/graphql` endpoint, nested product example, bounds and reproducible latency
+measurements are in [the product graph guide](docs/graphql-api.md). Run `make schema` and
+`pnpm codegen` after API contract or GraphQL operation changes; commit both schemas and
+the typed client artifacts. Use Node 22 to match CI. Set `ENV=dev` to enable the interactive
+GraphQL editor; introspection remains enabled in every environment.
 
 Tests write only to a dedicated database named `korpa_test`. They refuse other database names.
 Without `TEST_DATABASE_URL`, database integration tests are skipped; CI always sets it.
