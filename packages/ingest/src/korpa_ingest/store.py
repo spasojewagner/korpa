@@ -330,3 +330,45 @@ def persist(
             )
         )
         database_size(connection)
+
+
+# Per-format monthly snapshots are kept for this many months (current one included); older
+# months are folded into monthly_prices, one row per product, so history stays within budget.
+KEEP_MONTHS = 3
+
+
+def month_start(day: date, back: int) -> date:
+    """First day of the month `back` months before `day`'s month."""
+    ordinal = day.year * 12 + day.month - 1 - back
+    return date(ordinal // 12, ordinal % 12 + 1, 1)
+
+
+def compact_monthly(engine: Engine, today: date, keep_months: int = KEEP_MONTHS) -> int:
+    """Fold per-format snapshots older than the window into monthly_prices; returns rows removed.
+
+    Idempotent. Late rows for an already compacted month widen min/max and add to n_formats;
+    the stored median is kept as first computed.
+    """
+    cutoff = month_start(today, keep_months - 1)
+    with engine.begin() as connection:
+        connection.execute(
+            sa.text("""
+            INSERT INTO monthly_prices AS m (barcode, month, min_regular, median_regular,
+                max_regular, min_discounted, n_formats)
+            SELECT barcode, month, min(regular),
+                   percentile_disc(0.5) WITHIN GROUP (ORDER BY regular),
+                   max(regular), min(discounted), count(*)
+            FROM monthly_snapshots WHERE month < :cutoff GROUP BY barcode, month
+            ON CONFLICT (barcode, month) DO UPDATE SET
+                min_regular = least(m.min_regular, excluded.min_regular),
+                max_regular = greatest(m.max_regular, excluded.max_regular),
+                min_discounted = least(m.min_discounted, excluded.min_discounted),
+                n_formats = m.n_formats + excluded.n_formats
+            """),
+            {"cutoff": cutoff},
+        )
+        removed = connection.execute(
+            sa.text("DELETE FROM monthly_snapshots WHERE month < :cutoff"), {"cutoff": cutoff}
+        ).rowcount
+    logger.info("compacted monthly snapshots before %s: %s rows", cutoff, removed)
+    return int(removed)

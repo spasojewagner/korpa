@@ -13,7 +13,7 @@ export type ProductDetailQueryVariables = Exact<{
 }>;
 
 
-export type ProductDetailQuery = { asOf: string, product: { barcode: string, name: string, brand: string, unit: string, category: { code: number, name: string }, names: Array<{ rawName: string, retailer: { id: number, name: string, slug: string } }>, prices: Array<{ regularPara: number, discountedPara: number | null, effectivePara: number, unitPricePara: number, discountFrom: string | null, discountTo: string | null, listDate: string, format: { id: number, name: string, retailer: { id: number, name: string, slug: string } } }>, history: Array<{ month: string, regularPara: number }> } | null };
+export type ProductDetailQuery = { asOf: string, product: { barcode: string, name: string, brand: string, unit: string, category: { code: number, name: string }, names: Array<{ rawName: string, retailer: { id: number, name: string, slug: string } }>, prices: Array<{ regularPara: number, discountedPara: number | null, effectivePara: number, unitPricePara: number, discountFrom: string | null, discountTo: string | null, listDate: string, format: { id: number, name: string, retailer: { id: number, name: string, slug: string } } }>, monthlyPrices: Array<{ month: string, minRegularPara: number }> } | null };
 
 export type ProductsSummaryQueryVariables = Exact<{
   barcodes: Array<string> | string;
@@ -87,9 +87,9 @@ export const ProductDetailDocument = new TypedDocumentString(`
         }
       }
     }
-    history(months: 12) {
+    monthlyPrices(months: 12) {
       month
-      regularPara
+      minRegularPara
     }
   }
 }

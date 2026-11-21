@@ -28,11 +28,10 @@ test('search params are bounded and typed', () => {
   expect(parseSearch({})).toEqual({ q: undefined, kategorija: undefined })
 })
 
-test('history keeps the lowest regular price per month, in order', () => {
+test('history uses the lowest regular price of each month', () => {
   expect(monthlyLows([
-    { month: '2026-02-01', regularPara: 300 },
-    { month: '2026-01-01', regularPara: 200 },
-    { month: '2026-02-01', regularPara: 250 },
+    { month: '2026-01-01', minRegularPara: 200 },
+    { month: '2026-02-01', minRegularPara: 250 },
   ])).toEqual([{ month: '2026-01-01', para: 200 }, { month: '2026-02-01', para: 250 }])
 })
 

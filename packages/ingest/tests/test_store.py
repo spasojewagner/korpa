@@ -13,7 +13,13 @@ from korpa_ingest.compat import LEGACY_PROFILE, PROFILE
 from korpa_ingest.normalize import normalize
 from korpa_ingest.portal import Download, RetailerSource
 from korpa_ingest.reader import Parsed, Report, read_csv
-from korpa_ingest.store import StorageLimitError, persist, validators
+from korpa_ingest.store import (
+    StorageLimitError,
+    compact_monthly,
+    month_start,
+    persist,
+    validators,
+)
 from sqlalchemy.engine import Engine
 
 SOURCE = RetailerSource("demo", "Demo", "dataset-id", "https://example.org/cene.csv", "sodl")
@@ -313,3 +319,67 @@ def test_set_based_history_keeps_all_changed_dates(engine: Engine) -> None:
     assert count(engine, db.price_changes) == 3
     with engine.connect() as c:
         assert c.execute(sa.select(db.prices_current.c.regular)).scalar_one() == 12000
+
+
+def test_monthly_compaction_keeps_recent_detail_and_folds_older_months(engine: Engine) -> None:
+    persist(engine, SOURCE, fixture_rows(), DOWNLOAD, datetime.now(UTC))
+    with engine.begin() as connection:
+        format_id, barcode = connection.execute(
+            sa.select(db.monthly_snapshots.c.format_id, db.monthly_snapshots.c.barcode)
+        ).first()
+        other = connection.execute(
+            db.retail_formats.insert()
+            .values(retailer_id=sa.select(db.retailers.c.id).scalar_subquery(), name="Drugi")
+            .returning(db.retail_formats.c.id)
+        ).scalar_one()
+        old = date(2026, 5, 1)
+        connection.execute(
+            db.monthly_snapshots.insert(),
+            [
+                {
+                    "format_id": format_id,
+                    "barcode": barcode,
+                    "month": old,
+                    "regular": 100,
+                    "discounted": 90,
+                },
+                {
+                    "format_id": other,
+                    "barcode": barcode,
+                    "month": old,
+                    "regular": 300,
+                    "discounted": None,
+                },
+            ],
+        )
+    recent = count(engine, db.monthly_snapshots) - 2
+    assert compact_monthly(engine, date(2026, 11, 21)) == 2
+    assert compact_monthly(engine, date(2026, 11, 21)) == 0
+    assert count(engine, db.monthly_snapshots) == recent
+    with engine.connect() as connection:
+        row = connection.execute(sa.select(db.monthly_prices)).mappings().one()
+        history = (
+            connection.execute(
+                sa.select(db.monthly_price_history).where(
+                    db.monthly_price_history.c.barcode == barcode
+                )
+            )
+            .mappings()
+            .all()
+        )
+    assert (
+        row["month"],
+        row["min_regular"],
+        row["max_regular"],
+        row["min_discounted"],
+        row["n_formats"],
+    ) == (old, 100, 300, 90, 2)
+    assert row["median_regular"] in {100, 300}
+    assert {h["month"] for h in history} >= {old}
+    assert len([h for h in history if h["month"] == old]) == 1
+
+
+def test_month_start() -> None:
+    assert month_start(date(2026, 11, 21), 0) == date(2026, 11, 1)
+    assert month_start(date(2026, 11, 21), 2) == date(2026, 9, 1)
+    assert month_start(date(2026, 1, 5), 1) == date(2025, 12, 1)

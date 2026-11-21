@@ -431,3 +431,69 @@ def test_schema_export_contains_rest_paths_without_graphql() -> None:
         "/api/categories",
         "/api/quality",
     }
+
+
+def test_monthly_prices_join_compacted_and_live_months(client: TestClient, engine: Engine) -> None:
+    current, old = AS_OF.replace(day=1), AS_OF.replace(month=AS_OF.month - 5, day=1)
+    with engine.begin() as c:
+        c.execute(
+            db.monthly_snapshots.insert(),
+            [
+                {"format_id": 1, "barcode": B1, "month": current, "regular": 120, "discounted": 90},
+                {
+                    "format_id": 2,
+                    "barcode": B1,
+                    "month": current,
+                    "regular": 160,
+                    "discounted": None,
+                },
+                # A late per-format row for an already compacted month must not duplicate it.
+                {"format_id": 1, "barcode": B1, "month": old, "regular": 999, "discounted": None},
+            ],
+        )
+        c.execute(
+            db.monthly_prices.insert().values(
+                barcode=B1,
+                month=old,
+                min_regular=100,
+                median_regular=110,
+                max_regular=130,
+                min_discounted=None,
+                n_formats=3,
+            )
+        )
+    query = (
+        f'{{ product(barcode:"{B1}") {{ monthlyPrices(months:12) {{ month minRegularPara '
+        "medianRegularPara maxRegularPara minDiscountedPara nFormats } } }"
+    )
+    response = client.post("/graphql", json={"query": query})
+    assert response.status_code == 200, response.text
+    assert response.json()["data"]["product"]["monthlyPrices"] == [
+        {
+            "month": old.isoformat(),
+            "minRegularPara": 100,
+            "medianRegularPara": 110,
+            "maxRegularPara": 130,
+            "minDiscountedPara": None,
+            "nFormats": 3,
+        },
+        {
+            "month": current.isoformat(),
+            "minRegularPara": 120,
+            "medianRegularPara": 120,
+            "maxRegularPara": 160,
+            "minDiscountedPara": 90,
+            "nFormats": 2,
+        },
+    ]
+    short = client.post(
+        "/graphql",
+        json={"query": f'{{ product(barcode:"{B1}") {{ monthlyPrices(months:1) {{ month }} }} }}'},
+    )
+    assert short.json()["data"]["product"]["monthlyPrices"] == [{"month": current.isoformat()}]
+    too_long = client.post(
+        "/graphql",
+        json={"query": f'{{ product(barcode:"{B1}") {{ monthlyPrices(months:25) {{ month }} }} }}'},
+    )
+    assert too_long.status_code == 422
+    assert too_long.json()["detail"] == "Invalid GraphQL arguments: months"

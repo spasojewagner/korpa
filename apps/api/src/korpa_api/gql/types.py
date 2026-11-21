@@ -122,6 +122,18 @@ class MonthlySnapshot(Observation):
     month: date
 
 
+@strawberry.type(
+    description="Regular prices of one product in one month across retail formats, in para."
+)
+class MonthlyPrice:
+    month: date
+    min_regular_para: int
+    median_regular_para: int
+    max_regular_para: int
+    min_discounted_para: int | None
+    n_formats: int
+
+
 @strawberry.type
 class PriceChange(Observation):
     changed_on: date
@@ -178,6 +190,22 @@ class Product:
                 format_id=row["format_id"],
             )
             for row in await info.context.history.load((self.barcode, bound))
+        ]
+
+    # Lowest, median and highest regular price per month; kept beyond the per-format window.
+    @strawberry.field
+    async def monthly_prices(self, info: GraphInfo, months: int = 12) -> list[MonthlyPrice]:
+        bound = MonthsInput(months=months).months
+        return [
+            MonthlyPrice(
+                month=row["month"],
+                min_regular_para=row["min_regular"],
+                median_regular_para=row["median_regular"],
+                max_regular_para=row["max_regular"],
+                min_discounted_para=row["min_discounted"],
+                n_formats=row["n_formats"],
+            )
+            for row in await info.context.monthly_prices.load((self.barcode, bound))
         ]
 
     @strawberry.field

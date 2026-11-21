@@ -9,6 +9,6 @@ query ProductDetail($barcode: String!) {
       discountFrom discountTo listDate
       format { id name retailer { id name slug } }
     }
-    history(months: 12) { month regularPara }
+    monthlyPrices(months: 12) { month minRegularPara }
   }
 }
