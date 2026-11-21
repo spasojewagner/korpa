@@ -175,14 +175,15 @@ def parse_row(values: list[str], report: Report | None = None) -> PriceRow:
             errors.append("price")
     day, start, end = dates
     price, per_unit, discount = prices
-    # Dependent rules are evaluated only when their input fields parsed successfully.
-    if "price" not in errors and "date" not in errors:
-        assert price is not None
-        if (discount is None and (start is not None or end is not None)) or (
-            discount is not None
-            and (start is None or end is None or start > end or discount > price)
-        ):
-            errors.append("discount")
+    # Presence rules are independent of parsing errors in other price/date fields.
+    # Numeric and chronological comparisons require only their own parsed operands.
+    if (
+        (discounted == "" and (disc_from != "" or disc_to != ""))
+        or (discounted != "" and (disc_from == "" or disc_to == ""))
+        or (start is not None and end is not None and start > end)
+        or (discount is not None and price is not None and discount > price)
+    ):
+        errors.append("discount")
     if kind == "MESEČNI_PRESEK" and day is not None and day.day != 1:
         errors.append("snapshot_date")
     if errors:

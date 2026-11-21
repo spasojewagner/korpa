@@ -118,6 +118,22 @@ def test_every_failing_rule_is_counted_once_per_row() -> None:
     assert parsed.report.errors_by_rule == {"barcode": 1, "unit": 1, "price": 1, "list_type": 1}
 
 
+def test_unrelated_price_failure_does_not_hide_missing_discount_dates() -> None:
+    row = values()
+    row[8], row[10] = "invalid", "99.99"
+    parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
+    assert parsed.report.errors == {"price": 1}
+    assert parsed.report.errors_by_rule == {"price": 1, "discount": 1}
+
+
+def test_bad_list_date_does_not_hide_an_overpriced_discount() -> None:
+    row = values()
+    row[7], row[10], row[11], row[12] = "invalid", "199.99", "01-11-2026", "30-11-2026"
+    parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
+    assert parsed.report.errors == {"date": 1}
+    assert parsed.report.errors_by_rule == {"date": 1, "discount": 1}
+
+
 def test_deviations_on_an_invalid_row_are_still_visible() -> None:
     row = values()
     row[4], row[5], row[14] = "short", "KG", "VAZECI_CENOVNIK"
