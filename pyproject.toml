@@ -17,6 +17,7 @@ dependencies = [
   "typer>=0.15,<1",
   "python-dotenv>=1,<2",
   "asyncpg==0.32.0",
+  "strawberry-graphql[cli,fastapi]==0.341.2",
 ]
 
 [project.optional-dependencies]

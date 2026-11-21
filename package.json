@@ -2,7 +2,10 @@
   "name": "korpa-workspace",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k \"uv run --extra dev uvicorn korpa_api.main:app --reload\" \"npm --prefix apps/web run dev\""
+    "dev": "concurrently -k \"uv run --extra dev uvicorn korpa_api.main:app --reload\" \"npm --prefix apps/web run dev\"",
+    "codegen": "npm --prefix apps/web run codegen"
   },
-  "devDependencies": { "concurrently": "^9.2.1" }
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

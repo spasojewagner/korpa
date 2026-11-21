@@ -1,0 +1,3 @@
+query ProductCategories {
+  categories { code name }
+}

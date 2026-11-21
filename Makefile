@@ -1,4 +1,4 @@
-.PHONY: dev test e2e lint build seed-bench bench
+.PHONY: dev test e2e lint build seed-bench bench schema
 
 dev:
 	docker compose -f infra/docker-compose.yml up -d --wait
@@ -26,3 +26,7 @@ seed-bench:
 
 bench:
 	uv run --extra dev python -m korpa_api.bench measure
+
+schema:
+	uv run --extra dev strawberry export-schema korpa_api.gql.schema:schema --output apps/web/src/graphql/schema.graphql
+	uv run --extra dev python -m korpa_api.export_openapi
