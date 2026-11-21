@@ -12,6 +12,7 @@ from starlette.responses import Response
 
 from korpa_api.database import async_database_url
 from korpa_api.gql.router import make_router, validate_request
+from korpa_api.mcp_server import create_server, endpoint
 from korpa_api.problems import install_problem_handlers, problem, problem_responses
 from korpa_api.routes import router
 
@@ -23,13 +24,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     engine = create_async_engine(async_database_url(), pool_pre_ping=True)
     app.state.sessions = async_sessionmaker(engine, expire_on_commit=False)
     try:
-        yield
+        server, app.state.mcp_transport = create_server(app)
+        async with server.session_manager.run():
+            yield
     finally:
         await engine.dispose()
 
 
 app = FastAPI(title="Korpa", lifespan=lifespan, responses=problem_responses())
 install_problem_handlers(app)
+app.mount("/mcp", endpoint)
 app.include_router(router)
 app.include_router(make_router(), prefix="/graphql")
 app.add_middleware(

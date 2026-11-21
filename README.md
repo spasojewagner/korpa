@@ -12,7 +12,7 @@ open data portal. Korpa turns those files into a tool people can actually use:
 - build a basket and see which chain is cheapest for it,
 - follow a monthly price index per product category,
 - see which retailers publish complete, on-time data (a data-quality report),
-- later: an AI basket assistant ("ručak za 4 osobe do 2.000 din") and an MCP server, always grounded in real prices.
+- use read-only MCP tools for product search, price comparison and basket totals, grounded in real prices.
 
 > Nezavisan projekat zasnovan na otvorenim podacima. Nije povezan sa Ministarstvom.
 > Independent project built on open data. Not affiliated with any government body.
@@ -159,3 +159,27 @@ In PowerShell replace `export ...` with
 `$env:PYTHONUTF8='1'` when the terminal's default encoding is not UTF-8. Create the test database
 only once. Tests apply migrations and clear their own tables between cases; never point the
 test URL at a shared database.
+
+## MCP
+
+The read-only Streamable HTTP endpoint is `https://korpa-api.onrender.com/mcp/`
+(`/mcp` redirects there). It exposes exactly three tools: `search_products`,
+`compare_prices`, and `cheapest_basket`. No API key is needed. Example configuration
+for a client that supports remote MCP servers over HTTP:
+
+```json
+{
+  "mcpServers": {
+    "korpa": {
+      "type": "http",
+      "url": "https://korpa-api.onrender.com/mcp/"
+    }
+  }
+}
+```
+
+Results include `as_of` and source price-list dates; amounts are integer para
+(1/100 RSD). Prices come from retailers' open-data price lists on data.gov.rs.
+Korpa is an independent project, not a state service. The endpoint uses stateless
+JSON responses and read-only database transactions. Host and Origin checks remain
+enabled for the deployed API, Korpa's web origin, and loopback development.
