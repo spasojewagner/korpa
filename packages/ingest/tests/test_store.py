@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 import sqlalchemy as sa
 from korpa_ingest import db
-from korpa_ingest.compat import LEGACY_PROFILE, PROFILE
+from korpa_ingest.compat import LEGACY_PROFILE, PREVIOUS_PROFILE, PROFILE
 from korpa_ingest.normalize import normalize
 from korpa_ingest.portal import Download, RetailerSource
 from korpa_ingest.reader import Parsed, Report, read_csv
@@ -383,3 +383,30 @@ def test_month_start() -> None:
     assert month_start(date(2026, 11, 21), 0) == date(2026, 11, 1)
     assert month_start(date(2026, 11, 21), 2) == date(2026, 9, 1)
     assert month_start(date(2026, 1, 5), 1) == date(2025, 12, 1)
+
+
+@pytest.mark.parametrize("status", [0, 200, 304, 503])
+def test_retry_count_is_persisted_for_this_request(engine: Engine, status: int) -> None:
+    initial = fixture_rows()
+    initial.report.retries = 2
+    persist(engine, SOURCE, initial, DOWNLOAD, datetime.now(UTC))
+    parsed = fixture_rows() if status == 200 else Parsed([], Report(profile=PROFILE))
+    parsed.report.retries = 1
+    if status in (0, 503):
+        parsed.report.error("download")
+    persist(engine, SOURCE, parsed, Download(status, b""), datetime.now(UTC))
+    with engine.connect() as connection:
+        report = connection.execute(
+            sa.select(db.ingest_runs.c.errors_json).order_by(db.ingest_runs.c.id.desc())
+        ).scalar()
+    assert report["retries"] == 1
+    if status == 304:
+        assert report["rows_valid"] == initial.report.rows_valid
+        assert report["deviations"] == dict(initial.report.deviations)
+
+
+def test_profile_upgrade_forces_full_download_from_previous_profile(engine: Engine) -> None:
+    previous = fixture_rows()
+    previous.report.profile = PREVIOUS_PROFILE
+    persist(engine, SOURCE, previous, DOWNLOAD, datetime.now(UTC))
+    assert validators(engine, SOURCE) == (None, None)

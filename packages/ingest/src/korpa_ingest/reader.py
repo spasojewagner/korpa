@@ -11,7 +11,17 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from korpa_ingest.compat import HEADER_ALIASES, LIST_TYPES, PROFILE, PROFILES, UNIT_ALIASES, UNITS
+from korpa_ingest.compat import (
+    EXTENDED_VALUE_PROFILES,
+    HEADER_ALIASES,
+    LIST_TYPES,
+    NEW_HEADER_ALIASES,
+    PROFILE,
+    PROFILES,
+    UNIT_ALIASES,
+    UNITS,
+    cyrillic_header,
+)
 
 HEADERS = (
     "KATEGORIJA",
@@ -60,6 +70,7 @@ class Report:
     deviations: Counter[str] = field(default_factory=Counter)
     errors_by_rule: Counter[str] = field(default_factory=Counter)
     profile: str | None = None
+    retries: int = 0
 
     def error(self, code: str, line: int = 0, count: int = 1) -> None:
         self.errors[code] += count
@@ -77,6 +88,7 @@ class Report:
             "errors_by_rule": dict(self.errors_by_rule),
             "deviations": dict(self.deviations),
             "profile": self.profile,
+            "retries": self.retries,
         }
 
 
@@ -100,7 +112,7 @@ def money(value: str, *, optional: bool = False, report: Report | None = None) -
         return None
     if (
         report is not None
-        and report.profile == PROFILE
+        and report.profile in EXTENDED_VALUE_PROFILES
         and re.fullmatch(r"[0-9]+(?:\.[0-9])?", value)
     ):
         whole, _, fractional = value.partition(".")
@@ -149,7 +161,11 @@ def parse_row(values: list[str], report: Report | None = None) -> PriceRow:
         if kind in LIST_TYPES:
             kind = LIST_TYPES[kind]
             report.deviations["list_type_ascii"] += 1
-        if report.profile == PROFILE and unit.isascii() and unit.lower() in UNIT_ALIASES:
+        if (
+            report.profile in EXTENDED_VALUE_PROFILES
+            and unit.isascii()
+            and unit.lower() in UNIT_ALIASES
+        ):
             unit = UNIT_ALIASES[unit.lower()]
             report.deviations["unit_alias"] += 1
         elif unit.isascii() and unit.lower() in UNITS and unit != unit.lower():
@@ -222,7 +238,12 @@ def parse_row(values: list[str], report: Report | None = None) -> PriceRow:
 def header_order(header: list[str], profile: str | None) -> list[int] | None:
     if profile is None:
         return list(range(15)) if tuple(header) == HEADERS else None
-    mapped = [HEADER_ALIASES.get(value.strip()) for value in header]
+    if profile == PROFILE and (translated := cyrillic_header(header)) is not None:
+        # Cyrillic names must equal canonical names, without applying Latin aliases.
+        mapped = [value if value in HEADERS else None for value in translated]
+    else:
+        aliases = HEADER_ALIASES | NEW_HEADER_ALIASES if profile == PROFILE else HEADER_ALIASES
+        mapped = [aliases.get(value.strip()) for value in header]
     if len(mapped) != 15 or set(mapped) != set(HEADERS):
         return None
     return [mapped.index(name) for name in HEADERS]

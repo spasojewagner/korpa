@@ -3,7 +3,7 @@ import io
 from pathlib import Path
 
 import pytest
-from korpa_ingest.compat import LEGACY_PROFILE, PROFILE
+from korpa_ingest.compat import LEGACY_PROFILE, PREVIOUS_PROFILE, PROFILE
 from korpa_ingest.reader import HEADERS, read_csv
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -98,7 +98,7 @@ def test_header_requires_a_bijection(variant: str) -> None:
     if variant == "duplicate":
         header[0] = header[1]
     elif variant == "unknown":
-        header[6] = "Naziv trgovca - format"
+        header[6] = "Naziv trgovca - formata*"
     elif variant == "missing":
         header.pop()
     else:
@@ -235,3 +235,79 @@ def test_legacy_profile_preserves_its_original_contract() -> None:
     current = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
     assert current.report.rows_valid == 1
     assert current.report.deviations == {"unit_alias": 1, "price_decimals": 1}
+
+
+@pytest.mark.parametrize(
+    ("position", "alias"),
+    [
+        (6, "Naziv trgovca - format"),
+        (6, "Naziv trgovca"),
+        (10, "Snizena cena"),
+        (11, "Datum pocetka snizenja"),
+        (12, "Datum kraja snizenja"),
+    ],
+)
+def test_new_exact_header_aliases(position: int, alias: str) -> None:
+    header = list(HEADERS)
+    header[position] = alias
+    content = csv_bytes(header, [values()])
+    parsed = read_csv(content, profile=PROFILE)
+    assert parsed.report.rows_valid == 1
+    assert parsed.report.deviations == {"header_alias": 1}
+    for profile in (None, LEGACY_PROFILE, PREVIOUS_PROFILE):
+        assert not read_csv(content, profile=profile).header_accepted
+
+
+CYRILLIC_HEADERS = (
+    "КАТЕГОРИЈА;НАЗИВ КАТЕГОРИЈЕ;Назив производа;Робна марка;Баркод производа;"
+    "Јединица мере;Назив трговца - формата;Датум ценовника;Редовна цена;"
+    "Цена по јединици мере;Снижена цена;Датум почетка снижења;Датум краја снижења;"
+    "Стопа ПДВ;ВРСТА_ЦЕНОВНИКА"
+).split(";")
+
+
+def test_exact_cyrillic_header_is_counted_without_changing_values() -> None:
+    row = values()
+    parsed = read_csv(csv_bytes(CYRILLIC_HEADERS[::-1], [row[::-1]]), profile=PROFILE)
+    assert parsed.report.rows_valid == 1
+    assert parsed.report.deviations == {"header_alias": 1}
+    row[5], row[14] = "кг", "ВАЖЕЋИ_ЦЕНОВНИК"
+    parsed = read_csv(csv_bytes(CYRILLIC_HEADERS, [row]), profile=PROFILE)
+    assert parsed.header_accepted
+    assert parsed.report.errors_by_rule == {"unit": 1, "list_type": 1}
+    assert not read_csv(
+        csv_bytes(CYRILLIC_HEADERS, [values()]), profile=PREVIOUS_PROFILE
+    ).header_accepted
+
+
+@pytest.mark.parametrize(
+    ("position", "name"),
+    [
+        (0, "КАТЕГОРИЈЕ"),  # One wrong letter.
+        (0, "Категорија"),
+        (10, "Снизена цена"),
+        (6, "Назив трговца – формата"),
+        (6, " Назив трговца - формата"),
+        (6, "Назив трговца"),
+        (2, "Naziv proizvoda"),
+        (2, "Назив производa"),  # Latin a in an otherwise Cyrillic name.
+    ],
+)
+def test_cyrillic_header_requires_exact_complete_transliteration(position: int, name: str) -> None:
+    header = CYRILLIC_HEADERS.copy()
+    header[position] = name
+    assert not read_csv(csv_bytes(header, [values()]), profile=PROFILE).header_accepted
+
+
+def test_previous_profile_keeps_price_and_unit_mappings() -> None:
+    row = values()
+    row[5], row[8] = "lit", "100"
+    parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PREVIOUS_PROFILE)
+    assert parsed.report.rows_valid == 1
+    assert parsed.report.deviations == {"unit_alias": 1, "price_decimals": 1}
+
+
+def test_new_header_aliases_still_require_every_column_once() -> None:
+    header = list(HEADERS)
+    header[0] = "Naziv trgovca"
+    assert not read_csv(csv_bytes(header, [values()]), profile=PROFILE).header_accepted

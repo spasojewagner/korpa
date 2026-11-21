@@ -36,7 +36,7 @@ by arbitrary ordering. Historical files with unrecognized names are not automati
 
 ## Previous compatibility profile `compat-2026-11`
 
-The earlier CLI selected this profile; the current CLI uses `compat-2026-11.2` described below.
+The earlier CLI selected this profile; the current CLI uses `compat-2026-11.3` described below.
 `read_csv` without a profile still provides
 strict contract validation. No barcode, product text, price, date, or empty field is repaired.
 
@@ -240,9 +240,9 @@ Leading-dot fractions are not mapped. No >2-decimal or comma-decimal failures we
 Unapproved units include `listić`, `br.pranja`, `m`, `set`, `dzak`, `par`, empty strings,
 `KO`, `M`, and `JED`; these remain errors.
 
-## Active profile `compat-2026-11.2`
+## Previous profile `compat-2026-11.2`
 
-The current CLI profile inherits the exact list-type and header mappings documented above.
+This profile inherits the exact list-type and header mappings documented above.
 It adds only:
 
 | Field | Accepted source shape | Canonical representation | Deviation |
@@ -306,8 +306,8 @@ line terminators and any BOM. SHA-256 is over downloaded, HTTP-decoded bytes bef
 decoding, so it includes any BOM. The existing `compat-2026-11.2` reader was used without
 changes or database writes. Header failures count physical data lines as the reader does;
 they do not prove that each row was semantically inspected. These are data observations,
-not findings of legal non-compliance. Every proposal below awaits a maintainer decision;
-no compatibility mappings or source repairs are implemented here.
+not findings of legal non-compliance. These proposals describe the original investigation;
+the subsequent maintainer decisions are implemented in the active profile below.
 
 ### BRICO S DOO (`brico-s-doo`)
 
@@ -505,3 +505,52 @@ report's ingest. The header failure remains reproducible despite the changed row
 Proposal: ask the publisher to restore these three canonical header spellings, or seek a
 maintainer decision on exactly these three one-to-one aliases in a new counted profile.
 Do not apply general accent-insensitive header matching.
+
+
+## Active profile `compat-2026-11.3`
+
+This profile retains all `compat-2026-11.2` behavior and adds only these exact Latin aliases:
+
+| Published header | Canonical header |
+| --- | --- |
+| `Naziv trgovca - format` | `Naziv trgovca - formata` |
+| `Naziv trgovca` | `Naziv trgovca - formata` |
+| `Snizena cena` | `Snižena cena` |
+| `Datum pocetka snizenja` | `Datum početka sniženja` |
+| `Datum kraja snizenja` | `Datum kraja sniženja` |
+
+As before, Latin header cells may be trimmed and columns reordered, but all 15 canonical
+columns must be mapped exactly once. An accepted noncanonical header increments `header_alias`
+once per file, including a header using several approved aliases. No general case folding,
+accent stripping, suffix correction or partial matching is added. Both previous profiles
+remain explicitly available; the CLI selects the new profile, forcing a fresh download when
+stored validators belong to an older profile.
+
+A fully Serbian Cyrillic header is accepted only when every name, transliterated using the
+standard Serbian mapping, equals a canonical name exactly. Case, accents, whitespace and
+punctuation are preserved; Latin aliases are not applied after transliteration. All alphabetic
+characters in every name must be Serbian Cyrillic. Column reordering is allowed, but missing,
+duplicate and additional columns still reject the entire file. Acceptance is counted once
+as `header_alias`. This rule applies only to headers, never to units, list types or other data.
+In particular, Statovac's observed `Назив трговца – формата` transliterates to
+`Naziv trgovca – formata`, whose en dash does not equal the canonical hyphen. That published
+header remains rejected under the approved exact rule. Its Cyrillic units and list types
+also remain unapproved; correcting the header alone would not make those rows valid.
+
+BRICO S DOO and Konovo retain their structural errors. RIČ retains its invalid VAT, missing
+prices and unapproved units. No mappings or inferred values are added for these publishers.
+Leon's zero discounts and `1kg/l` units are likewise unchanged.
+
+### Bounded transient download retries
+
+Each retailer CSV download gets at most two retries (three attempts total), waiting 5 seconds
+before the first retry and 15 seconds before the second. Only connect timeouts, read timeouts
+(including interruption while reading the body), and HTTP 500–599 are retried. HTTP 400–499,
+other transport errors, invalid resource URLs and oversized files are not retried. A partial
+body is discarded before restarting the download. Conditional request headers remain the
+same across attempts. Discovery requests are unchanged.
+
+The per-retailer report includes integer `retries`, from 0 to 2, both in CLI output and the
+stored ingest audit report, even when all attempts fail. It counts retries for this download,
+not previous ingests; a 304 preserves previous file-quality counters while retaining this
+request's retry count. The final HTTP failure status or timeout is reported as before.
