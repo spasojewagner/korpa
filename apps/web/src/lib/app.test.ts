@@ -2,7 +2,9 @@ import { afterEach, describe, expect, test } from 'vitest'
 import { monthlyLows } from '../pages/Product'
 import { toTotals } from '../pages/Basket'
 import { parseSearch } from '../router'
+import { latestPoint } from './analytics'
 import { MAX_ITEMS, basket } from './basket'
+import { formatChange, formatIndex, formatTimes } from './format'
 
 afterEach(() => basket.clear())
 
@@ -44,4 +46,16 @@ test('basket response maps to totals with missing counts and dates', () => {
     }] }],
   })
   expect(totals).toEqual([{ key: '7', retailer: 'Alfa', format: 'Hiper', totalPara: 1000, complete: false, missing: 2, listDate: '2026-11-21' }])
+})
+
+test('index numbers and the latest published point', () => {
+  expect(formatIndex(101.44)).toBe('101,4')
+  expect(formatChange(1.014).replace(/\u00a0/g, ' ')).toBe('+1,4 %')
+  expect(formatChange(0.975).replace(/\u00a0/g, ' ')).toBe('−2,5 %')
+  expect(formatChange(1).replace(/\u00a0/g, ' ')).toBe('0,0 %')
+  expect(formatTimes(1.56)).toBe('1,56×')
+  expect(latestPoint({ code: 1, name: 'x', points: [
+    { month: '2026-11-01', value: 100, n_products: 40, n_excluded: 0, provisional: false },
+    { month: '2026-11-21', value: null, n_products: 10, n_excluded: 0, provisional: true },
+  ] })?.value).toBe(100)
 })

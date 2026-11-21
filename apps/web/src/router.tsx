@@ -30,7 +30,7 @@ const product = createRoute({ getParentRoute: () => rootRoute, path: '/proizvod/
 const basketPage = createRoute({ getParentRoute: () => rootRoute, path: '/korpa' })
   .lazy(() => import('./pages/Basket').then((m) => m.Route))
 const index = createRoute({ getParentRoute: () => rootRoute, path: '/indeks' })
-  .lazy(() => import('./pages/Static').then((m) => m.IndexRoute))
+  .lazy(() => import('./pages/PriceIndex').then((m) => m.Route))
 const quality = createRoute({ getParentRoute: () => rootRoute, path: '/kvalitet' })
   .lazy(() => import('./pages/Quality').then((m) => m.Route))
 const about = createRoute({ getParentRoute: () => rootRoute, path: '/o-projektu' })

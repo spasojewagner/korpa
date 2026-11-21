@@ -1,4 +1,5 @@
 import type { ProductDetailQuery, ProductsSummaryQuery } from '../src/gql/graphql'
+import type { IndexResponse, SignalsResponse } from '../src/lib/analytics'
 import type { Schemas } from '../src/lib/api'
 
 const asOf = '2026-11-21'
@@ -60,5 +61,33 @@ export const basket: Schemas['BasketResponse'] = {
       complete: true, rank: 1, list_date_min: '2026-11-20', list_date_max: '2026-11-20' }] },
     { ...beta, formats: [{ id: 2, name: 'Beta Market', total_para: 12999, found_barcodes: ['8600000000002'],
       missing_barcodes: [MILK], complete: false, rank: 2, list_date_min: '2026-11-20', list_date_max: '2026-11-20' }] },
+  ],
+}
+
+export const priceIndex: IndexResponse = {
+  as_of: asOf,
+  base_month: '2026-11-01',
+  categories: [
+    { code: 0, name: 'Sve kategorije', points: [
+      { month: '2026-11-01', value: 100, n_products: 61234, n_excluded: 0, provisional: false },
+      { month: '2026-11-21', value: 101.4, n_products: 59876, n_excluded: 12, provisional: true },
+    ] },
+    { code: 2, name: 'Mleko i mlečni proizvodi', points: [
+      { month: '2026-11-01', value: 100, n_products: 812, n_excluded: 0, provisional: false },
+      { month: '2026-11-21', value: 97.5, n_products: 790, n_excluded: 1, provisional: true },
+    ] },
+    { code: 9, name: 'Sirće', points: [
+      { month: '2026-11-21', value: null, n_products: 12, n_excluded: 0, provisional: true },
+    ] },
+  ],
+}
+
+export const signals: SignalsResponse = {
+  as_of: asOf,
+  items: [
+    { type: 'jump', barcode: MILK, name: 'Mleko 2,8% 1 l', retailer: 'Alfa', format: 'Alfa Hiper', date: '2026-11-20',
+      price_para: 18999, reference_para: 14999, ratio: 1.27 },
+    { type: 'outlier', barcode: '8600000000002', name: 'Mleko 0,9% 1 l', retailer: 'Beta', format: 'Beta Market',
+      date: '2026-11-20', price_para: 24999, reference_para: 15999, ratio: 1.56 },
   ],
 }

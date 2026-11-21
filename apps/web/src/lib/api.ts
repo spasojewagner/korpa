@@ -28,8 +28,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const PAGE_SIZE = 20
 
+/** Either a query (2+ characters) or a category is required; without a query the API browses the category. */
 export function searchProducts(q: string, category: number | undefined, offset: number) {
-  const params = new URLSearchParams({ q, limit: String(PAGE_SIZE), offset: String(offset) })
+  const params = new URLSearchParams({ limit: String(PAGE_SIZE), offset: String(offset) })
+  if (q) params.set('q', q)
   if (category) params.set('category', String(category))
   return request<Schemas['SearchResponse']>(`/api/search?${params}`)
 }
@@ -39,7 +41,7 @@ export function compareBasket(items: Schemas['BasketItem'][]) {
 }
 
 /** Nightly static JSON first (served with the site), the API as fallback. */
-async function staticFirst<T>(file: string, path: string): Promise<T> {
+export async function staticFirst<T>(file: string, path: string): Promise<T> {
   try {
     const response = await fetch(`/data/${file}`)
     if (response.ok && response.headers.get('content-type')?.includes('json')) return (await response.json()) as T

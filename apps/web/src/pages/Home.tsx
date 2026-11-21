@@ -2,7 +2,7 @@ import { Link, createLazyRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { SearchForm } from '../components'
 import { useI18n } from '../i18n/I18nProvider'
-import { fetchQuality } from '../lib/api'
+import { fetchCategories, fetchQuality, type Schemas } from '../lib/api'
 import { formatDate } from '../lib/format'
 import { usePageMeta } from '../lib/meta'
 
@@ -24,10 +24,25 @@ function useNewestListDate(): string | null {
   return newest
 }
 
+function useCategories(): Schemas['CategoryItem'][] {
+  const [categories, setCategories] = useState<Schemas['CategoryItem'][]>([])
+  useEffect(() => {
+    let live = true
+    fetchCategories()
+      .then((items) => { if (live) setCategories(items.filter((item) => item.n_products > 0)) })
+      .catch(() => undefined)
+    return () => {
+      live = false
+    }
+  }, [])
+  return categories
+}
+
 function Home() {
-  const { t } = useI18n()
+  const { t, tp } = useI18n()
   const navigate = useNavigate()
   const newest = useNewestListDate()
+  const categories = useCategories()
   usePageMeta()
   return (
     <>
@@ -51,6 +66,22 @@ function Home() {
           ))}
         </ul>
       </section>
+      {categories.length > 0 && (
+        <section aria-labelledby="categories" className="mt-10">
+          <h2 id="categories" className="text-xl font-semibold">{t('categoriesHeading')}</h2>
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((category) => (
+              <li key={category.code}>
+                <Link to="/pretraga" search={{ kategorija: category.code }}
+                  className="flex min-h-11 items-center justify-between gap-3 rounded-md border border-line bg-white px-4 py-2 text-ink hover:bg-paper-raised">
+                  <span>{category.name}</span>
+                  <span className="text-sm text-ink-muted tabular-nums">{tp('basketItems', category.n_products)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <section aria-labelledby="how" className="mt-12 max-w-2xl rounded-lg bg-paper-raised p-6">
         <h2 id="how" className="text-xl font-semibold">{t('howHeading')}</h2>
         <ol className="mt-3 flex list-decimal flex-col gap-2 pl-5 text-ink-soft">
