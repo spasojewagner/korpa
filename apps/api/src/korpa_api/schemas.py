@@ -36,11 +36,11 @@ class SearchItem(BaseModel):
     brand: str
     unit: str
     category_code: int
-    min_effective_para: int | None
-    max_effective_para: int | None
+    min_effective_para: int
+    max_effective_para: int
     n_formats: int
     any_discount: bool
-    list_date: date | None
+    list_date: date
 
 
 class SearchResponse(BaseModel):

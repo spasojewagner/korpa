@@ -1,84 +1,96 @@
 Count
-Aggregate  (cost=380.65..380.66 rows=1 width=8) (actual time=8.074..8.076 rows=1 loops=1)
-  Buffers: shared hit=285
-  ->  Bitmap Heap Scan on products  (cost=93.40..377.48 rows=1266 width=0) (actual time=0.474..7.923 rows=1200 loops=1)
-        Recheck Cond: ((search_tsv @@ '''cokolda'''::tsquery) OR (search_norm %> 'cokolda'::text))
-        Heap Blocks: exact=265
-        Buffers: shared hit=285
-        ->  BitmapOr  (cost=93.40..93.40 rows=1272 width=0) (actual time=0.429..0.430 rows=0 loops=1)
-              Buffers: shared hit=20
-              ->  Bitmap Index Scan on ix_products_search  (cost=0.00..13.12 rows=60 width=0) (actual time=0.022..0.022 rows=0 loops=1)
-                    Index Cond: (search_tsv @@ '''cokolda'''::tsquery)
-                    Buffers: shared hit=3
-              ->  Bitmap Index Scan on ix_products_search_norm_trgm  (cost=0.00..79.65 rows=1212 width=0) (actual time=0.406..0.406 rows=1200 loops=1)
-                    Index Cond: (search_norm %> 'cokolda'::text)
-                    Buffers: shared hit=17
+Aggregate  (cost=1070.96..1070.97 rows=1 width=8) (actual time=11.111..11.113 rows=1 loops=1)
+  Buffers: shared hit=3886
+  ->  Nested Loop Semi Join  (cost=93.83..1067.80 rows=1266 width=0) (actual time=0.257..11.022 rows=1200 loops=1)
+        Buffers: shared hit=3886
+        ->  Bitmap Heap Scan on products  (cost=93.40..377.48 rows=1266 width=14) (actual time=0.244..4.125 rows=1200 loops=1)
+              Recheck Cond: ((search_tsv @@ '''cokolda'''::tsquery) OR (search_norm %> 'cokolda'::text))
+              Heap Blocks: exact=265
+              Buffers: shared hit=285
+              ->  BitmapOr  (cost=93.40..93.40 rows=1272 width=0) (actual time=0.214..0.215 rows=0 loops=1)
+                    Buffers: shared hit=20
+                    ->  Bitmap Index Scan on ix_products_search  (cost=0.00..13.12 rows=60 width=0) (actual time=0.010..0.011 rows=0 loops=1)
+                          Index Cond: (search_tsv @@ '''cokolda'''::tsquery)
+                          Buffers: shared hit=3
+                    ->  Bitmap Index Scan on ix_products_search_norm_trgm  (cost=0.00..79.65 rows=1212 width=0) (actual time=0.203..0.203 rows=1200 loops=1)
+                          Index Cond: (search_norm %> 'cokolda'::text)
+                          Buffers: shared hit=17
+        ->  Index Only Scan using ix_prices_current_barcode on prices_current  (cost=0.42..3.48 rows=60 width=14) (actual time=0.005..0.005 rows=1 loops=1200)
+              Index Cond: (barcode = products.barcode)
+              Heap Fetches: 0
+              Buffers: shared hit=3601
 Planning:
-  Buffers: shared hit=112
-Planning Time: 1.236 ms
-Execution Time: 8.380 ms
+  Buffers: shared hit=265
+Planning Time: 1.213 ms
+Execution Time: 11.211 ms
 
 Page and price aggregation
-Nested Loop  (cost=431.94..646.81 rows=20 width=73) (actual time=7.686..8.123 rows=20 loops=1)
-  Buffers: shared hit=387
-  ->  Limit  (cost=420.66..420.71 rows=20 width=116) (actual time=7.611..7.615 rows=20 loops=1)
-        Buffers: shared hit=294
-        ->  Sort  (cost=420.66..423.83 rows=1266 width=116) (actual time=7.609..7.612 rows=20 loops=1)
+Nested Loop  (cost=1122.25..1337.13 rows=20 width=73) (actual time=11.936..12.397 rows=20 loops=1)
+  Buffers: shared hit=3988
+  ->  Limit  (cost=1110.98..1111.03 rows=20 width=116) (actual time=11.862..11.866 rows=20 loops=1)
+        Buffers: shared hit=3895
+        ->  Sort  (cost=1110.98..1114.14 rows=1266 width=116) (actual time=11.861..11.864 rows=20 loops=1)
               Sort Key: ((ts_rank(products.search_tsv, '''cokolda'''::tsquery) + similarity(products.search_norm, 'cokolda'::text))) DESC, products.name, products.barcode
               Sort Method: top-N heapsort  Memory: 28kB
-              Buffers: shared hit=294
-              ->  Bitmap Heap Scan on products  (cost=93.40..386.98 rows=1266 width=116) (actual time=0.259..7.061 rows=1200 loops=1)
-                    Recheck Cond: ((search_tsv @@ '''cokolda'''::tsquery) OR (search_norm %> 'cokolda'::text))
-                    Heap Blocks: exact=265
-                    Buffers: shared hit=285
-                    ->  BitmapOr  (cost=93.40..93.40 rows=1272 width=0) (actual time=0.219..0.220 rows=0 loops=1)
-                          Buffers: shared hit=20
-                          ->  Bitmap Index Scan on ix_products_search  (cost=0.00..13.12 rows=60 width=0) (actual time=0.006..0.006 rows=0 loops=1)
-                                Index Cond: (search_tsv @@ '''cokolda'''::tsquery)
-                                Buffers: shared hit=3
-                          ->  Bitmap Index Scan on ix_products_search_norm_trgm  (cost=0.00..79.65 rows=1212 width=0) (actual time=0.213..0.213 rows=1200 loops=1)
-                                Index Cond: (search_norm %> 'cokolda'::text)
-                                Buffers: shared hit=17
-  ->  Aggregate  (cost=11.27..11.28 rows=1 width=21) (actual time=0.025..0.025 rows=1 loops=20)
+              Buffers: shared hit=3895
+              ->  Nested Loop Semi Join  (cost=93.83..1077.29 rows=1266 width=116) (actual time=0.282..11.427 rows=1200 loops=1)
+                    Buffers: shared hit=3886
+                    ->  Bitmap Heap Scan on products  (cost=93.40..377.48 rows=1266 width=144) (actual time=0.250..3.344 rows=1200 loops=1)
+                          Recheck Cond: ((search_tsv @@ '''cokolda'''::tsquery) OR (search_norm %> 'cokolda'::text))
+                          Heap Blocks: exact=265
+                          Buffers: shared hit=285
+                          ->  BitmapOr  (cost=93.40..93.40 rows=1272 width=0) (actual time=0.218..0.219 rows=0 loops=1)
+                                Buffers: shared hit=20
+                                ->  Bitmap Index Scan on ix_products_search  (cost=0.00..13.12 rows=60 width=0) (actual time=0.006..0.006 rows=0 loops=1)
+                                      Index Cond: (search_tsv @@ '''cokolda'''::tsquery)
+                                      Buffers: shared hit=3
+                                ->  Bitmap Index Scan on ix_products_search_norm_trgm  (cost=0.00..79.65 rows=1212 width=0) (actual time=0.210..0.210 rows=1200 loops=1)
+                                      Index Cond: (search_norm %> 'cokolda'::text)
+                                      Buffers: shared hit=17
+                    ->  Index Only Scan using ix_prices_current_barcode on prices_current  (cost=0.42..3.48 rows=60 width=14) (actual time=0.004..0.004 rows=1 loops=1200)
+                          Index Cond: (barcode = products.barcode)
+                          Heap Fetches: 0
+                          Buffers: shared hit=3601
+  ->  Aggregate  (cost=11.27..11.28 rows=1 width=21) (actual time=0.026..0.026 rows=1 loops=20)
         Buffers: shared hit=93
-        ->  Index Scan using ix_prices_current_barcode on prices_current  (cost=0.42..9.47 rows=60 width=20) (actual time=0.009..0.015 rows=60 loops=20)
+        ->  Index Scan using ix_prices_current_barcode on prices_current prices_current_1  (cost=0.42..9.47 rows=60 width=20) (actual time=0.007..0.013 rows=60 loops=20)
               Index Cond: (barcode = products.barcode)
               Buffers: shared hit=93
 Planning:
-  Buffers: shared hit=124
-Planning Time: 0.658 ms
-Execution Time: 8.244 ms
+  Buffers: shared hit=80
+Planning Time: 0.610 ms
+Execution Time: 12.497 ms
 
 Basket query (20 items)
-Hash Left Join  (cost=232.19..234.18 rows=60 width=121) (actual time=0.779..0.803 rows=60 loops=1)
+Hash Join  (cost=232.19..234.18 rows=60 width=121) (actual time=0.649..0.669 rows=60 loops=1)
   Hash Cond: (retail_formats.id = basket_summary.format_id)
   Buffers: shared hit=94
-  ->  Hash Join  (cost=1.23..3.05 rows=60 width=49) (actual time=0.018..0.031 rows=60 loops=1)
+  ->  Hash Join  (cost=1.23..3.05 rows=60 width=49) (actual time=0.023..0.035 rows=60 loops=1)
         Hash Cond: (retail_formats.retailer_id = retailers.id)
         Buffers: shared hit=2
-        ->  Seq Scan on retail_formats  (cost=0.00..1.60 rows=60 width=24) (actual time=0.005..0.007 rows=60 loops=1)
+        ->  Seq Scan on retail_formats  (cost=0.00..1.60 rows=60 width=24) (actual time=0.004..0.007 rows=60 loops=1)
               Buffers: shared hit=1
-        ->  Hash  (cost=1.10..1.10 rows=10 width=29) (actual time=0.007..0.008 rows=10 loops=1)
+        ->  Hash  (cost=1.10..1.10 rows=10 width=29) (actual time=0.012..0.013 rows=10 loops=1)
               Buckets: 1024  Batches: 1  Memory Usage: 9kB
               Buffers: shared hit=1
               ->  Seq Scan on retailers  (cost=0.00..1.10 rows=10 width=29) (actual time=0.002..0.003 rows=10 loops=1)
                     Buffers: shared hit=1
-  ->  Hash  (cost=230.21..230.21 rows=60 width=76) (actual time=0.756..0.757 rows=60 loops=1)
+  ->  Hash  (cost=230.21..230.21 rows=60 width=76) (actual time=0.617..0.618 rows=60 loops=1)
         Buckets: 1024  Batches: 1  Memory Usage: 36kB
         Buffers: shared hit=92
-        ->  Subquery Scan on basket_summary  (cost=228.71..230.21 rows=60 width=76) (actual time=0.705..0.736 rows=60 loops=1)
+        ->  Subquery Scan on basket_summary  (cost=228.71..230.21 rows=60 width=76) (actual time=0.575..0.601 rows=60 loops=1)
               Buffers: shared hit=92
-              ->  HashAggregate  (cost=228.71..229.61 rows=60 width=76) (actual time=0.705..0.730 rows=60 loops=1)
+              ->  HashAggregate  (cost=228.71..229.61 rows=60 width=76) (actual time=0.575..0.597 rows=60 loops=1)
                     Group Key: prices_current.format_id
                     Batches: 1  Memory Usage: 144kB
                     Buffers: shared hit=92
-                    ->  Nested Loop  (cost=0.43..201.80 rows=1196 width=42) (actual time=0.014..0.345 rows=1200 loops=1)
+                    ->  Nested Loop  (cost=0.43..201.80 rows=1196 width=42) (actual time=0.014..0.332 rows=1200 loops=1)
                           Buffers: shared hit=92
                           ->  Values Scan on "*VALUES*"  (cost=0.00..0.25 rows=20 width=36) (actual time=0.001..0.005 rows=20 loops=1)
-                          ->  Index Scan using ix_prices_current_barcode on prices_current  (cost=0.43..9.48 rows=60 width=38) (actual time=0.004..0.009 rows=60 loops=20)
+                          ->  Index Scan using ix_prices_current_barcode on prices_current  (cost=0.43..9.48 rows=60 width=38) (actual time=0.005..0.010 rows=60 loops=20)
                                 Index Cond: (barcode = ("*VALUES*".column1)::character(13))
                                 Buffers: shared hit=92
 Planning:
-  Buffers: shared hit=152
-Planning Time: 0.460 ms
-Execution Time: 0.852 ms
+  Buffers: shared hit=139
+Planning Time: 0.434 ms
+Execution Time: 0.710 ms

@@ -8,12 +8,12 @@
   "prices_current": 720000,
   "results": {
     "search": {
-      "p95_ms": 27.865,
-      "median_ms": 17.523
+      "p95_ms": 35.384,
+      "median_ms": 28.213
     },
     "basket_20": {
-      "p95_ms": 19.122,
-      "median_ms": 10.732
+      "p95_ms": 14.518,
+      "median_ms": 11.431
     }
   }
 }

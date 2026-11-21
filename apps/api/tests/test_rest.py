@@ -173,6 +173,63 @@ def test_search_aggregates_and_filters(client: TestClient) -> None:
     }
 
 
+@pytest.mark.parametrize("query", ["mleko", "0000000000004"])
+def test_search_excludes_products_without_current_prices(
+    client: TestClient,
+    engine: Engine,
+    query: str,
+) -> None:
+    unpriced_barcode = "0000000000004"
+    with engine.begin() as connection:
+        connection.execute(
+            db.products.insert().values(
+                barcode=unpriced_barcode,
+                name="Mleko bez cene",
+                brand="Domaće",
+                unit="l",
+                category_code=1,
+            )
+        )
+    response = client.get("/api/search", params={"q": query})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["total"] == (1 if query == "mleko" else 0)
+    assert unpriced_barcode not in [item["barcode"] for item in data["items"]]
+    for item in data["items"]:
+        assert item["n_formats"] >= 1
+        assert item["min_effective_para"] is not None
+        assert item["max_effective_para"] is not None
+        assert item["list_date"] is not None
+
+
+def test_withdrawn_product_history_does_not_keep_it_in_price_search(
+    client: TestClient,
+    engine: Engine,
+) -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            db.monthly_snapshots.insert().values(
+                format_id=1,
+                barcode=B1,
+                month=AS_OF.replace(day=1),
+                regular=100,
+            )
+        )
+        connection.execute(db.prices_current.delete().where(db.prices_current.c.barcode == B1))
+    for query in ("mleko", B1):
+        response = client.get("/api/search", params={"q": query})
+        assert response.status_code == 200
+        assert response.json() == {"items": [], "total": 0, "as_of": AS_OF.isoformat()}
+
+
+def test_search_openapi_requires_price_and_source_date() -> None:
+    properties = app.openapi()["components"]["schemas"]["SearchItem"]["properties"]
+    assert properties["min_effective_para"]["type"] == "integer"
+    assert properties["max_effective_para"]["type"] == "integer"
+    assert properties["list_date"]["type"] == "string"
+    assert properties["list_date"]["format"] == "date"
+
+
 @pytest.mark.parametrize("query", ["unfindableword", "0000000000099", "'; DROP TABLE products;--"])
 def test_unknown_query_returns_empty_200(client: TestClient, query: str) -> None:
     response = client.get("/api/search", params={"q": query})
@@ -196,12 +253,10 @@ def test_basket_ranks_complete_before_partial_and_merges_duplicates(client: Test
     formats = sorted(
         [f for r in result["retailers"] for f in r["formats"]], key=lambda f: f["rank"]
     )
-    assert [f["id"] for f in formats] == [1, 2, 3, 4]
-    assert [f["total_para"] for f in formats] == [600, 715, 50, 0]
-    assert [f["complete"] for f in formats] == [True, True, False, False]
+    assert [f["id"] for f in formats] == [1, 2, 3]
+    assert [f["total_para"] for f in formats] == [600, 715, 50]
+    assert [f["complete"] for f in formats] == [True, True, False]
     assert formats[2]["missing_barcodes"] == [B2]
-    assert formats[3]["found_barcodes"] == []
-    assert formats[3]["list_date_min"] is None
     assert result["as_of"] == AS_OF.isoformat()
 
 
@@ -223,8 +278,44 @@ def test_basket_partial_ranking_prefers_more_found_over_cheaper_total(client: Te
         ],
         key=lambda f: f["rank"],
     )
-    assert [f["id"] for f in formats] == [1, 2, 3, 4]
+    assert [f["id"] for f in formats] == [1, 2, 3]
     assert not any(f["complete"] for f in formats)
+
+
+def test_basket_omits_formats_and_retailers_with_no_requested_products(client: TestClient) -> None:
+    response = client.post("/api/basket", json={"items": [{"barcode": B3, "qty": 1}]})
+    assert response.status_code == 200
+    retailers = response.json()["retailers"]
+    assert [retailer["id"] for retailer in retailers] == [1]
+    assert [row["id"] for row in retailers[0]["formats"]] == [1]
+    assert retailers[0]["formats"][0]["found_barcodes"] == [B3]
+
+
+def test_basket_returns_no_formats_when_every_barcode_is_missing(client: TestClient) -> None:
+    response = client.post("/api/basket", json={"items": [{"barcode": "0000000000099", "qty": 1}]})
+    assert response.status_code == 200
+    assert response.json() == {"retailers": [], "as_of": AS_OF.isoformat()}
+
+
+def test_basket_keeps_a_found_product_with_a_genuine_zero_price(
+    client: TestClient,
+    engine: Engine,
+) -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            db.prices_current.update()
+            .where(
+                db.prices_current.c.barcode == B3,
+            )
+            .values(regular=0, unit_price=0)
+        )
+    response = client.post("/api/basket", json={"items": [{"barcode": B3, "qty": 1}]})
+    assert response.status_code == 200
+    formats = response.json()["retailers"][0]["formats"]
+    assert len(formats) == 1
+    assert formats[0]["found_barcodes"] == [B3]
+    assert formats[0]["total_para"] == 0
+    assert formats[0]["complete"] is True
 
 
 @pytest.mark.parametrize(

@@ -39,12 +39,15 @@ barcode should be used against a live-data database.
   transliterated from Serbian Cyrillic, then normalized. Full-text OR word-trigram candidates
   rank by full-text rank plus similarity, then name and barcode. Price aggregation runs only
   for the selected page. Items contain `min_effective_para`, `max_effective_para`, `n_formats`,
-  `any_discount`, and the newest `list_date`. A retained catalog product without current
-  listings has null price/date fields and zero formats. `total` counts matching catalog
-  products, including when an offset returns an empty page.
+  `any_discount`, and the newest `list_date`. Products must have at least one current price,
+  including for exact barcode searches. Min/max prices and source date are non-nullable.
+  `total` counts only matching products with current prices, including when an offset returns
+  an empty page; retained catalog/history records alone cannot keep a withdrawn item visible.
 - **Basket:** 1–50 input items, exact text barcodes and integer quantities 1–99. Duplicate
-  barcodes merge; a merged quantity above 99 is rejected. Every format appears, including
-  zero matches. Each row has a global `rank`, `complete`, `found_barcodes`, `missing_barcodes`,
+  barcodes merge; a merged quantity above 99 is rejected. Only formats with at least one
+  requested barcode found appear; retailers with no matching formats are omitted. An entirely
+  unavailable basket returns an empty retailer list. Genuine zero-priced matching products
+  remain valid matches. Each row has a global `rank`, `complete`, `found_barcodes`, `missing_barcodes`,
   `total_para`, and `list_date_min`/`list_date_max`. Complete baskets rank first by total;
   partial baskets rank by number found, then partial total. Formats are nested under retailers;
   retailer groups appear in the order of their best-ranked format. The explicit completeness
@@ -117,8 +120,8 @@ prices, after 10 warmups and 50 measured requests per endpoint:
 
 | Request | Median | p95 |
 | --- | ---: | ---: |
-| Search (mixed exact spelling and typo queries) | 17.523 ms | **27.865 ms** |
-| Basket with 20 distinct items | 10.732 ms | **19.122 ms** |
+| Search (mixed exact spelling and typo queries) | 28.213 ms | **35.384 ms** |
+| Basket with 20 distinct items | 11.431 ms | **14.518 ms** |
 
 Both p95 values are below the 200 ms target. The synthetic database occupied 137,903,127 bytes.
 These are local warm-cache measurements, not an external-network latency guarantee.
@@ -127,7 +130,7 @@ The complete [latency record](bench/rest-latency.json) and
 [EXPLAIN ANALYZE plans](bench/search-explain.txt) are committed. The search count/page plans use
 BitmapOr across the vector/trigram GIN indexes; page price summaries use the barcode index.
 The actual 20-item basket query uses 20 barcode-index scans (60 rows each), not a scan of the
-720k-row price table. Recorded SQL execution times were 8.380 ms for search count, 8.244 ms
-for the page/price aggregation, and 0.852 ms for basket aggregation.
+720k-row price table. Recorded SQL execution times were 11.211 ms for search count, 12.497 ms
+for the page/price aggregation, and 0.710 ms for basket aggregation.
 
 GraphQL and code generation remain a separate phase. No GraphQL endpoint is introduced here.

@@ -40,6 +40,10 @@ def search_statements(
         )
     if params.category is not None:
         condition = sa.and_(condition, p.c.category_code == params.category)
+    condition = sa.and_(
+        condition,
+        sa.select(1).where(prices.c.barcode == p.c.barcode).exists(),
+    )
     matches = sa.select(p, (rank + similarity).label("score")).where(condition).cte("matches")
     count = sa.select(sa.func.count()).select_from(matches)
     page = (
@@ -147,11 +151,11 @@ def basket_statement(request: BasketRequest, as_of: date) -> Select[*tuple[objec
         retailers.c.id.label("retailer_id"),
         retailers.c.name.label("retailer_name"),
         retailers.c.slug,
-        sa.func.coalesce(summary.c.total_para, 0).label("total_para"),
+        summary.c.total_para,
         summary.c.found,
         summary.c.list_date_min,
         summary.c.list_date_max,
-    ).select_from(formats.join(retailers).outerjoin(summary, summary.c.format_id == formats.c.id))
+    ).select_from(formats.join(retailers).join(summary, summary.c.format_id == formats.c.id))
     return statement
 
 
