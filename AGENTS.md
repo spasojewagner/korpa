@@ -52,10 +52,11 @@ month the list valid that day is also published as `MESEČNI_PRESEK` and kept fo
 Invalid rows are counted and reported per retailer, never silently dropped and never "fixed" by guessing.
 Do not invent the portal API shape: verify it and record findings in `docs/data-notes.md`.
 
-### Source compatibility profile `compat-2026-11`
+### Source compatibility profile `compat-2026-11.2`
 Observed publisher variants are accepted only through exact, documented mappings. Every applied mapping is counted per retailer as a deviation in the quality report; it is never silent and never turns an invalid value into a valid one by guessing.
 - `VRSTA_CENOVNIKA`: `MESECNI_PRESEK` -> `MESEČNI_PRESEK`, `VAZECI_CENOVNIK` -> `VAŽEĆI_CENOVNIK`.
-- `Jedinica mere`: case-insensitive match to the six allowed units (`KG` -> `kg`).
+- `Jedinica mere`: case-insensitive match to the six allowed units (`KG` -> `kg`), plus exact case-insensitive aliases `kom.` -> `kom`, `gr` -> `g`, `lit` -> `l`, counted as `unit_alias`. `JED`, `KO`, `M` and all other aliases remain errors.
+- Prices with zero or one decimal using `.` are padded to two decimals without rounding (`100` -> `100.00`, `1000.1` -> `1000.10`), counted as `price_decimals` per mapped field. More than two decimals, commas, spaces, signs, leading-dot fractions, and thousands separators remain errors.
 - Headers: only the aliases listed in `docs/data-notes.md`, each of the 15 columns mapped exactly once.
 Any other variant stays an error. A new mapping needs a maintainer decision and a new profile id.
 

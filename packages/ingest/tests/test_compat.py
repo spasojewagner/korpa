@@ -3,7 +3,7 @@ import io
 from pathlib import Path
 
 import pytest
-from korpa_ingest.compat import PROFILE
+from korpa_ingest.compat import LEGACY_PROFILE, PROFILE
 from korpa_ingest.reader import HEADERS, read_csv
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -63,7 +63,7 @@ def test_monthly_ascii_mapping_keeps_monthly_semantics() -> None:
     assert parsed.report.deviations == {"list_type_ascii": 1}
 
 
-@pytest.mark.parametrize("unit", ["kom.", "lit", " KG", "kilogram", "KＧ", "KG"])
+@pytest.mark.parametrize("unit", ["JED", "KO", "M", " KG", "kilogram", "KＧ", "KG"])
 def test_unlisted_units_remain_errors(unit: str) -> None:
     row = values()
     row[5] = unit
@@ -111,7 +111,7 @@ def test_header_requires_a_bijection(variant: str) -> None:
 
 def test_every_failing_rule_is_counted_once_per_row() -> None:
     row = values()
-    row[4], row[5], row[8], row[9], row[14] = "short", "lit", "", "invalid", "UNKNOWN"
+    row[4], row[5], row[8], row[9], row[14] = "short", "JED", "", "invalid", "UNKNOWN"
     parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
     assert parsed.report.rows_total == 1 and parsed.report.rows_valid == 0
     assert parsed.report.errors == {"barcode": 1}
@@ -148,3 +148,90 @@ def test_incomplete_csv_does_not_become_cacheable() -> None:
     assert parsed.header_accepted and not parsed.fully_processed
     assert not parsed.rows
     assert "csv_syntax" in parsed.report.errors
+
+
+@pytest.mark.parametrize(
+    ("source", "expected"),
+    [
+        ("100", 10000),
+        ("1000.1", 100010),
+        ("0", 0),
+        ("0.1", 10),
+        ("0001.2", 120),
+    ],
+)
+def test_short_decimal_prices_are_exact_and_counted(source: str, expected: int) -> None:
+    row = values()
+    row[8], row[9] = source, source
+    parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
+    assert parsed.report.rows_valid == 1
+    assert parsed.rows[0].regular == parsed.rows[0].unit_price == expected
+    assert parsed.report.deviations == {"price_decimals": 2}
+
+
+def test_discount_price_padding_is_counted_per_field() -> None:
+    row = values()
+    row[8:13] = ["100", "100.0", "90", "01-11-2026", "30-11-2026"]
+    parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
+    assert parsed.rows[0].discounted == 9000
+    assert parsed.report.deviations == {"price_decimals": 3}
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "1.001",
+        "1.000",
+        "1,00",
+        "1,000.00",
+        "1.000,00",
+        "1 000",
+        " 1.00",
+        "1.00 ",
+        "+1",
+        "-1",
+        "1.",
+        ".18",
+        ".3",
+        "1e2",
+        "NaN",
+        "21474837",
+    ],
+)
+def test_unapproved_price_shapes_still_fail_without_rounding(source: str) -> None:
+    row = values()
+    row[8] = source
+    parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
+    assert parsed.report.rows_valid == 0
+    assert parsed.report.errors == {"price": 1}
+
+
+@pytest.mark.parametrize(
+    ("source", "target"),
+    [
+        ("kom.", "kom"),
+        ("KOM.", "kom"),
+        ("gr", "g"),
+        ("GR", "g"),
+        ("lit", "l"),
+        ("LiT", "l"),
+    ],
+)
+def test_exact_unit_aliases_are_counted(source: str, target: str) -> None:
+    row = values()
+    row[5] = source
+    parsed = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
+    assert parsed.report.rows_valid == 1
+    assert parsed.rows[0].unit == target
+    assert parsed.report.deviations == {"unit_alias": 1}
+
+
+def test_legacy_profile_preserves_its_original_contract() -> None:
+    row = values()
+    row[5], row[8] = "lit", "100"
+    legacy = read_csv(csv_bytes(list(HEADERS), [row]), profile=LEGACY_PROFILE)
+    assert legacy.report.errors_by_rule == {"unit": 1, "price": 1}
+    assert not legacy.report.deviations
+    current = read_csv(csv_bytes(list(HEADERS), [row]), profile=PROFILE)
+    assert current.report.rows_valid == 1
+    assert current.report.deviations == {"unit_alias": 1, "price_decimals": 1}

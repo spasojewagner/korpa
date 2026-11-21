@@ -9,7 +9,7 @@ from unittest.mock import patch
 import pytest
 import sqlalchemy as sa
 from korpa_ingest import db
-from korpa_ingest.compat import PROFILE
+from korpa_ingest.compat import LEGACY_PROFILE, PROFILE
 from korpa_ingest.normalize import normalize
 from korpa_ingest.portal import Download, RetailerSource
 from korpa_ingest.reader import Parsed, Report, read_csv
@@ -260,6 +260,17 @@ def test_validator_profile_and_rejected_file_do_not_poison_cache(engine: Engine)
         "demo", "Demo", "dataset-id", "https://example.org/new.csv", "sodl"
     )
     assert validators(engine, changed_url) == (None, None)
+
+
+def test_profile_two_ignores_the_previous_profiles_validators(engine: Engine) -> None:
+    legacy = current_file(1)
+    legacy.report.profile = LEGACY_PROFILE
+    persist(engine, SOURCE, legacy, DOWNLOAD, datetime.now(UTC))
+    assert validators(engine, SOURCE, profile=LEGACY_PROFILE) == (
+        DOWNLOAD.etag,
+        DOWNLOAD.last_modified,
+    )
+    assert validators(engine, SOURCE) == (None, None)
 
 
 def test_304_retains_report_validators_and_withdrawal_baseline(engine: Engine) -> None:

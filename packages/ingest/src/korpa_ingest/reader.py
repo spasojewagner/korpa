@@ -11,7 +11,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from korpa_ingest.compat import HEADER_ALIASES, LIST_TYPES, PROFILE, UNITS
+from korpa_ingest.compat import HEADER_ALIASES, LIST_TYPES, PROFILE, PROFILES, UNIT_ALIASES, UNITS
 
 HEADERS = (
     "KATEGORIJA",
@@ -95,9 +95,17 @@ class RowError(ValueError):
         super().__init__(self.codes[0])
 
 
-def money(value: str, *, optional: bool = False) -> int | None:
+def money(value: str, *, optional: bool = False, report: Report | None = None) -> int | None:
     if value == "" and optional:
         return None
+    if (
+        report is not None
+        and report.profile == PROFILE
+        and re.fullmatch(r"[0-9]+(?:\.[0-9])?", value)
+    ):
+        whole, _, fractional = value.partition(".")
+        value = whole + "." + fractional.ljust(2, "0")
+        report.deviations["price_decimals"] += 1
     if not re.fullmatch(r"[0-9]+\.[0-9]{2}", value):
         raise RowError("price")
     result = int(Decimal(value) * 100)
@@ -137,11 +145,14 @@ def parse_row(values: list[str], report: Report | None = None) -> PriceRow:
         vat,
         kind,
     ) = values
-    if report is not None and report.profile == PROFILE:
+    if report is not None and report.profile in PROFILES:
         if kind in LIST_TYPES:
             kind = LIST_TYPES[kind]
             report.deviations["list_type_ascii"] += 1
-        if unit.isascii() and unit.lower() in UNITS and unit != unit.lower():
+        if report.profile == PROFILE and unit.isascii() and unit.lower() in UNIT_ALIASES:
+            unit = UNIT_ALIASES[unit.lower()]
+            report.deviations["unit_alias"] += 1
+        elif unit.isascii() and unit.lower() in UNITS and unit != unit.lower():
             unit = unit.lower()
             report.deviations["unit_case"] += 1
     errors: list[str] = []
@@ -169,7 +180,7 @@ def parse_row(values: list[str], report: Report | None = None) -> PriceRow:
     prices: list[int | None] = []
     for value, optional in ((regular, False), (unit_price, False), (discounted, True)):
         try:
-            prices.append(money(value, optional=optional))
+            prices.append(money(value, optional=optional, report=report))
         except RowError:
             prices.append(None)
             errors.append("price")
@@ -218,7 +229,7 @@ def header_order(header: list[str], profile: str | None) -> list[int] | None:
 
 
 def read_csv(content: bytes, *, profile: str | None = None) -> Parsed:
-    if profile not in (None, PROFILE):
+    if profile is not None and profile not in PROFILES:
         raise ValueError("Unknown compatibility profile")
     report = Report(profile=profile)
     try:
