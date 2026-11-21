@@ -1,3 +1,5 @@
+import re
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -90,14 +92,18 @@ def test_index_refresh_runs_after_compaction_only_for_writes(dry_run: bool) -> N
             return_value=Download(200, (FIXTURES / "good.csv").read_bytes()),
         ),
         patch("korpa_ingest.cli.compact_monthly") as compact,
-        patch("korpa_ingest.cli.refresh_index") as refresh,
     ):
         order.attach_mock(compact, "compact")
-        order.attach_mock(refresh, "refresh")
         result = CliRunner().invoke(
             app, ["ingest", "--retailer", "demo"] + (["--dry-run"] if dry_run else [])
         )
     assert result.exit_code == 0, result.output
-    assert [call[0] for call in order.mock_calls] == ([] if dry_run else ["compact", "refresh"])
-    if not dry_run:
-        assert compact.call_args == refresh.call_args
+    assert [call[0] for call in order.mock_calls] == ([] if dry_run else ["compact"])
+
+
+def test_ingest_package_does_not_import_the_api_package() -> None:
+    # Layering: the API reads what ingest writes; ingest never depends on the API.
+    source = Path(__file__).parents[1] / "src" / "korpa_ingest"
+    imports = re.compile(r"^\s*(from|import)\s+korpa_api\b", re.MULTILINE)
+    offenders = [p.name for p in source.rglob("*.py") if imports.search(p.read_text("utf-8"))]
+    assert offenders == []

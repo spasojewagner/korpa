@@ -45,7 +45,8 @@ The empty example variables use local development defaults: Postgres at
 `http://127.0.0.1:8000/health`, and web at `http://127.0.0.1:5173`.
 These database credentials are for the local Compose service only. Set `DATABASE_URL` and a
 comma-separated `CORS_ORIGINS` for other environments. Load real price lists with
-`uv run --extra dev korpa ingest --all`, then open the site: search, product comparison, basket,
+`uv run --extra dev korpa ingest --all` and refresh the index and static files with
+`uv run --extra dev python -m korpa_api.export_static`, then open the site: search, product comparison, basket,
 data quality and about pages, in Latin or Cyrillic. The web app calls the API at `VITE_API_URL`
 (build-time variable, default `http://127.0.0.1:8000`). `npm --prefix apps/web run size` checks
 the Home JavaScript budget after a build.

@@ -1,14 +1,13 @@
 import json
 import logging
 import os
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated
+from zoneinfo import ZoneInfo
 
 import httpx
 import typer
 from dotenv import load_dotenv
-from korpa_api.analytics import refresh_index
-from korpa_api.pricing import belgrade_today
 from sqlalchemy import create_engine
 
 from korpa_ingest.compat import PROFILE
@@ -19,6 +18,10 @@ from korpa_ingest.reader import Parsed, Report, read_csv
 from korpa_ingest.store import StorageLimitError, compact_monthly, persist, validators
 
 app = typer.Typer(no_args_is_help=True)
+
+
+def belgrade_today() -> date:
+    return datetime.now(ZoneInfo("Europe/Belgrade")).date()
 
 
 @app.command()
@@ -108,9 +111,9 @@ def ingest(
                 )
                 failed |= bool(parsed.report.errors)
         if engine is not None:
-            as_of = belgrade_today()
-            compact_monthly(engine, as_of)
-            refresh_index(engine, as_of)
+            # The price index is refreshed by `python -m korpa_api.export_static`, which runs next:
+            # the ingest package must not depend on the API package.
+            compact_monthly(engine, belgrade_today())
     except StorageLimitError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(2) from exc
