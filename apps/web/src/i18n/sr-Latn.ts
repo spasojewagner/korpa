@@ -11,4 +11,54 @@ export const copy = {
   scriptLabel: 'Pismo',
   latin: 'Latinica',
   cyrillic: 'Ћирилица',
+
+  sourceDate: 'Cenovnik od {date}',
+  staleData: 'Podaci stariji od {days} dana',
+  regularPrice: 'redovna cena',
+  perUnit: '{price}/{unit}',
+  badgeCheapest: 'Najjeftinije',
+  badgeDiscount: 'Sniženo',
+  badgeDiscountUntil: 'Sniženo do {date}',
+  badgeIncrease: 'Poskupelo',
+  badgeDecrease: 'Pojeftinilo',
+  searchLabel: 'Pretraga proizvoda',
+  searchPlaceholder: 'npr. mleko, hleb, 8600…',
+  searchButton: 'Traži',
+  addToBasket: 'Dodaj u korpu',
+  priceFrom: 'od {price}',
+  priceRange: '{min} – {max}',
+  quantity: 'Količina',
+  decrease: 'Smanji količinu',
+  increase: 'Povećaj količinu',
+  comparisonCaption: 'Cene po trgovcu i formatu prodavnice',
+  colFormat: 'Trgovac i format',
+  colPrice: 'Cena',
+  colUnitPrice: 'Po jedinici mere',
+  basketComplete: 'Cela korpa',
+  basketPartial: 'Nepotpune korpe',
+  basketPartialNote: 'Ovi trgovci nemaju sve proizvode iz korpe, pa njihov zbir nije uporediv sa celom korpom.',
+  colTotal: 'Ukupno',
+  sparklineSummary: 'Najniža cena {min} ({minMonth}), najviša {max} ({maxMonth}).',
+  loading: 'Učitavanje…',
+  emptyTitle: 'Nema rezultata',
+  errorTitle: 'Nešto nije u redu',
+  errorMessage: 'Podaci trenutno nisu dostupni. Pokušajte ponovo.',
+  offlineTitle: 'Niste povezani na internet',
+  retry: 'Pokušaj ponovo',
+  footerSources: 'Izvor podataka',
+  footerLicense: 'Licenca podataka: Srpska licenca za otvorene podatke.',
+  footerCode: 'Izvorni kod',
 } as const
+
+/** Serbian plural forms (Intl.PluralRules 'sr': one = 1, 21, 31…; few = 2–4, 22–24…; other). */
+export const plurals = {
+  formats: { one: 'u {n} formatu', few: 'u {n} formata', other: 'u {n} formata' },
+  missing: {
+    one: 'Nedostaje {n} proizvod',
+    few: 'Nedostaju {n} proizvoda',
+    other: 'Nedostaje {n} proizvoda',
+  },
+} as const
+
+export type CopyKey = keyof typeof copy
+export type PluralKey = keyof typeof plurals
