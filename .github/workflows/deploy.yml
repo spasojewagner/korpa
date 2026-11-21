@@ -1,0 +1,49 @@
+name: deploy
+
+# Nightly: migrate, ingest the latest price lists, export static JSON, deploy the site.
+# On every push to main: migrate, export and deploy (no ingest), so code changes ship with current data.
+on:
+  schedule:
+    - cron: '17 3 * * *' # 04:17 / 05:17 in Belgrade (CET / CEST)
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: uv sync --frozen
+      - name: Migrate
+        run: uv run alembic -c apps/api/alembic.ini upgrade head
+      - name: Ingest
+        if: github.event_name != 'push'
+        # Invalid rows are reported on the data quality page; a crash or the storage guard still fails the job.
+        run: uv run korpa ingest --all --report-row-errors
+      - name: Export static data
+        run: uv run python -m korpa_api.export_static --out apps/web/public/data
+      - name: Deploy web
+        run: |
+          npx --yes vercel@66.6.0 pull --yes --environment=production --token="$VERCEL_TOKEN"
+          npx --yes vercel@66.6.0 build --prod --token="$VERCEL_TOKEN"
+          npx --yes vercel@66.6.0 deploy --prebuilt --prod --token="$VERCEL_TOKEN"

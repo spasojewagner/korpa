@@ -8,13 +8,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def async_database_url() -> str:
-    return (
-        make_url(database_url())
-        .set(drivername="postgresql+asyncpg")
-        .render_as_string(
-            hide_password=False,
-        )
-    )
+    """The same database for asyncpg, which knows neither libpq's sslmode nor channel_binding.
+
+    Hosted URLs (e.g. Neon) carry ?sslmode=require&channel_binding=require;
+    asyncpg takes ssl=<mode> instead.
+    """
+    url = make_url(database_url())
+    query = dict(url.query)
+    query.pop("channel_binding", None)
+    sslmode = query.pop("sslmode", None)
+    if isinstance(sslmode, str) and sslmode != "disable":
+        query["ssl"] = sslmode
+    url = url.set(drivername="postgresql+asyncpg", query=query)
+    return url.render_as_string(hide_password=False)
 
 
 async def session(request: Request) -> AsyncIterator[AsyncSession]:

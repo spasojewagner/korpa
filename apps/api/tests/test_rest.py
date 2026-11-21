@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import subprocess
@@ -5,10 +6,12 @@ import sys
 from collections.abc import Iterator
 from datetime import UTC, date, datetime, timedelta
 from importlib.resources import files
+from pathlib import Path
 
 import pytest
 import sqlalchemy as sa
 from fastapi.testclient import TestClient
+from korpa_api.export_static import export
 from korpa_api.main import app
 from korpa_api.pricing import effective_price
 from korpa_api.translit import normalize, normalize_query, transliterate
@@ -513,3 +516,12 @@ def test_openapi_documents_problem_media_and_schema() -> None:
                 content["application/problem+json"]["schema"]["properties"]["status"]["type"]
                 == "integer"
             )
+
+
+def test_static_export_matches_rest_responses(
+    client: TestClient, engine: Engine, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("DATABASE_URL", engine.url.render_as_string(hide_password=False))
+    asyncio.run(export(tmp_path))
+    for name, path in (("categories.json", "/api/categories"), ("quality.json", "/api/quality")):
+        assert json.loads((tmp_path / name).read_text("utf-8")) == client.get(path).json()
