@@ -33,6 +33,7 @@ function QualityPage() {
       <h1 className="text-2xl font-semibold">{t('qualityHeading')}</h1>
       <p className="mt-4 max-w-3xl text-ink-soft">{t('qualityIntro')}</p>
       <p className="mt-2 max-w-3xl text-ink-soft">{t('qualityAdjusted')}</p>
+      <p className="mt-2 max-w-3xl text-ink-soft">{t('qualitySuspected')}</p>
       <div className="mt-6 overflow-x-auto">
         {query.isPending ? (
           <StateView kind="loading" lines={2} />
@@ -74,6 +75,7 @@ function QualityPage() {
                     <td className="py-3 text-sm text-ink-soft">
                       <Counts label={t('rejected')} counts={retailer.errors} />
                       <Counts label={t('adjusted')} counts={retailer.deviations} />
+                      <Counts label={t('suspected')} counts={retailer.suspected_errors} />
                     </td>
                   </tr>
                 )
