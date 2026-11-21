@@ -1,0 +1,40 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: korpa
+          POSTGRES_PASSWORD: korpa
+          POSTGRES_DB: korpa_test
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U korpa" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+psycopg://korpa:korpa@localhost:5432/korpa_test
+      TEST_DATABASE_URL: postgresql+psycopg://korpa:korpa@localhost:5432/korpa_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: uv sync --extra dev --frozen
+      - run: npm ci
+      - run: npm ci --prefix apps/web
+      - run: uv run --extra dev ruff check .
+      - run: uv run --extra dev mypy
+      - run: uv run --extra dev alembic -c apps/api/alembic.ini upgrade head
+      - run: uv run --extra dev pytest
+      - run: npm --prefix apps/web run lint
+      - run: npm --prefix apps/web run typecheck
+      - run: npm --prefix apps/web test
+      - run: npm --prefix apps/web run build
+      - run: npx --prefix apps/web playwright install --with-deps chromium
+      - run: npm --prefix apps/web run e2e
