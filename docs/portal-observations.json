@@ -10,7 +10,8 @@
       "accepted": 20372,
       "parse_seconds": 1.3636991000021226,
       "baseline_write_seconds": 40.8911506000004,
-      "baseline_parse_write_seconds": 42.254849700002524
+      "baseline_parse_write_seconds": 42.254849700002524,
+      "database_state": "no product, current-price, or history data; five retailer records and rejected-run audit metadata retained from the strict-only spike"
     },
     "bulk_metro_parse_write_seconds": 1.869,
     "baseline_commit": "e4832ed6349dfcfade8e63c4bd52131625c8c9f0",

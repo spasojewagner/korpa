@@ -163,8 +163,10 @@ observations are retained permanently. No raw CSV is stored in persistent tables
 ## Performance measurement
 
 Local Docker PostgreSQL 16, sequential imports, same machine and the same Metro bytes
-(SHA-256 in the observation file). Both isolated Metro comparisons started with empty databases;
-network time is excluded from both Metro parse/write comparisons. The old writer was taken
+(SHA-256 in the observation file). Both isolated Metro comparisons started without product,
+current-price, or history data. The original database retained the five retailer records and
+rejected-run audit metadata from the strict-only spike; the bulk comparison used a fresh
+database. Network time is excluded from both Metro parse/write comparisons. The old writer was taken
 from commit `e4832ed6349dfcfade8e63c4bd52131625c8c9f0` and fed the same approved-profile rows.
 
 | Measurement | Original per-row writer | COPY and set-based writer |
