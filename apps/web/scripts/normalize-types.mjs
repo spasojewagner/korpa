@@ -11,6 +11,7 @@ for (const filename of await readdir(directory)) {
     .replace(/^\/\* eslint-disable \*\/\r?\n/, '')
     .replace(/\/\*\*[\s\S]*?\*\//g, '')
     .replaceAll('(documents as any)', '(documents as Record<string, unknown>)')
+    .replaceAll('Record<string, any>', 'Record<string, unknown>')
     .replace(/DocumentNode<\s*any,\s*any\s*>/g, 'DocumentNode<unknown, never>')
     .replace(/DocumentNode<\s*infer TType,\s*any\s*>/g, 'DocumentNode<infer TType, never>')
   const ast = ts.createSourceFile(filename, strict, ts.ScriptTarget.Latest, true)

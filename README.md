@@ -42,8 +42,11 @@ The empty example variables use local development defaults: Postgres at
 `postgresql+psycopg://korpa:korpa@localhost:5432/korpa`, API at
 `http://127.0.0.1:8000/health`, and web at `http://127.0.0.1:5173`.
 These database credentials are for the local Compose service only. Set `DATABASE_URL` and a
-comma-separated `CORS_ORIGINS` for other environments. The development page shows an honest
-empty state and the required independence disclaimer; it offers a Latin/Cyrillic UI toggle.
+comma-separated `CORS_ORIGINS` for other environments. Load real price lists with
+`uv run --extra dev korpa ingest --all`, then open the site: search, product comparison, basket,
+data quality and about pages, in Latin or Cyrillic. The web app calls the API at `VITE_API_URL`
+(build-time variable, default `http://127.0.0.1:8000`). `npm --prefix apps/web run size` checks
+the Home JavaScript budget after a build.
 
 On Windows PowerShell without Make, use `Copy-Item .env.example .env`, then:
 

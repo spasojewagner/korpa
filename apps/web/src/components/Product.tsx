@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { useI18n } from '../i18n/I18nProvider'
 import { formatDate, formatMonth, formatPrice } from '../lib/format'
 import { Badge } from './Badge'
+import { Icon } from './Icon'
 import { Price, SourceDate } from './Price'
 
 export interface ProductSummary {
@@ -22,11 +23,13 @@ export interface ProductCardProps {
   /** Lets the router supply its own link element; defaults to a plain anchor. */
   renderLink?: (children: ReactNode, className: string) => ReactNode
   onAdd?: (barcode: string) => void
+  /** Already in the basket: the add button becomes a static confirmation. */
+  added?: boolean
   headingLevel?: 2 | 3
   today?: Date
 }
 
-export function ProductCard({ product, href, renderLink, onAdd, headingLevel = 2, today }: ProductCardProps) {
+export function ProductCard({ product, href, renderLink, onAdd, added = false, headingLevel = 2, today }: ProductCardProps) {
   const { t, tp } = useI18n()
   const { barcode, name, brand, unit, minPara, maxPara, nFormats, anyDiscount, listDate } = product
   const linkClass = 'text-ink underline-offset-4 hover:underline'
@@ -49,9 +52,12 @@ export function ProductCard({ product, href, renderLink, onAdd, headingLevel = 2
       {anyDiscount && <span><Badge variant="discount" /></span>}
       <SourceDate date={listDate} today={today} />
       {onAdd && (
-        <button type="button" onClick={() => onAdd(barcode)}
-          className="min-h-11 self-start rounded-md border border-brand px-4 font-semibold text-brand hover:bg-brand-subtle">
-          {t('addToBasket')}<span className="sr-only">: {name}</span>
+        // One button in both states, so keyboard focus stays in place after adding.
+        <button type="button" aria-disabled={added || undefined} onClick={() => { if (!added) onAdd(barcode) }}
+          className={`inline-flex min-h-11 items-center gap-1 self-start rounded-md border px-4 font-semibold text-brand ${
+            added ? 'border-transparent' : 'border-brand hover:bg-brand-subtle'}`}>
+          {added && <Icon name="check" />}
+          {t(added ? 'inBasket' : 'addToBasket')}<span className="sr-only">: {name}</span>
         </button>
       )}
     </article>

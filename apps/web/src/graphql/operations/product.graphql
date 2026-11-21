@@ -5,12 +5,10 @@ query ProductDetail($barcode: String!) {
     category { code name }
     names { rawName retailer { id name slug } }
     prices {
-      regularPara discountedPara effectivePara unitPricePara vat
-      discountFrom discountTo listDate asOf
+      regularPara discountedPara effectivePara unitPricePara
+      discountFrom discountTo listDate
       format { id name retailer { id name slug } }
     }
-    cheapest { effectivePara listDate asOf format { id name } }
-    history(months: 1) { month regularPara discountedPara listDate asOf }
-    changes(days: 1) { changedOn regularPara discountedPara listDate asOf }
+    history(months: 12) { month regularPara }
   }
 }

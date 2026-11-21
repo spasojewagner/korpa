@@ -1,5 +1,5 @@
 /* Korpa design tokens for Tailwind CSS v4.
-   In M3 move to apps/web/src/styles/theme.css and import after "tailwindcss".
+   Imported by src/styles.css after "tailwindcss".
    Semantic names only: use bg-paper, text-ink, bg-brand ... never raw hex or default Tailwind colors.
    Contrast ratios are listed in docs/design/README.md. */
 

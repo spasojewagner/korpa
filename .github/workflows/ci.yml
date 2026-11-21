@@ -42,5 +42,6 @@ jobs:
       - run: npm --prefix apps/web run typecheck
       - run: npm --prefix apps/web test
       - run: npm --prefix apps/web run build
+      - run: npm --prefix apps/web run size
       - run: npx --prefix apps/web playwright install --with-deps chromium
       - run: npm --prefix apps/web run e2e

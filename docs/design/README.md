@@ -8,9 +8,10 @@ Not a government look: no coats of arms, flags, state colors or official-style s
 2. **Every number has a date.** "Cenovnik od 19.11.2026." next to (or directly under) every price or total.
 3. **Color is never the only signal.** "Najjeftinije", "Sniženo", "Poskupelo" are always icon + text.
 4. **Honest comparisons.** A partial basket is never ranked next to a complete one without saying so.
-5. **Light pages.** Home under 100 KB JS (gzip); no chart library on Home; charts are small hand-written SVG.
+5. **Light pages.** Home under 105 KB JS (gzip): React DOM + TanStack Router are a measured floor of 94.4 KB, so the
+   app shell keeps to ~10 KB. Every other page is its own chunk; no chart library; charts are small hand-written SVG.
 
-## Color (tokens in `theme.css`)
+## Color (tokens in `apps/web/src/styles/theme.css`)
 | Token | Hex | Use | Contrast on `paper` |
 |---|---|---|---|
 | `ink` | #13233A | body text, headings | 14.9:1 |
