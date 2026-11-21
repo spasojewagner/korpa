@@ -525,3 +525,45 @@ def test_static_export_matches_rest_responses(
     asyncio.run(export(tmp_path))
     for name, path in (("categories.json", "/api/categories"), ("quality.json", "/api/quality")):
         assert json.loads((tmp_path / name).read_text("utf-8")) == client.get(path).json()
+
+
+def test_search_prefers_names_that_start_with_the_query(client: TestClient, engine: Engine) -> None:
+    milk, substitute = "0000000000101", "0000000000102"
+    with engine.begin() as c:
+        c.execute(
+            db.products.insert(),
+            [
+                {
+                    "barcode": milk,
+                    "name": "Mleko trajno 2,8% mlečne masti 1 l",
+                    "brand": "Imlek",
+                    "unit": "l",
+                    "category_code": 1,
+                },
+                {
+                    "barcode": substitute,
+                    "name": "Zamena za mleko",
+                    "brand": "",
+                    "unit": "kg",
+                    "category_code": 1,
+                },
+            ],
+        )
+        c.execute(
+            db.prices_current.insert(),
+            [
+                {
+                    "format_id": f,
+                    "barcode": code,
+                    "regular": 15000,
+                    "unit_price": 15000,
+                    "vat": 20,
+                    "list_date": AS_OF,
+                }
+                for code, formats in ((milk, (1, 2, 3)), (substitute, (1,)))
+                for f in formats
+            ],
+        )
+    items = client.get("/api/search", params={"q": "mleko"}).json()["items"]
+    order = [item["barcode"] for item in items]
+    assert order.index(milk) < order.index(substitute)

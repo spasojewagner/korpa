@@ -44,7 +44,15 @@ def search_statements(
         condition,
         sa.select(1).where(prices.c.barcode == p.c.barcode).exists(),
     )
-    matches = sa.select(p, (rank + similarity).label("score")).where(condition).cte("matches")
+    # Relevance: text rank and trigram similarity, plus a bonus when the name starts with the
+    # query ("Mleko 2,8%" before "Zamena za mleko") and a small one for products sold in more
+    # formats, which are the ones people usually look for.
+    starts = sa.case((p.c.search_norm.startswith(query, autoescape=True), 1.0), else_=0.0)
+    n_formats = (
+        sa.select(sa.func.count()).where(prices.c.barcode == p.c.barcode).scalar_subquery()
+    )
+    score = rank + similarity + starts + 0.25 * sa.func.ln(1 + n_formats)
+    matches = sa.select(p, score.label("score")).where(condition).cte("matches")
     count = sa.select(sa.func.count()).select_from(matches)
     page = (
         sa.select(matches)
