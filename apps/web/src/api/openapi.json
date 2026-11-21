@@ -1209,17 +1209,27 @@
     },
     "/api/search": {
       "get": {
+        "description": "Search current-priced products by text and/or category.\n\nAt least one of q or category is required. With category alone, order by number of\ncurrent retail formats descending, then name; barcode breaks ties for stable pagination.\nText queries retain relevance ranking, optionally filtered by category.",
         "operationId": "search_api_search_get",
         "parameters": [
           {
+            "description": "Text query; required unless category is supplied.",
             "in": "query",
             "name": "q",
-            "required": true,
+            "required": false,
             "schema": {
-              "maxLength": 100,
-              "minLength": 2,
-              "title": "Q",
-              "type": "string"
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "minLength": 2,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Text query; required unless category is supplied.",
+              "title": "Q"
             }
           },
           {

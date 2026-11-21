@@ -17,17 +17,30 @@ class Problem(BaseModel):
 
 class SearchParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    q: str = Field(min_length=2, max_length=100)
+    q: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=100,
+        description="Text query; required unless category is supplied.",
+    )
     category: int | None = Field(default=None, ge=1, le=25)
     limit: int = Field(default=20, ge=1, le=50)
     offset: int = Field(default=0, ge=0, le=1000)
 
     @field_validator("q")
     @classmethod
-    def nonblank_query(cls, value: str) -> str:
+    def nonblank_query(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
         if len(value.strip()) < 2:
             raise ValueError("Query must contain at least two non-padding characters")
         return value.strip()
+
+    @model_validator(mode="after")
+    def require_query_or_category(self) -> "SearchParams":
+        if self.q is None and self.category is None:
+            raise ValueError("At least one of q or category is required")
+        return self
 
 
 class SearchItem(BaseModel):

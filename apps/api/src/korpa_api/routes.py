@@ -21,6 +21,12 @@ Database = Annotated[AsyncSession, Depends(session)]
 
 @router.get("/search", response_model=SearchResponse)
 async def search(params: Annotated[SearchParams, Query()], database: Database) -> SearchResponse:
+    """Search current-priced products by text and/or category.
+
+    At least one of q or category is required. With category alone, order by number of
+    current retail formats descending, then name; barcode breaks ties for stable pagination.
+    Text queries retain relevance ranking, optionally filtered by category.
+    """
     return await repository.search(database, params, belgrade_today())
 
 

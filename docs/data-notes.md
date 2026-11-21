@@ -288,3 +288,220 @@ independent failing rule: for example, Metro still has 2,360 price failures even
 
 [profile-2-observations.json](profile-2-observations.json) contains all measurements, exact
 source URLs, hashes, both profiles, the fresh-read proof, deviations, and independent rule counts.
+
+## Eight failed retailers: observed causes and proposals
+
+Investigated on 21 November 2026. The set is the eight `status: failed` publishers in
+[the static quality response](https://ai-korpa.vercel.app/data/quality.json) used by
+[/kvalitet](https://ai-korpa.vercel.app/kvalitet), with `as_of: 2026-11-21` and completed
+ingests between 17:43 and 17:49 UTC. The public API location remains
+[the deployed service](https://korpa-api.onrender.com/api/quality), as documented in
+[deploy.md](deploy.md); the static response identifies the page's actual published snapshot.
+
+Sources below were resolved through the verified portal discovery interface, then downloaded
+without conditional validators at 19:35:34–19:35:45 UTC (20:35:34–20:35:45 Europe/Belgrade).
+All eight fresh responses were HTTP 200 and decoded successfully as UTF-8 (optional BOM
+removed); all use semicolons. Exact first physical lines below preserve CSV quoting but omit
+line terminators and any BOM. SHA-256 is over downloaded, HTTP-decoded bytes before UTF-8
+decoding, so it includes any BOM. The existing `compat-2026-11.2` reader was used without
+changes or database writes. Header failures count physical data lines as the reader does;
+they do not prove that each row was semantically inspected. These are data observations,
+not findings of legal non-compliance. Every proposal below awaits a maintainer decision;
+no compatibility mappings or source repairs are implemented here.
+
+### BRICO S DOO (`brico-s-doo`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/6a329a1969e6025495f2d2b6/) · [Downloaded CSV](https://data.gov.rs/s/resources/brico-s-doo-cenovnik/20261121-032950/cene-proizvoda-bricos-20261121.csv)
+
+Fresh observation: `2026-11-21T19:35:34.175949+00:00`; 4,227,662 bytes; SHA-256
+`5ae3b1d35d221e25bdb6257665f94a412d0891c6b45ac7d470b7eb7f137e27d9`.
+
+Exact header:
+
+```text
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca - formata*;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snižena cena;Datum početka sniženja;Datum kraja sniženja;Stopa PDV
+```
+
+The header has 14 columns: `VRSTA_CENOVNIKA` is missing and column 7 is
+`Naziv trgovca - formata*` (literal trailing asterisk). All 32,713 records are rejected
+at the header stage. The first data record additionally contains category `10000`, date
+`21.11.2026`, and an empty required unit price; fixing the header alone would not establish
+row validity.
+
+Proposal: ask the publisher for the complete 15-column export with canonical format header,
+explicit list type, category codes 1–25, `DD-MM-YYYY` dates and populated unit prices.
+The maintainer should decide whether this non-grocery assortment belongs in discovery;
+do not infer list type or recode its categories.
+
+### Konovo doo (`konovo-doo`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/6a693202d31a9dd3073aaf73/) · [Downloaded CSV](https://konovo.rs/wp-content/uploads/cenovnik/cene_proizvoda_konovo.csv)
+
+Fresh observation: `2026-11-21T19:35:35.174296+00:00`; 1,586,197 bytes; SHA-256
+`06f07888c4e875be9d5da8ecb18ab28ffb208178fe92c389f602bbc86ce7408f`.
+
+Exact header:
+
+```text
+Kategorija;"Naziv kategorije";"Naziv proizvoda";"Robna marka";"Barkod proizvoda";"Jedinica mere";"Naziv trgovca - formata";"Datum cenovnika";"Redovna cena";"Cena po jedinici mere";"Snižena cena";"Datum početka sniženja";"Datum kraja sniženja";"Stopa PDV";"Šifra proizvoda"
+```
+
+The file has 15 columns, but `Kategorija` and `Naziv kategorije` differ in case
+from the required uppercase headers; the last column is `Šifra proizvoda` instead of
+`VRSTA_CENOVNIKA`. All 10,061 records fail the header. The first final-column value is
+`G-43816`, a product identifier, so treating it as a spelling alias would change meaning.
+
+Proposal: request a separate contract export with canonical category headers, explicit list
+type and no additional product-code column. Ask the maintainer to review assortment/category
+scope (the first category name is `Tableti i Oprema za Tablete`); never substitute list types
+for product identifiers.
+
+### Leon Conditors DOO (`leon-conditors-doo`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/68f1db0682d3fdfbdceeabcb/) · [Downloaded CSV](https://www.leon.co.rs/cenovnik/cene-proizvoda-leon.csv)
+
+Fresh observation: `2026-11-21T19:35:35.893326+00:00`; 1,560,523 bytes; SHA-256
+`186e7d218a4ee3680d55359d1edeebc2c3f86c71a96966327b0c3db51a494fed`.
+
+Exact header:
+
+```text
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca - formata;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snižena cena;Datum početka sniženja;Datum kraja sniženja;Stopa PDV;VRSTA_CENOVNIKA
+```
+
+The deployed failure is a connection timeout, not a rejected CSV or HTTP error.
+The [deployment job](https://github.com/spasojewagner/korpa/actions/runs/44931550566/job/136929067446)
+records at `2026-11-21T17:46:27.1784846Z`:
+
+```text
+ERROR:root:Download failed for leon-conditors-doo: ConnectTimeout
+```
+
+The accompanying report has `http_status: 0`, zero rows and `download: 1`; the ingestion
+client has a 60-second timeout. This identifies the observed exception, but does not prove
+whether the underlying cause was routing, hosting or another connection problem.
+The fresh download below succeeds with HTTP 200, decodes as UTF-8 and has the canonical
+header. Parsing without writes yields 827 valid records of 9,670; independent rules count
+8,843 discount failures and 4 unit failures. `Snižena cena` is literal `0` on 8,837 rows
+(e.g. CSV line 2), and the four unit failures use `1kg/l`. These later row findings did
+not cause the earlier download failure and are not a claim that a new import has run.
+
+Proposal: retry the normal ingest from the deployment environment and check connectivity
+if the timeout recurs; a maintainer can consider bounded transient-download retries separately.
+Ask the publisher to leave absent discounts empty and publish valid unit values; do not
+interpret zero as an absent discount or guess what `1kg/l` means.
+
+### Planeta Sport (`planeta-sport`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/6acca84dc60236a1e2681a41/) · [Downloaded CSV](https://portal.planeta.services/api/media/price-reporting/cene_proizvoda_planetasport.csv)
+
+Fresh observation: `2026-11-21T19:35:36.464269+00:00`; 487,719 bytes; SHA-256
+`b1d4f5c6e0c7db87d60d6bf9e4208bc150eacf30b0b01fbe8e9f468701f9ecb4`.
+
+Exact header:
+
+```text
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snižena cena;Datum početka sniženja;Datum kraja sniženja;Stopa PDV;VRSTA_CENOVNIKA
+```
+
+All 2,444 records fail because column 7 is `Naziv trgovca`, not
+`Naziv trgovca - formata`. This is a UTF-8 header mismatch, not an encoding error. The first
+published format value is `Planeta Sport - eplaneta.rs`.
+
+Proposal: request the canonical format header from the publisher. Alternatively, the
+maintainer can decide whether that exact header is a justified future one-to-one alias
+after confirming that values identify formats; any approval needs a new counted profile.
+
+### Qvattro Company (`qvattro-company`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/68f8cbfd1d835c729727825d/) · [Downloaded CSV](https://prodavnicasunce.rs/cenovnik/cene_proizvoda_QVATTRO_COMPANY.csv)
+
+Fresh observation: `2026-11-21T19:35:36.941032+00:00`; 4,999,434 bytes; SHA-256
+`58d583ef86cbaa02ae001c3c1a0e5c9443218c4a047837dc4958dec4b05ab33e`.
+
+Exact header:
+
+```text
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca - format;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snižena cena;Datum početka sniženja;Datum kraja sniženja;Stopa PDV;VRSTA_CENOVNIKA
+```
+
+All 29,791 records fail because column 7 is `Naziv trgovca - format`
+(singular `format`), not `Naziv trgovca - formata`. The other 14 parsed header cells match.
+
+Proposal: request the canonical header; alternatively submit this exact one-to-one spelling
+variant for a maintainer decision in a future counted profile. No general suffix correction
+or fuzzy header matching is justified.
+
+### RIČ doo Prokuplje (`ric-doo-prokuplje`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/6a95ed3adf0d645f96b6f3de/) · [Downloaded CSV](https://www.podaci.ric.rs/cenovnici/cene_proizvoda_ric.csv)
+
+Fresh observation: `2026-11-21T19:35:38.554612+00:00`; 4,190,562 bytes; SHA-256
+`60947f91b5b8c42a20ef9db8146954e630b956757343ce99e3a9271ce65d44db`.
+
+Exact header:
+
+```text
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca - formata;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snižena cena;Datum početka sniženja;Datum kraja sniženja;Stopa PDV;VRSTA_CENOVNIKA
+```
+
+The canonical header is accepted and all 31,885 records are fully processed,
+but none is valid. Every `Stopa PDV` is decimal text: `20.00` on 29,012 rows and `10.00`
+on 2,873 rows; the contract requires integer text. Independently, 31,851 required
+`Cena po jedinici mere` cells are empty. There are also 51 unapproved unit values:
+`kgr` (16), `kon` (15), `kg.` (5), `km` (4), `kgm` (3), `set` (3), `om` (2),
+`1` (2), `kob` (1). First-failure counts (`vat: 31834`, `unit: 51`) hide overlapping
+price failures; independent counts are `vat: 31885`, `price: 31851`, `unit: 51`.
+CSV line 2 has `Stopa PDV=20.00` and an empty unit price.
+
+Proposal: request integer VAT, actual populated unit prices and explicit valid units from
+the publisher. The maintainer may separately evaluate the two exact decimal VAT spellings,
+but that alone would leave almost all rows invalid; do not calculate missing unit prices
+or infer units from these abbreviations.
+
+### Statovac (`statovac`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/6a0aecd5c320c889bd9a2a96/) · [Downloaded CSV](https://data.gov.rs/s/resources/cenovnici-statovac/20261107-033026/cene-proizvoda-kengur.csv)
+
+Fresh observation: `2026-11-21T19:35:43.424111+00:00`; 5,315,775 bytes; SHA-256
+`c72a690bca92d9c20907e0daa7e945815cb7f319fe66dc7af245982c97bba704`.
+
+Exact header:
+
+```text
+КАТЕГОРИЈА;НАЗИВ КАТЕГОРИЈЕ;Назив производа;Робна марка;Баркод производа;Јединица мере;Назив трговца – формата;Датум ценовника;Редовна цена;Цена по јединици мере;Снижена цена;Датум почетка снижења;Датум краја снижења;Стопа ПДВ;ВРСТА_ЦЕНОВНИКА
+```
+
+All 22,300 records fail at the header: all 15 column names are Cyrillic,
+including `КАТЕГОРИЈА` and `ВРСТА_ЦЕНОВНИКА`; column 7 also uses an en dash. UTF-8 decoding
+succeeds, so this is not an encoding failure. Published values also include Cyrillic
+units (`кг`: 15,824; `л`: 5,904; `ком`: 572) and list type `МЕСЕЧНИ_ПРЕСЕК` in line 2.
+Header acceptance alone would not validate those values.
+
+Proposal: request the canonical Latin contract export, or ask the maintainer to review a
+complete, explicitly enumerated header/unit/list-type profile with deviation counters.
+Do not transliterate arbitrary source data or silently turn Cyrillic values into valid ones.
+
+### VP DIMA (`vp-dima`)
+
+[Portal dataset](https://data.gov.rs/api/1/datasets/6a95aa4568bb7d8ad44b1e7d/) · [Downloaded CSV](https://vpdima.rs/cenovnik/cene_proizvoda_vpdima.csv)
+
+Fresh observation: `2026-11-21T19:35:44.899283+00:00`; 4,596,747 bytes; SHA-256
+`44506019ba8d51cd1ad6a14f8c21832aabd32513893e0649f54e1102537169af`.
+
+Exact header:
+
+```text
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca - formata;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snizena cena;Datum pocetka snizenja;Datum kraja snizenja;Stopa PDV;VRSTA_CENOVNIKA
+```
+
+Columns 11–13 are ASCII `Snizena cena`, `Datum pocetka snizenja` and
+`Datum kraja snizenja`, instead of `Snižena cena`, `Datum početka sniženja` and
+`Datum kraja sniženja`. UTF-8 decoding succeeds; the missing accents are present in the
+published header itself. The fresh file has 25,465 rejected records, compared with 25,466
+in the deployed report; its Last-Modified is `Sat, 21 Nov 2026 19:08:24 GMT`, after that
+report's ingest. The header failure remains reproducible despite the changed row count.
+
+Proposal: ask the publisher to restore these three canonical header spellings, or seek a
+maintainer decision on exactly these three one-to-one aliases in a new counted profile.
+Do not apply general accent-insensitive header matching.
