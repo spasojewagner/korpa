@@ -14,8 +14,8 @@ from sqlalchemy.engine import Engine
 from test_rest import client as client
 from test_rest import engine as engine
 
-BASE, NEXT, CURRENT = date(2026, 8, 1), date(2026, 9, 1), date(2026, 10, 1)
-AS_OF = date(2026, 10, 15)
+BASE, NEXT, CURRENT = date(2026, 9, 1), date(2026, 10, 1), date(2026, 11, 1)
+AS_OF = date(2026, 11, 21)
 
 
 def seed(
@@ -106,7 +106,7 @@ def test_base_rise_medians_overall_provisional_and_idempotent_cache(
             "provisional": False,
         },
         {
-            "month": CURRENT.isoformat(),
+            "month": AS_OF.isoformat(),
             "value": 110.0,
             "n_products": 30,
             "n_excluded": 0,
@@ -130,8 +130,8 @@ def test_base_rise_medians_overall_provisional_and_idempotent_cache(
 def test_exclusion_counts_and_threshold_after_exclusions(
     client: TestClient, engine: Engine, monkeypatch: pytest.MonkeyPatch, n: int
 ) -> None:
-    # Both inclusive limits enter the mean and cancel geometrically. Missing rows on
-    # either side, 0/0, zero numerator/denominator and ratios just outside are excluded.
+    # Inclusive limits cancel geometrically. Only matched zero/out-of-range pairs are
+    # excluded; products missing from either month do not enter either count.
     seed(
         engine,
         n - 2,
@@ -153,9 +153,9 @@ def test_exclusion_counts_and_threshold_after_exclusions(
     for category in result["categories"][:2]:
         for point in category["points"][1:]:
             assert point["n_products"] == n
-            assert point["n_excluded"] == 7
+            assert point["n_excluded"] == 5
             assert point["value"] == expected
-        # Two zero-base products and one missing-base newcomer are excluded even at base.
+        # Only the two zero-base products are excluded at the base point.
         assert category["points"][0]["n_excluded"] == 2
 
 
@@ -163,7 +163,7 @@ def test_compacted_and_live_history_and_late_rows_refresh_cache(
     client: TestClient, engine: Engine, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     seed(engine)
-    assert compact_monthly(engine, date(2026, 11, 1)) == 90
+    assert compact_monthly(engine, date(2026, 12, 1)) == 90
     refresh_index(engine, AS_OF)
     assert read(client, monkeypatch)["categories"][0]["points"][1]["value"] == 110.0
     with engine.begin() as c:
@@ -206,24 +206,24 @@ def test_future_lists_and_months_are_ignored(
 ) -> None:
     seed(engine)
     with engine.begin() as c:
-        c.execute(db.prices_current.update().values(list_date=date(2026, 10, 16)))
+        c.execute(db.prices_current.update().values(list_date=date(2026, 11, 22)))
         c.execute(
             db.monthly_snapshots.insert().values(
-                format_id=1, barcode=f"{1:013d}", month=date(2026, 11, 1), regular=1
+                format_id=1, barcode=f"{1:013d}", month=date(2026, 12, 1), regular=1
             )
         )
     refresh_index(engine, AS_OF)
     result = read(client, monkeypatch)
     point = result["categories"][0]["points"][-1]
-    assert point["n_products"] == 0 and point["n_excluded"] == 30
-    assert point["value"] is None and point["month"] == CURRENT.isoformat()
+    assert point["n_products"] == 0 and point["n_excluded"] == 0
+    assert point["value"] is None and point["month"] == AS_OF.isoformat()
 
 
 def test_index_static_export_equals_rest_with_completed_and_provisional_points(
     client: TestClient, engine: Engine, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     seed(engine, extra=[(0, 330), (300, None)])
-    refresh_index(engine, AS_OF)
+    # Export must rebuild final points even when deployment did not run ingestion.
     monkeypatch.setattr("korpa_api.export_static.belgrade_today", lambda: AS_OF)
     asyncio.run(export(tmp_path))
     assert json.loads((tmp_path / "index.json").read_text("utf-8")) == read(client, monkeypatch)
@@ -256,3 +256,50 @@ def test_index_problem_contract(client: TestClient, monkeypatch: pytest.MonkeyPa
     responses = app.openapi()["paths"]["/api/index"]["get"]["responses"]
     for status in ("422", "500", "503"):
         assert set(responses[status]["content"]) == {"application/problem+json"}
+
+
+@pytest.mark.parametrize("first_day", [False, True])
+def test_current_month_snapshot_is_final_and_provisional_uses_source_date(
+    client: TestClient, engine: Engine, monkeypatch: pytest.MonkeyPatch, first_day: bool
+) -> None:
+    seed(engine)
+    with engine.begin() as c:
+        c.execute(
+            db.monthly_snapshots.insert().from_select(
+                ["format_id", "barcode", "month", "regular"],
+                sa.select(
+                    db.prices_current.c.format_id,
+                    db.prices_current.c.barcode,
+                    sa.literal(CURRENT),
+                    db.prices_current.c.regular,
+                ),
+            )
+        )
+    as_of = CURRENT if first_day else AS_OF
+    refresh_index(engine, as_of)
+    monkeypatch.setattr("korpa_api.routes.belgrade_today", lambda: as_of)
+    result = client.get("/api/index").json()
+    points = result["categories"][0]["points"]
+    assert [p["month"] for p in points] == [
+        BASE.isoformat(),
+        NEXT.isoformat(),
+        CURRENT.isoformat(),
+        as_of.isoformat(),
+    ]
+    assert [p["provisional"] for p in points] == [False, False, False, True]
+    assert points[0]["value"] == 100.0
+    assert points[2]["value"] == 110.0
+    with engine.connect() as c:
+        assert c.scalar(sa.select(sa.func.max(db.index_monthly.c.month))) == CURRENT
+
+
+def test_unmatched_products_do_not_enter_either_count(
+    client: TestClient, engine: Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    seed(engine, 30, [(300, None), (None, 330)])
+    refresh_index(engine, AS_OF)
+    for category in read(client, monkeypatch)["categories"][:2]:
+        for point in category["points"][1:]:
+            assert point["n_products"] == 30
+            assert point["n_excluded"] == 0
+            assert point["value"] == 110.0

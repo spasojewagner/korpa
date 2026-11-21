@@ -92,7 +92,7 @@ sa.Index(
     "ix_prices_current_index_median",
     prices_current.c.barcode,
     prices_current.c.regular,
-    postgresql_include=["list_date"],
+    postgresql_include=["list_date", "discounted", "disc_from", "disc_to"],
 )
 price_changes = sa.Table(
     "price_changes",

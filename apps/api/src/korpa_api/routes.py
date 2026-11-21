@@ -14,6 +14,8 @@ from korpa_api.schemas import (
     QualityResponse,
     SearchParams,
     SearchResponse,
+    SignalsParams,
+    SignalsResponse,
 )
 
 router = APIRouter(prefix="/api")
@@ -49,3 +51,8 @@ async def quality(database: Database) -> QualityResponse:
 @router.get("/index", response_model=IndexResponse)
 async def price_index(database: Database) -> IndexResponse:
     return await analytics.price_index(database, belgrade_today())
+
+
+@router.get("/signals", response_model=SignalsResponse)
+async def signals(params: Annotated[SignalsParams, Query()], database: Database) -> SignalsResponse:
+    return await analytics.signals(database, params, belgrade_today())
