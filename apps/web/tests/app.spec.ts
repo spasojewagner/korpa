@@ -85,7 +85,10 @@ for (const path of ['/pretraga', '/korpa', '/indeks', '/kvalitet', '/o-projektu'
   test(`no accessibility violations on ${path}`, async ({ page }) => {
     await page.goto(path)
     await expect(h1(page)).toBeVisible()
-    if (path === '/kvalitet') await expect(page.getByRole('table')).toBeVisible()
+    if (path === '/kvalitet') {
+      await expect(page.getByRole('table')).toBeVisible()
+      await expect(page.getByText('Verovatne greške u cenama:')).toBeVisible()
+    }
     await expectNoViolations(page)
   })
 }

@@ -92,7 +92,7 @@ export const copy = {
 
   indexHeading: 'Indeks cena',
   indexSoon: 'Mesečni indeks cena po kategorijama biće objavljen kada se prikupi dovoljno mesečnih preseka.',
-  indexIntro: 'Koliko su se redovne cene promenile u odnosu na {month}. Vrednost 100 znači isti nivo cena kao tada.',
+  indexIntro: 'Promena redovnih cena u odnosu na bazni mesec ({month} = 100). Vrednost iznad 100 znači da su cene u proseku više nego tada.',
   indexOverall: 'Sve kategorije',
   indexProvisional: 'privremeno, cene od {date}',
   indexMethodHeading: 'Kako računamo',
@@ -132,6 +132,8 @@ export const copy = {
   today: 'danas',
   rejected: 'Odbačeno',
   adjusted: 'Prilagođeno',
+  suspected: 'Verovatne greške u cenama',
+  qualitySuspected: 'Verovatne greške su cene više od tri puta veće od istog proizvoda u drugim prodavnicama ili od prethodne cene istog formata, najčešće pakovanje upisano kao komad. Ne prikazujemo ih kao signale.',
 
   aboutHeading: 'O projektu',
   aboutWhat: 'Korpa je nezavisan, nekomercijalan projekat. Cenovnike namirnica koje trgovci po zakonu objavljuju kao otvorene podatke pretvara u alat za poređenje cena.',
@@ -191,6 +193,7 @@ export const codeLabels: Record<string, string> = {
   unit_alias: 'skraćenica jedinice mere',
   price_decimals: 'cena bez dve decimale',
   header_alias: 'drugačiji naziv kolone',
+  price_outlier: 'cena preko 3 puta od uporedive',
 }
 
 export type CopyKey = keyof typeof copy
