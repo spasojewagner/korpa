@@ -418,6 +418,13 @@
             ],
             "title": "Status",
             "type": "string"
+          },
+          "suspected_errors": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Suspected Errors",
+            "type": "object"
           }
         },
         "required": [
@@ -429,6 +436,7 @@
           "rows_total",
           "rows_valid",
           "errors",
+          "suspected_errors",
           "errors_by_rule",
           "deviations",
           "profile",

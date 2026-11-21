@@ -7,6 +7,7 @@ from sqlalchemy.engine import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import ColumnElement, Select
 
+from korpa_api.analytics import suspected_price_errors
 from korpa_api.pricing import effective_price
 from korpa_api.schemas import (
     BasketFormat,
@@ -230,6 +231,7 @@ async def categories(session: AsyncSession) -> list[CategoryItem]:
 
 
 async def quality(session: AsyncSession, as_of: date) -> QualityResponse:
+    suspected = await suspected_price_errors(session, as_of)
     r, runs = db.retailers, db.ingest_runs
     latest = (
         sa.select(runs)
@@ -284,6 +286,9 @@ async def quality(session: AsyncSession, as_of: date) -> QualityResponse:
                     **row,
                     "status": status,
                     "errors": errors,
+                    "suspected_errors": {"price_outlier": suspected[row["id"]]}
+                    if row["id"] in suspected
+                    else {},
                     "errors_by_rule": report.get("errors_by_rule", {}),
                     "deviations": report.get("deviations", {}),
                     "profile": report.get("profile"),

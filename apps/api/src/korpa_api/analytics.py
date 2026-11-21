@@ -267,6 +267,7 @@ def signal_candidates(
 
 def signals_statement(as_of: date, params: SignalsParams) -> Select[*tuple[object, ...]]:
     candidates = signal_candidates(as_of, params.type)
+    ratio = sa.cast(candidates.c.price_para, sa.Numeric) / candidates.c.reference_para
     p, f, r = db.products, db.retail_formats, db.retailers
     return (
         sa.select(
@@ -289,10 +290,15 @@ def signals_statement(as_of: date, params: SignalsParams) -> Select[*tuple[objec
             .join(f, f.c.id == candidates.c.format_id)
             .join(r, r.c.id == f.c.retailer_id)
         )
+        .where(
+            sa.cast(candidates.c.price_para, sa.BigInteger)
+            <= sa.cast(candidates.c.reference_para, sa.BigInteger) * 3
+        )
         .order_by(
             candidates.c.date.desc(),
-            candidates.c.type,
+            ratio.desc(),
             candidates.c.barcode,
+            candidates.c.type,
             candidates.c.format_id,
         )
         .limit(params.limit)
@@ -305,3 +311,20 @@ async def signals(session: AsyncSession, params: SignalsParams, as_of: date) -> 
     await session.execute(sa.text("SET LOCAL enable_presorted_aggregate = off"))
     rows = (await session.execute(signals_statement(as_of, params))).mappings()
     return SignalsResponse(as_of=as_of, items=[SignalItem.model_validate(row) for row in rows])
+
+
+async def suspected_price_errors(session: AsyncSession, as_of: date) -> dict[int, int]:
+    """Count above-bound rule candidates per retailer, before any publication limits."""
+    candidates = signal_candidates(as_of)
+    f = db.retail_formats
+    await session.execute(sa.text("SET LOCAL enable_presorted_aggregate = off"))
+    rows = await session.execute(
+        sa.select(f.c.retailer_id, sa.func.count())
+        .select_from(candidates.join(f, f.c.id == candidates.c.format_id))
+        .where(
+            sa.cast(candidates.c.price_para, sa.BigInteger)
+            > sa.cast(candidates.c.reference_para, sa.BigInteger) * 3
+        )
+        .group_by(f.c.retailer_id)
+    )
+    return {int(row["retailer_id"]): int(row["count"]) for row in rows.mappings()}

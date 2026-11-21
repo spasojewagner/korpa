@@ -122,6 +122,7 @@ class QualityItem(BaseModel):
     rows_total: int | None
     rows_valid: int | None
     errors: dict[str, int]
+    suspected_errors: dict[str, int]
     errors_by_rule: dict[str, int]
     deviations: dict[str, int]
     profile: str | None
