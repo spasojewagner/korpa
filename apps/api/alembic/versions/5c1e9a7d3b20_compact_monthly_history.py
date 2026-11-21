@@ -37,9 +37,7 @@ def upgrade() -> None:
         sa.Column("min_discounted", sa.Integer),
         sa.Column("n_formats", sa.SmallInteger, nullable=False),
     )
-    op.create_index(
-        "ix_monthly_snapshots_barcode_month", "monthly_snapshots", ["barcode", "month"]
-    )
+    op.create_index("ix_monthly_snapshots_barcode_month", "monthly_snapshots", ["barcode", "month"])
     op.execute(VIEW)
 
 
