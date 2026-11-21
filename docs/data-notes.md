@@ -34,9 +34,10 @@ The adapter selects CSV resources whose URL contains `cene_proizvoda` or `cene-p
 Distinct matching resources or datasets for one publisher are reported as ambiguous, never chosen
 by arbitrary ordering. Historical files with unrecognized names are not automatically imported.
 
-## Compatibility profile `compat-2026-11`
+## Previous compatibility profile `compat-2026-11`
 
-The CLI explicitly selects this approved profile. `read_csv` without a profile still provides
+The earlier CLI selected this profile; the current CLI uses `compat-2026-11.2` described below.
+`read_csv` without a profile still provides
 strict contract validation. No barcode, product text, price, date, or empty field is repaired.
 
 Exact value mappings:
@@ -186,3 +187,104 @@ products; that figure is not used as the isolated cold comparison.
 These are observed local wall times, not a network latency guarantee. The larger forecast of
 700k current rows remains a separate scale benchmark. Scheduled ingestion, raw-download
 artifact retention, static JSON exports, product APIs, and deployment belong to later phases.
+
+## Measured price/unit failures before `compat-2026-11.2`
+
+Measured from fresh live downloads on 21 November 2026 before enabling the new mappings.
+Counts inspect every field of every structurally valid source row under `compat-2026-11`,
+including rows that also fail a different rule. Empty optional discounted prices are excluded;
+empty required prices are `other`. These are field counts, not rejected-row counts.
+
+| Retailer | Price column | Integer (`100`) | One decimal (`1000.1`) | >2 decimals | Comma decimal | Other |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| `beltorg-doo-1` | Redovna cena | 0 | 0 | 0 | 0 | 0 |
+| `beltorg-doo-1` | Cena po jedinici mere | 0 | 0 | 0 | 0 | 0 |
+| `beltorg-doo-1` | Snižena cena | 0 | 0 | 0 | 0 | 0 |
+| `lidl` | Redovna cena | 0 | 0 | 0 | 0 | 99 |
+| `lidl` | Cena po jedinici mere | 0 | 0 | 0 | 0 | 99 |
+| `lidl` | Snižena cena | 0 | 0 | 0 | 0 | 0 |
+| `luki-komerc-d-o-o` | Redovna cena | 0 | 0 | 0 | 0 | 0 |
+| `luki-komerc-d-o-o` | Cena po jedinici mere | 0 | 0 | 0 | 0 | 113 |
+| `luki-komerc-d-o-o` | Snižena cena | 0 | 0 | 0 | 0 | 0 |
+| `metro-cash-carry-doo-beograd` | Redovna cena | 10022 | 1461 | 0 | 0 | 0 |
+| `metro-cash-carry-doo-beograd` | Cena po jedinici mere | 4697 | 2992 | 0 | 0 | 2360 |
+| `metro-cash-carry-doo-beograd` | Snižena cena | 756 | 4 | 0 | 0 | 0 |
+| `yuhor-d-o-o` | Redovna cena | 0 | 0 | 0 | 0 | 153 |
+| `yuhor-d-o-o` | Cena po jedinici mere | 0 | 0 | 0 | 0 | 312 |
+| `yuhor-d-o-o` | Snižena cena | 0 | 0 | 0 | 0 | 0 |
+
+Unit failures under the previous profile, grouped by the exact published value:
+
+| Retailer | Exact unit value | Count |
+| --- | --- | ---: |
+| `beltorg-doo-1` | — (none) | 0 |
+| `lidl` | `kom.` | 2556 |
+| `lidl` | `listić` | 36 |
+| `lidl` | `br.pranja` | 84 |
+| `lidl` | `m` | 8 |
+| `luki-komerc-d-o-o` | `lit` | 20 |
+| `luki-komerc-d-o-o` | `set` | 28 |
+| `luki-komerc-d-o-o` | `dzak` | 24 |
+| `luki-komerc-d-o-o` | `par` | 4 |
+| `metro-cash-carry-doo-beograd` | `"" (empty)` | 2272 |
+| `metro-cash-carry-doo-beograd` | `KO` | 1848 |
+| `metro-cash-carry-doo-beograd` | `M` | 101 |
+| `metro-cash-carry-doo-beograd` | `GR` | 44 |
+| `metro-cash-carry-doo-beograd` | `JED` | 4 |
+| `yuhor-d-o-o` | — (none) | 0 |
+
+The frequent unapproved price shapes are empty required values (Lidl: 99 in each of regular
+and unit-price columns; Luki: 113 unit prices; Metro: 2,272 unit prices; Yuhor: 153 regular
+and 312 unit prices) and 88 leading-dot Metro unit prices such as `.18` and `.3`.
+Leading-dot fractions are not mapped. No >2-decimal or comma-decimal failures were observed.
+Unapproved units include `listić`, `br.pranja`, `m`, `set`, `dzak`, `par`, empty strings,
+`KO`, `M`, and `JED`; these remain errors.
+
+## Active profile `compat-2026-11.2`
+
+The current CLI profile inherits the exact list-type and header mappings documented above.
+It adds only:
+
+| Field | Accepted source shape | Canonical representation | Deviation |
+| --- | --- | --- | --- |
+| Price | ASCII digits, no decimal (`100`) | `100.00` | `price_decimals` per field |
+| Price | ASCII digits, dot, one decimal (`1000.1`) | `1000.10` | `price_decimals` per field |
+| Unit | Exact ASCII case-insensitive `kom.` | `kom` | `unit_alias` |
+| Unit | Exact ASCII case-insensitive `gr` | `g` | `unit_alias` |
+| Unit | Exact ASCII case-insensitive `lit` | `l` | `unit_alias` |
+
+Padding is exact; it never rounds. More than two decimals, commas, spaces, signs, thousands
+separators, leading-dot fractions, and out-of-range integer para still fail `price`.
+Unknown units still fail `unit`. Canonical two-decimal prices are not counted as deviations.
+The previous profile remains available explicitly to the Python reader, with unchanged rules.
+The stored validator profile must equal the active profile, so upgrading from `compat-2026-11`
+forces a full GET even when ETag or Last-Modified was saved for an otherwise identical URL.
+The five-file re-run below explicitly verified that old-profile validators were ignored.
+
+### Five-file re-run with `compat-2026-11.2`
+
+All five requests were full HTTP 200 responses: the saved previous-profile validators were
+ignored by the existing validator mechanism. Sources changed since the earlier observation
+(Luki now has 25,190 rows and Metro 38,041); the before/after valid counts below use the same
+fresh bytes measured before this profile change. This re-run reused the local database and
+took **101.8949 seconds**, including discovery, network downloads and database work.
+This is a new observation, not a replacement for the earlier isolated writer benchmark.
+
+| Retailer | Rows | Valid (previous profile, same bytes) | Valid (new profile) | Deviations | Errors (first failing rule) |
+| --- | ---: | ---: | ---: | --- | --- |
+| `beltorg-doo-1` | 2,075 | 1,799 | 1,799 | list_type_ascii: 2,075 | conflicting_duplicate: 276 |
+| `lidl` | 12,628 | 9,781 | 11,970 | header_alias: 1; list_type_ascii: 12,628; unit_alias: 2,556 | unit: 128; price: 99; conflicting_duplicate: 431 |
+| `luki-komerc-d-o-o` | 25,190 | 24,999 | 25,019 | list_type_ascii: 25,190; unit_alias: 20 | price: 97; unit: 56; conflicting_duplicate: 18 |
+| `metro-cash-carry-doo-beograd` | 38,041 | 20,372 | 33,617 | list_type_ascii: 38,041; unit_case: 33,772; price_decimals: 19,932; unit_alias: 44 | unit: 4,225; price: 72; discount: 1; conflicting_duplicate: 126 |
+| `yuhor-d-o-o` | 4,612 | 4,268 | 4,268 | list_type_ascii: 4,612 | price: 312; conflicting_duplicate: 32 |
+
+Total: **76,673 valid records of 82,546**, compared with **61,219**
+under the previous profile on those same measured bytes. Counts include valid duplicate source
+records before identical duplicates collapse to database writes. New accepted rows can expose
+conflicting duplicate identities, so the conflict count can increase after an alias is enabled.
+Metro now also exposes one invalid discount; it remains an error. The report retains every
+independent failing rule: for example, Metro still has 2,360 price failures even though only
+72 are its first failing rule.
+
+[profile-2-observations.json](profile-2-observations.json) contains all measurements, exact
+source URLs, hashes, both profiles, the fresh-read proof, deviations, and independent rule counts.
