@@ -40,7 +40,7 @@ Not a government look: no coats of arms, flags, state colors or official-style s
   transliteration at runtime. UI copy and category names are transliterated; **product names and brands are shown
   exactly as the retailer published them** (they are data, e.g. "Coca-Cola" must stay as is).
 
-## Components (key ones, typed, each with tests)
+## Components (`apps/web/src/components`, typed, tested, axe-checked)
 | Component | Notes |
 |---|---|
 | `Price` | para → formatted, optional discounted + regular, unit price |
@@ -48,7 +48,7 @@ Not a government look: no coats of arms, flags, state colors or official-style s
 | `Badge` | variants `cheapest`, `discount`, `partial`, `increase`, `decrease`; icon + text always |
 | `SearchForm` | `role="search"`, label visible, submits to `/pretraga?q=`; no autocomplete in v1 |
 | `ProductCard` | name, brand, unit, min–max price, number of formats, add to basket |
-| `PriceComparison` | table on ≥ 640 px (caption, `scope`, sortable with `aria-sort`), stacked list on mobile |
+| `PriceComparison` | two-column table (caption, row headers), cheapest first (`aria-sort`), ties share the badge, unit price under each price |
 | `QuantityStepper` | − / number input / +, labelled per product, 1–99 |
 | `BasketSummary` | per retailer/format total, complete vs partial (badge + count of missing items) |
 | `ScriptToggle` | "Latinica / Ћирилица" radio group, persisted, sets `lang` on `<html>` |

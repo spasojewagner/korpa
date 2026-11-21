@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router'
 import { App } from './App'
+import { I18nProvider } from './i18n/I18nProvider'
 import './styles.css'
 
 const rootRoute = createRootRoute()
@@ -12,6 +13,6 @@ declare module '@tanstack/react-router' { interface Register { router: typeof ro
 const client = new QueryClient()
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode><QueryClientProvider client={client}>
-    <RouterProvider router={router} />
+    <I18nProvider><RouterProvider router={router} /></I18nProvider>
   </QueryClientProvider></React.StrictMode>,
 )
