@@ -69,6 +69,9 @@ class CostRule(ValidationRule):
                     multiplier = FORMAT_CAP
                 elif name == "names":
                     multiplier = NAME_CAP
+                elif name == "monthlyPrices":
+                    value = arguments.get("months", 12)
+                    multiplier = max(1, min(24, value)) if type(value) is int else 24
                 elif name in {"history", "changes"}:
                     key, default, maximum = (
                         ("months", 12, 24) if name == "history" else ("days", 30, 120)

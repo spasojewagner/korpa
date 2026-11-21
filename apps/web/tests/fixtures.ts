@@ -40,10 +40,10 @@ export const product: ProductDetailQuery = {
       { regularPara: 16999, discountedPara: null, effectivePara: 16999, unitPricePara: 16999, discountFrom: null,
         discountTo: null, listDate: '2026-11-20', format: { id: 2, name: 'Beta Market', retailer: beta } },
     ],
-    history: [
-      { month: '2026-09-01', regularPara: 15499 },
-      { month: '2026-10-01', regularPara: 15999 },
-      { month: '2026-11-01', regularPara: 15999 },
+    monthlyPrices: [
+      { month: '2026-09-01', minRegularPara: 15499 },
+      { month: '2026-10-01', minRegularPara: 15999 },
+      { month: '2026-11-01', minRegularPara: 15999 },
     ],
   },
 }

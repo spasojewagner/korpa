@@ -120,6 +120,33 @@ ingest_runs = sa.Table(
     sa.Column("rows_valid", sa.Integer, nullable=False),
     sa.Column("errors_json", sa.JSON, nullable=False),
 )
+# Months older than the per-format window, one row per product (see store.compact_monthly).
+monthly_prices = sa.Table(
+    "monthly_prices",
+    metadata,
+    sa.Column("barcode", sa.CHAR(13), sa.ForeignKey("products.barcode"), primary_key=True),
+    sa.Column("month", sa.Date, primary_key=True),
+    sa.Column("min_regular", sa.Integer, nullable=False),
+    sa.Column("median_regular", sa.Integer, nullable=False),
+    sa.Column("max_regular", sa.Integer, nullable=False),
+    sa.Column("min_discounted", sa.Integer),
+    sa.Column("n_formats", sa.SmallInteger, nullable=False),
+)
+
+# Read-only views live outside `metadata`, so table-level helpers never try to write to them.
+views = sa.MetaData()
+monthly_price_history = sa.Table(
+    "monthly_price_history",
+    views,
+    sa.Column("barcode", sa.CHAR(13)),
+    sa.Column("month", sa.Date),
+    sa.Column("min_regular", sa.Integer),
+    sa.Column("median_regular", sa.Integer),
+    sa.Column("max_regular", sa.Integer),
+    sa.Column("min_discounted", sa.Integer),
+    sa.Column("n_formats", sa.SmallInteger),
+)
+
 index_monthly = sa.Table(
     "index_monthly",
     metadata,

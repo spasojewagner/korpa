@@ -12,6 +12,18 @@ type Format {
   retailer: Retailer!
 }
 
+"""
+Regular prices of one product in one month across retail formats, in para.
+"""
+type MonthlyPrice {
+  month: Date!
+  minRegularPara: Int!
+  medianRegularPara: Int!
+  maxRegularPara: Int!
+  minDiscountedPara: Int
+  nFormats: Int!
+}
+
 type MonthlySnapshot {
   regularPara: Int!
   discountedPara: Int
@@ -53,6 +65,7 @@ type Product {
   prices: [Price!]!
   cheapest: Price
   history(months: Int! = 12): [MonthlySnapshot!]!
+  monthlyPrices(months: Int! = 12): [MonthlyPrice!]!
   changes(days: Int! = 30): [PriceChange!]!
 }
 

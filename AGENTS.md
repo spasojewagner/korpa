@@ -72,7 +72,8 @@ Any other variant stays an error. A new mapping needs a maintainer decision and 
 - Every number shown to users carries its source date ("Cenovnik od 19.11.2026.").
 
 ## Storage budget (Neon free plan = 1 GB hard cap)
-- Keep daily `price_changes` for 120 days; older history lives in `monthly_snapshots`.
+- Keep daily `price_changes` for 120 days; older history lives in `monthly_snapshots` (per format, last 3 months)
+  and `monthly_prices` (one row per product per month). `korpa ingest` compacts older months after each run.
 - Never store raw CSVs in the database.
 - Log `pg_database_size` after each ingest; warn at 70 %, stop writing at 90 %.
 

@@ -36,6 +36,7 @@ class Context(BaseContext):
         self.categories = DataLoader(load_fn=self.load_categories)
         self.names = DataLoader(load_fn=self.load_names, max_batch_size=50)
         self.history = DataLoader(load_fn=self.load_history, max_batch_size=50)
+        self.monthly_prices = DataLoader(load_fn=self.load_monthly_prices, max_batch_size=50)
         self.changes = DataLoader(load_fn=self.load_changes, max_batch_size=50)
 
     async def rows(self, statement: Select[*tuple[object, ...]]) -> list[RowMapping]:
@@ -191,6 +192,26 @@ class Context(BaseContext):
         self, keys: list[tuple[str, int]]
     ) -> list[list[RowMapping] | BaseException]:
         return await self.observations(db.monthly_snapshots, "month", keys, True)
+
+    async def load_monthly_prices(
+        self, keys: list[tuple[str, int]]
+    ) -> list[list[RowMapping] | BaseException]:
+        # One row per product and month (compacted + live months), so at most `months` rows each.
+        view = db.monthly_price_history
+        codes = list(dict.fromkeys(code for code, _ in keys))
+        oldest = month_start(self.as_of, max(months for _, months in keys))
+        rows = await self.rows(
+            sa.select(view)
+            .where(view.c.barcode.in_(codes), view.c.month >= oldest, view.c.month <= self.as_of)
+            .order_by(view.c.barcode, view.c.month)
+        )
+        by_code: dict[str, list[RowMapping]] = defaultdict(list)
+        for row in rows:
+            by_code[row["barcode"]].append(row)
+        return [
+            [row for row in by_code[code] if row["month"] >= month_start(self.as_of, months)]
+            for code, months in keys
+        ]
 
     async def load_changes(
         self, keys: list[tuple[str, int]]

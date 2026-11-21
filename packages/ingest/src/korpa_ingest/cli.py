@@ -14,7 +14,7 @@ from korpa_ingest.db import database_url
 from korpa_ingest.normalize import normalize
 from korpa_ingest.portal import Download, PortalClient
 from korpa_ingest.reader import Parsed, Report, read_csv
-from korpa_ingest.store import StorageLimitError, persist, validators
+from korpa_ingest.store import StorageLimitError, compact_monthly, persist, validators
 
 app = typer.Typer(no_args_is_help=True)
 
@@ -104,6 +104,8 @@ def ingest(
                     )
                 )
                 failed |= bool(parsed.report.errors)
+        if engine is not None:
+            compact_monthly(engine, datetime.now(UTC).date())
     except StorageLimitError as exc:
         typer.echo(str(exc), err=True)
         raise typer.Exit(2) from exc

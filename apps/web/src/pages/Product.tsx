@@ -12,12 +12,8 @@ import { WithQuery } from '../lib/query'
 type Product = NonNullable<ProductDetailQuery['product']>
 
 /** Lowest regular price per month across formats (history has no discount windows). */
-export function monthlyLows(history: Product['history']): MonthPoint[] {
-  const lows = new Map<string, number>()
-  for (const { month, regularPara } of history) {
-    lows.set(month, Math.min(regularPara, lows.get(month) ?? Infinity))
-  }
-  return [...lows].sort(([a], [b]) => a.localeCompare(b)).map(([month, para]) => ({ month, para }))
+export function monthlyLows(months: Product['monthlyPrices']): MonthPoint[] {
+  return months.map(({ month, minRegularPara }) => ({ month, para: minRegularPara }))
 }
 
 function ProductPage() {
@@ -52,7 +48,7 @@ function ProductPage() {
 function ProductView({ product }: { product: Product }) {
   const { t } = useI18n()
   const item = useBasket().find((entry) => entry.barcode === product.barcode)
-  const history = monthlyLows(product.history)
+  const history = monthlyLows(product.monthlyPrices)
   const actions = useRef<HTMLDivElement>(null)
   const add = () => {
     basket.add(product.barcode)

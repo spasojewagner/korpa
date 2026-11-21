@@ -50,14 +50,17 @@ Free-tier constraints and how the design handles them:
 | `product_names` | barcode, retailer_id, raw_name | names as each retailer writes them |
 | `prices_current` | format_id, barcode, regular, discounted, disc_from, disc_to, unit_price, vat, list_date, updated_at | PK (format_id, barcode) |
 | `price_changes` | format_id, barcode, changed_on, regular, discounted | appended only when a price changes |
-| `monthly_snapshots` | format_id, barcode, month, regular, discounted | from `MESEČNI_PRESEK` |
+| `monthly_snapshots` | format_id, barcode, month, regular, discounted | from `MESEČNI_PRESEK`; last 3 months only |
+| `monthly_prices` | barcode, month, min/median/max regular, min discounted, n_formats | older months, one row per product |
+| `monthly_price_history` (view) | same columns | `monthly_prices` + live months aggregated; read by GraphQL `monthlyPrices` |
 | `ingest_runs` | id, retailer_id, started_at, finished_at, http_status, rows_total, rows_valid, errors_json | one per retailer per run |
 | `index_monthly` | month, category_code, value, n_products | materialized category index |
 
 Money is INTEGER para (×100); dates are DATE.
 
 ## 4. Storage budget (1 GB)
-- `price_changes` keeps 120 days; older history comes from `monthly_snapshots`.
+- `price_changes` keeps 120 days; older history comes from `monthly_snapshots` (3 months per format) and
+  `monthly_prices` (one row per product per month, kept forever: about 10× smaller than per-format rows).
 - No raw CSVs in the database (raw files are kept 7 days as CI artifacts).
 - `pg_database_size` is logged after every ingest: warn at 70 %, stop writing at 90 %.
 - Estimate to verify in M1: ~12k products × ~60 formats ≈ up to 700k `prices_current` rows (order of 100–200 MB with indexes).
