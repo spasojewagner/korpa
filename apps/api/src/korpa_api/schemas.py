@@ -153,3 +153,26 @@ class IndexResponse(BaseModel):
     as_of: date
     base_month: date
     categories: list[IndexCategory] = Field(max_length=26)
+
+
+class SignalsParams(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    type: Literal["jump", "outlier"] | None = None
+    limit: int = Field(default=100, ge=1, le=200)
+
+
+class SignalItem(BaseModel):
+    type: Literal["jump", "outlier"]
+    barcode: Barcode
+    name: str
+    retailer: str
+    format: str
+    date: date
+    price_para: int = Field(ge=0)
+    reference_para: int = Field(gt=0)
+    ratio: float = Field(allow_inf_nan=False)
+
+
+class SignalsResponse(BaseModel):
+    as_of: date
+    items: list[SignalItem] = Field(max_length=200)

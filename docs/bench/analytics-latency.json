@@ -1,0 +1,22 @@
+{
+  "measured_on": "2026-11-21",
+  "samples": 50,
+  "warmups": 10,
+  "transport": "loopback HTTP, complete JSON responses",
+  "products": 12000,
+  "formats": 60,
+  "prices_current": 720000,
+  "monthly_prices": 24000,
+  "price_changes": 200,
+  "signals_limit": 200,
+  "results": {
+    "index": {
+      "p95_ms": 195.487,
+      "median_ms": 154.626
+    },
+    "signals_200": {
+      "p95_ms": 185.681,
+      "median_ms": 143.902
+    }
+  }
+}

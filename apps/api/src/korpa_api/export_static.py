@@ -1,7 +1,8 @@
 """Write the static JSON the web app reads before it calls the API.
 
 Run nightly after ingest: `python -m korpa_api.export_static --out apps/web/public/data`.
-The files have exactly the shape of GET /api/categories, GET /api/quality and GET /api/index.
+The files match GET /api/categories, GET /api/quality, GET /api/index
+and GET /api/signals (limit 200).
 """
 
 import argparse
@@ -18,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from korpa_api import analytics, repository
 from korpa_api.database import async_database_url
 from korpa_api.pricing import belgrade_today
-from korpa_api.schemas import CategoryItem
+from korpa_api.schemas import CategoryItem, SignalsParams
 
 
 async def export(out: Path) -> list[Path]:
@@ -35,12 +36,14 @@ async def export(out: Path) -> list[Path]:
             categories = await repository.categories(session)
             quality = await repository.quality(session, as_of)
             index = await analytics.price_index(session, as_of)
+            signals = await analytics.signals(session, SignalsParams(limit=200), as_of)
     finally:
         await engine.dispose()
     payloads = {
         "categories.json": TypeAdapter(list[CategoryItem]).dump_python(categories, mode="json"),
         "quality.json": quality.model_dump(mode="json"),
         "index.json": index.model_dump(mode="json"),
+        "signals.json": signals.model_dump(mode="json"),
     }
     out.mkdir(parents=True, exist_ok=True)
     written = []

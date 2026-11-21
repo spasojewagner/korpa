@@ -31,9 +31,15 @@ against the contract in this file: do not change the JSON shapes without asking 
   including overall `0` first; points are ordered by month and have one current provisional point.
 - **Signals** are prompts for review, never accusations; each carries the rule that produced it.
   - `jump`: a format's regular price rose ≥ 25 % against that format's previous regular price for the same
-    product (consecutive `price_changes` rows) within the last 30 days.
+    product (consecutive `price_changes` rows) within the last 30 days, including both
+    `as_of - 30 days` and `as_of`; the preceding observation may be older than the window.
   - `outlier`: a format's current effective price is ≥ 1.5 × the median current effective price of the same
-    product in at least 3 other formats.
+    product in at least 3 other formats. The format being checked is excluded from its reference.
+  - Effective prices use discounts active on `as_of` (inclusive start/end). Future-dated lists
+    and changes are ignored. Medians follow the existing discrete convention (lower middle
+    observed price for even counts). Ratios require a positive reference; zero references
+    produce no signal. Apply thresholds before rounding the ratio to two decimals.
+  - Order newest date first; ties use type, barcode and format id ascending for stable limits.
 
 ## Contract
 Static files written by `export_static` next to `categories.json` and `quality.json`, and identical REST
@@ -57,7 +63,8 @@ final indices before reading, so a deployment without ingestion also publishes f
     }
   ]
 }
-// signals.json  ==  GET /api/signals?type=jump|outlier&limit=1..200 (default 100, newest first)
+// signals.json == GET /api/signals?limit=200
+// REST also accepts type=jump|outlier and limit=1..200 (default 100), newest first.
 {
   "as_of": "2026-12-02",
   "items": [

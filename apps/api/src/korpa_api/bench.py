@@ -105,8 +105,28 @@ def seed() -> None:
         """),
             {"base": month_start(belgrade_today(), 2), "next": month_start(belgrade_today(), 1)},
         )
+    with engine.begin() as c:
+        c.execute(
+            sa.text("""
+            INSERT INTO price_changes (format_id, barcode, changed_on, regular)
+            SELECT 60, barcode, :today - 10, regular FROM prices_current
+            WHERE format_id = 60 AND barcode::bigint <= 100
+            UNION ALL
+            SELECT 60, barcode, :today, regular * 2 FROM prices_current
+            WHERE format_id = 60 AND barcode::bigint <= 100
+        """),
+            {"today": belgrade_today()},
+        )
+        c.execute(
+            sa.text("""
+            UPDATE prices_current SET regular = regular * 2,
+                discounted = NULL, disc_from = NULL, disc_to = NULL
+            WHERE format_id = 60 AND barcode::bigint <= 100
+        """)
+        )
     refresh_index(engine, belgrade_today())
     with engine.begin() as c:
+        c.exec_driver_sql("ANALYZE price_changes")
         c.exec_driver_sql("ANALYZE monthly_prices")
         c.exec_driver_sql("ANALYZE index_monthly")
         c.exec_driver_sql("ANALYZE products")
@@ -160,7 +180,12 @@ def measure(
             else:
                 raise RuntimeError("Benchmark server did not start")
             basket = {"items": [{"barcode": f"{i:013d}", "qty": 1} for i in range(1, 21)]}
-            timings: dict[str, list[float]] = {"search": [], "basket_20": [], "index": []}
+            timings: dict[str, list[float]] = {
+                "search": [],
+                "basket_20": [],
+                "index": [],
+                "signals_200": [],
+            }
             for i in range(samples + 10):
                 start = time.perf_counter()
                 result = client.get(
@@ -176,10 +201,17 @@ def measure(
                 result = client.get("/api/index")
                 result.raise_for_status()
                 index_ms = (time.perf_counter() - start) * 1000
+                start = time.perf_counter()
+                result = client.get("/api/signals", params={"limit": 200})
+                result.raise_for_status()
+                signals_ms = (time.perf_counter() - start) * 1000
+                if len(result.json()["items"]) != 200:
+                    raise RuntimeError("Benchmark signals fixture is missing")
                 if i >= 10:
                     timings["search"].append(search_ms)
                     timings["basket_20"].append(basket_ms)
                     timings["index"].append(index_ms)
+                    timings["signals_200"].append(signals_ms)
         results = {
             key: {
                 "p95_ms": round(sorted(values)[math.ceil(len(values) * 0.95) - 1], 3),
@@ -195,6 +227,9 @@ def measure(
             "products": 12000,
             "formats": 60,
             "prices_current": 720000,
+            "monthly_prices": 24000,
+            "price_changes": 200,
+            "signals_limit": 200,
             "results": results,
         }
         (output / "rest-latency.json").write_text(
