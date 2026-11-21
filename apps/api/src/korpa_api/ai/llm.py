@@ -66,6 +66,8 @@ class Extractor(Protocol):
 
     async def extract(self, sentence: str) -> Extraction: ...
 
+    async def extract_raw(self, sentence: str) -> str: ...
+
 
 @dataclass
 class GeminiExtractor:
@@ -77,6 +79,10 @@ class GeminiExtractor:
     base_url: str = "https://generativelanguage.googleapis.com/v1beta"
 
     async def extract(self, sentence: str) -> Extraction:
+        return parse_extraction(await self.extract_raw(sentence))
+
+    async def extract_raw(self, sentence: str) -> str:
+        """Return the unmodified response text for reproducible evaluation recordings."""
         body = {
             "systemInstruction": {"parts": [{"text": PROMPT}]},
             "contents": [{"role": "user", "parts": [{"text": sentence}]}],
@@ -96,7 +102,7 @@ class GeminiExtractor:
             response.raise_for_status()
             parts = response.json()["candidates"][0]["content"]["parts"]
             text = "".join(part.get("text", "") for part in parts)
-            return parse_extraction(text)
+            return text
         except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
             # Never echo the response body into errors; the key travels in a header only.
             raise ModelError(type(exc).__name__) from exc
