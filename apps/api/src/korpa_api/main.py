@@ -42,6 +42,7 @@ app.add_middleware(
     ],
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
+    expose_headers=["Retry-After"],
 )
 
 

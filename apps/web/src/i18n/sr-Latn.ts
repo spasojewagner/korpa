@@ -169,32 +169,27 @@ export const plurals = {
   daysAgo: { one: 'pre {n} dan', few: 'pre {n} dana', other: 'pre {n} dana' },
 } as const
 
-/** Labels for ingest error and deviation codes; unknown codes are shown as they are. */
-export const codeLabels: Record<string, string> = {
-  price: 'neispravna cena',
-  unit: 'nepoznata jedinica mere',
-  barcode: 'neispravan barkod',
-  date: 'neispravan datum',
-  snapshot_date: 'neispravan datum preseka',
-  list_type: 'nepoznata vrsta cenovnika',
-  category: 'neispravna kategorija',
-  vat: 'neispravna stopa PDV',
-  discount: 'neispravno sniženje',
-  required_text: 'prazno obavezno polje',
-  column_count: 'pogrešan broj kolona',
-  conflicting_duplicate: 'isti proizvod dvaput sa različitim cenama',
-  nul_character: 'nedozvoljen znak',
-  header: 'neispravno zaglavlje',
-  encoding: 'pogrešno kodiranje',
-  download: 'preuzimanje nije uspelo',
-  suspicious_shrink: 'cenovnik naglo smanjen',
-  list_type_ascii: 'vrsta cenovnika bez kvačica',
-  unit_case: 'jedinica mere velikim slovima',
-  unit_alias: 'skraćenica jedinice mere',
-  price_decimals: 'cena bez dve decimale',
-  header_alias: 'drugačiji naziv kolone',
-  price_outlier: 'cena preko 3 puta od uporedive',
-}
+export { codeLabels } from './quality-labels'
 
 export type CopyKey = keyof typeof copy
 export type PluralKey = keyof typeof plurals
+
+/** Basket assistant copy, translated through the active script. */
+export const assistantCopy = {
+  assistantLabel: 'Napiši šta kupuješ',
+  assistantPlaceholder: 'npr. 2 mleka, hleb i desetak jaja',
+  assistantSubmit: 'Predloži proizvode',
+  assistantNote: 'Predlog pravi jezički model; cene su iz zvaničnih cenovnika. Proveri izbor pre dodavanja.',
+  assistantCounter: '{count}/300 znakova',
+  assistantResults: 'Predloženi proizvodi',
+  assistantReady: 'Predlog je spreman. Proveri izbor pre dodavanja.',
+  assistantSkip: 'Preskoči',
+  assistantAdd: 'Dodaj izabrano u korpu',
+  assistantMissing: 'Nismo našli proizvod',
+  assistantInvalid: 'Upiši između 3 i 300 znakova.',
+  assistantUnavailable: 'Pomoćnik trenutno nije dostupan',
+  assistantWait: 'Previše zahteva. Pokušaj ponovo za {minutes} min.',
+  assistantRateLimit: 'Previše zahteva. Pokušaj ponovo kasnije.',
+  assistantFull: 'U korpi može biti najviše {max} proizvoda. Preskoči neki predlog ili ukloni proizvod iz korpe.',
+  assistantAdded: 'Izabrani proizvodi su dodati u korpu.',
+} as const
