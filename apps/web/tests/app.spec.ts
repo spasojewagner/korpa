@@ -6,6 +6,7 @@ import { MILK, basket, categories, priceIndex, product, quality, search, signals
 const API = 'http://127.0.0.1:8000'
 
 test.beforeEach(async ({ page }) => {
+  await page.route(`${API}/api/ai/status`, (route) => route.fulfill({ json: { enabled: false } }))
   await page.route(`${API}/api/search?**`, (route) => route.fulfill({ json: search }))
   await page.route(`${API}/api/categories`, (route) => route.fulfill({ json: categories }))
   await page.route(`${API}/api/quality`, (route) => route.fulfill({ json: quality }))

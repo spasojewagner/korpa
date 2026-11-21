@@ -7,6 +7,7 @@ import { ApiError, compareBasket, graphql, type Schemas } from '../lib/api'
 import { basket, useBasket } from '../lib/basket'
 import { usePageMeta } from '../lib/meta'
 import { WithQuery } from '../lib/query'
+import { BasketAssistant } from '../components/BasketAssistant'
 
 export function toTotals(response: Schemas['BasketResponse']): BasketTotal[] {
   return response.retailers.flatMap((retailer) => retailer.formats.map((format) => ({
@@ -43,6 +44,7 @@ function BasketPage() {
   return (
     <>
       <h1 className="text-2xl font-semibold">{t('basketHeading')}</h1>
+      <BasketAssistant />
       {items.length === 0 ? (
         <div className="mt-4 flex flex-col items-start gap-3">
           <p className="text-ink-soft">{t('basketEmpty')}</p>

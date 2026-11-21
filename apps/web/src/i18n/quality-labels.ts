@@ -1,0 +1,27 @@
+/** Labels for ingest error and deviation codes; unknown codes are shown as they are. */
+export const codeLabels: Record<string, string> = {
+  price: 'neispravna cena',
+  unit: 'nepoznata jedinica mere',
+  barcode: 'neispravan barkod',
+  date: 'neispravan datum',
+  snapshot_date: 'neispravan datum preseka',
+  list_type: 'nepoznata vrsta cenovnika',
+  category: 'neispravna kategorija',
+  vat: 'neispravna stopa PDV',
+  discount: 'neispravno sniženje',
+  required_text: 'prazno obavezno polje',
+  column_count: 'pogrešan broj kolona',
+  conflicting_duplicate: 'isti proizvod dvaput sa različitim cenama',
+  nul_character: 'nedozvoljen znak',
+  header: 'neispravno zaglavlje',
+  encoding: 'pogrešno kodiranje',
+  download: 'preuzimanje nije uspelo',
+  suspicious_shrink: 'cenovnik naglo smanjen',
+  list_type_ascii: 'vrsta cenovnika bez kvačica',
+  unit_case: 'jedinica mere velikim slovima',
+  unit_alias: 'skraćenica jedinice mere',
+  price_decimals: 'cena bez dve decimale',
+  header_alias: 'drugačiji naziv kolone',
+  price_outlier: 'cena preko 3 puta od uporedive',
+}
+
