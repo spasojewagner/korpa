@@ -430,6 +430,7 @@ def test_schema_export_contains_rest_paths_without_graphql() -> None:
         "/api/basket",
         "/api/categories",
         "/api/quality",
+        "/api/index",
     }
 
 

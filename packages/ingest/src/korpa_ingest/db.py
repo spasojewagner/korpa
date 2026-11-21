@@ -88,7 +88,12 @@ prices_current = sa.Table(
     sa.CheckConstraint("regular >= 0 AND unit_price >= 0"),
     sa.CheckConstraint("discounted IS NULL OR discounted BETWEEN 0 AND regular"),
 )
-sa.Index("ix_prices_current_barcode", prices_current.c.barcode)
+sa.Index(
+    "ix_prices_current_index_median",
+    prices_current.c.barcode,
+    prices_current.c.regular,
+    postgresql_include=["list_date"],
+)
 price_changes = sa.Table(
     "price_changes",
     metadata,
@@ -151,9 +156,11 @@ index_monthly = sa.Table(
     "index_monthly",
     metadata,
     sa.Column("month", sa.Date, primary_key=True),
-    sa.Column("category_code", sa.ForeignKey("categories.code"), primary_key=True),
-    sa.Column("value", sa.Numeric(12, 4), nullable=False),
+    sa.Column("category_code", sa.Integer, primary_key=True),
+    sa.Column("value", sa.Numeric(12, 4), nullable=True),
     sa.Column("n_products", sa.Integer, nullable=False),
+    sa.Column("n_excluded", sa.Integer, nullable=False, server_default="0"),
+    sa.CheckConstraint("category_code BETWEEN 0 AND 25", name="ck_index_category"),
 )
 
 

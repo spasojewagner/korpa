@@ -12,8 +12,10 @@ import httpx
 import sqlalchemy as sa
 import typer
 from korpa_ingest import db
+from korpa_ingest.store import month_start
 from sqlalchemy.engine import Engine
 
+from korpa_api.analytics import refresh_index
 from korpa_api.pricing import belgrade_today
 from korpa_api.repository import basket_statement, search_statements
 from korpa_api.schemas import BasketRequest, SearchParams
@@ -91,11 +93,29 @@ def seed() -> None:
             {"today": belgrade_today()},
         )
     with engine.begin() as c:
+        c.execute(
+            sa.text("""
+            INSERT INTO monthly_prices
+                (barcode, month, min_regular, median_regular, max_regular, n_formats)
+            SELECT barcode, m.month, min(regular),
+                   percentile_disc(0.5) WITHIN GROUP (ORDER BY regular), max(regular), count(*)
+            FROM prices_current CROSS JOIN
+                (VALUES (CAST(:base AS date)), (CAST(:next AS date))) AS m(month)
+            GROUP BY barcode, m.month
+        """),
+            {"base": month_start(belgrade_today(), 2), "next": month_start(belgrade_today(), 1)},
+        )
+    refresh_index(engine, belgrade_today())
+    with engine.begin() as c:
+        c.exec_driver_sql("ANALYZE monthly_prices")
+        c.exec_driver_sql("ANALYZE index_monthly")
         c.exec_driver_sql("ANALYZE products")
         c.exec_driver_sql("ANALYZE prices_current")
         c.exec_driver_sql("ANALYZE retail_formats")
         c.exec_driver_sql("ANALYZE retailers")
         size = c.scalar(sa.text("SELECT pg_database_size(current_database())"))
+    with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as c:
+        c.exec_driver_sql("VACUUM ANALYZE prices_current")
     engine.dispose()
     typer.echo(
         json.dumps(
@@ -140,7 +160,7 @@ def measure(
             else:
                 raise RuntimeError("Benchmark server did not start")
             basket = {"items": [{"barcode": f"{i:013d}", "qty": 1} for i in range(1, 21)]}
-            timings: dict[str, list[float]] = {"search": [], "basket_20": []}
+            timings: dict[str, list[float]] = {"search": [], "basket_20": [], "index": []}
             for i in range(samples + 10):
                 start = time.perf_counter()
                 result = client.get(
@@ -152,9 +172,14 @@ def measure(
                 result = client.post("/api/basket", json=basket)
                 result.raise_for_status()
                 basket_ms = (time.perf_counter() - start) * 1000
+                start = time.perf_counter()
+                result = client.get("/api/index")
+                result.raise_for_status()
+                index_ms = (time.perf_counter() - start) * 1000
                 if i >= 10:
                     timings["search"].append(search_ms)
                     timings["basket_20"].append(basket_ms)
+                    timings["index"].append(index_ms)
         results = {
             key: {
                 "p95_ms": round(sorted(values)[math.ceil(len(values) * 0.95) - 1], 3),
