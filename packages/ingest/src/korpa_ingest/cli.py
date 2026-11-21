@@ -87,6 +87,7 @@ def ingest(
                         download = Download(exc.response.status_code, b"")
                     parsed = Parsed([], report)
                     logging.error("Download failed for %s: %s", source.slug, type(exc).__name__)
+                parsed.report.retries = portal.download_retries
                 if engine is not None:
                     persist(engine, source, parsed, download, started_at)
                 typer.echo(

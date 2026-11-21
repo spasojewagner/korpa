@@ -52,12 +52,14 @@ month the list valid that day is also published as `MESEČNI_PRESEK` and kept fo
 Invalid rows are counted and reported per retailer, never silently dropped and never "fixed" by guessing.
 Do not invent the portal API shape: verify it and record findings in `docs/data-notes.md`.
 
-### Source compatibility profile `compat-2026-11.2`
+### Source compatibility profile `compat-2026-11.3`
 Observed publisher variants are accepted only through exact, documented mappings. Every applied mapping is counted per retailer as a deviation in the quality report; it is never silent and never turns an invalid value into a valid one by guessing.
 - `VRSTA_CENOVNIKA`: `MESECNI_PRESEK` -> `MESEČNI_PRESEK`, `VAZECI_CENOVNIK` -> `VAŽEĆI_CENOVNIK`.
 - `Jedinica mere`: case-insensitive match to the six allowed units (`KG` -> `kg`), plus exact case-insensitive aliases `kom.` -> `kom`, `gr` -> `g`, `lit` -> `l`, counted as `unit_alias`. `JED`, `KO`, `M` and all other aliases remain errors.
 - Prices with zero or one decimal using `.` are padded to two decimals without rounding (`100` -> `100.00`, `1000.1` -> `1000.10`), counted as `price_decimals` per mapped field. More than two decimals, commas, spaces, signs, leading-dot fractions, and thousands separators remain errors.
-- Headers: only the aliases listed in `docs/data-notes.md`, each of the 15 columns mapped exactly once.
+- Headers: retain the `compat-2026-11.2` rules and add only `Naziv trgovca - format` and `Naziv trgovca` -> `Naziv trgovca - formata`, `Snizena cena` -> `Snižena cena`, `Datum pocetka snizenja` -> `Datum početka sniženja`, and `Datum kraja snizenja` -> `Datum kraja sniženja`. Every accepted noncanonical header counts as `header_alias` once per file; each of the 15 columns must map exactly once.
+- Fully Cyrillic headers: standard Serbian Cyrillic-to-Latin transliteration must produce every canonical name exactly. Do not trim, case-fold, strip accents, apply Latin aliases, or normalize punctuation on this path. Mixed-script headers and Cyrillic data values are not mapped.
+- Downloads: retry connect/read timeouts and HTTP 5xx at most twice, after 5 and 15 seconds. Never retry HTTP 4xx. Record `retries` in each retailer's report, including exhausted failures. BRICO S DOO, Konovo and RIČ receive no new mappings.
 Any other variant stays an error. A new mapping needs a maintainer decision and a new profile id.
 
 ## Conventions

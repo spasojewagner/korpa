@@ -1,6 +1,7 @@
 """Verified udata API adapter; discovery never scrapes retailer websites."""
 
 import re
+import time
 from dataclasses import dataclass
 from typing import Protocol
 from urllib.parse import urlparse
@@ -68,6 +69,7 @@ class PortalClient:
         self.client = client
         self.base_url = base_url.rstrip("/")
         self.issues: dict[str, str] = {}
+        self.download_retries = 0
 
     def discover(self) -> list[RetailerSource]:
         datasets: dict[str, Dataset] = {}
@@ -123,6 +125,7 @@ class PortalClient:
         etag: str | None = None,
         modified: str | None = None,
     ) -> Download:
+        self.download_retries = 0
         if urlparse(source.url).scheme != "https":
             raise ValueError("Resource must use HTTPS")
         headers = {}
@@ -130,7 +133,23 @@ class PortalClient:
             headers["If-None-Match"] = etag
         elif modified:
             headers["If-Modified-Since"] = modified
-        with self.client.stream("GET", source.url, headers=headers) as response:
+        while True:
+            try:
+                return self._download(source.url, headers, etag, modified)
+            except (httpx.ConnectTimeout, httpx.ReadTimeout, httpx.HTTPStatusError) as exc:
+                if (
+                    isinstance(exc, httpx.HTTPStatusError)
+                    and not 500 <= exc.response.status_code <= 599
+                ) or self.download_retries == 2:
+                    raise
+                delay = (5, 15)[self.download_retries]
+                self.download_retries += 1
+                time.sleep(delay)
+
+    def _download(
+        self, url: str, headers: dict[str, str], etag: str | None, modified: str | None
+    ) -> Download:
+        with self.client.stream("GET", url, headers=headers) as response:
             if response.status_code == 304:
                 return Download(304, b"", etag, modified)
             response.raise_for_status()
