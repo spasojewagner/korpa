@@ -94,7 +94,7 @@ uv sync --extra dev --frozen
 npm ci
 npm ci --prefix apps/web
 make schema
-pnpm codegen
+npm run codegen
 npm --prefix apps/web run typecheck
 ```
 

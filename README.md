@@ -135,7 +135,7 @@ documented in [the REST API guide](docs/rest-api.md).
 
 The query-only `/graphql` endpoint, nested product example, bounds and reproducible latency
 measurements are in [the product graph guide](docs/graphql-api.md). Run `make schema` and
-`pnpm codegen` after API contract or GraphQL operation changes; commit both schemas and
+`npm run codegen` after API contract or GraphQL operation changes; commit both schemas and
 the typed client artifacts. Use Node 22 to match CI. Set `ENV=dev` to enable the interactive
 GraphQL editor; introspection remains enabled in every environment.
 

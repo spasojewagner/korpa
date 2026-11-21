@@ -25,15 +25,11 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: apps/web/package-lock.json
-      - uses: pnpm/action-setup@v4
-        with:
-          version: '11.20.0'
-          run_install: false
       - run: uv sync --extra dev --frozen
       - run: npm ci
       - run: npm ci --prefix apps/web
       - run: make schema
-      - run: pnpm codegen
+      - run: npm run codegen
       - name: Check schema and client type drift
         run: |
           git diff --exit-code -- apps/web/src/graphql/schema.graphql apps/web/src/api apps/web/src/gql
