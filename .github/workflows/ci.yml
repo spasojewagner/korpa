@@ -38,6 +38,8 @@ jobs:
       - run: uv run --extra dev mypy
       - run: uv run --extra dev alembic -c apps/api/alembic.ini upgrade head
       - run: uv run --extra dev pytest
+      - name: Replay basket extraction fixture
+        run: uv run --extra dev python -m korpa_api.ai.evaluate --recorded docs/ai-eval/recorded.jsonl
       - run: npm --prefix apps/web run lint
       - run: npm --prefix apps/web run typecheck
       - run: npm --prefix apps/web test

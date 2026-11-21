@@ -14,3 +14,35 @@ Conventions used when labelling:
 
 Labels describe intent, not a specific barcode; the evaluator scores a candidate as a match when its category
 equals `category` and its normalized name contains every `query_terms` word (stems allowed, see the runner).
+
+
+## Running the evaluation
+
+Run from the repository root after `uv sync --extra dev --frozen`:
+
+```sh
+uv run python -m korpa_api.ai.evaluate
+uv run python -m korpa_api.ai.evaluate --recorded docs/ai-eval/recorded.jsonl --out docs/ai-eval/results.md
+```
+
+`recorded.jsonl` is a **hand-written fixture**, covering all 50 ids with intentionally imperfect
+responses. It is not a model benchmark. The committed `results.md` is only a replay smoke test.
+Each JSONL row contains `id` and raw model `text`; optional `model` metadata identifies the source.
+Recorded mode needs neither network nor keys. Missing, duplicate or unexpected ids fail the command.
+Invalid model output is scored as an empty extraction and counted in the report.
+
+An explicitly requested live evaluation uses `--live` and requires `LLM_PROVIDER=gemini`,
+`LLM_API_KEY`, and `LLM_MODEL`. Add `--record PATH` to save the actual raw responses, with the model
+name, for later replay. Calls are sequential with at least six seconds between them. A transport
+failure stops the command; recordings already written are retained. Never commit a key.
+
+`--database` additionally requires `DATABASE_URL` and runs the normal repository search for every
+extracted query in a read-only transaction. Top-1 and top-5 use all expected items as the denominator;
+unmatched expected items are misses. Labels do not filter the search. The report contains no product
+prices. `--phrases PATH` selects another labelled set for local tests without editing this one.
+
+Item recall and precision are micro-averaged across items; quantity accuracy uses matched pairs.
+Exact item count is averaged across sentences. Metrics are also shown separately for sentences with
+no expected items. A zero denominator is reported as N/A. Worst sentences are ranked by missed items,
+extra items and incorrect matched quantities (plus invalid outputs); retrieval misses break ties
+when enabled, followed by id order. CI checks successful execution, with no minimum score threshold.
