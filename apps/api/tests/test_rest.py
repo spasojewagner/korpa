@@ -176,6 +176,92 @@ def test_search_aggregates_and_filters(client: TestClient) -> None:
     }
 
 
+def test_category_browsing_orders_by_formats_then_name_and_barcode(
+    client: TestClient,
+    engine: Engine,
+) -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            db.products.insert(),
+            [
+                {"barcode": code, "name": name, "brand": "", "unit": "l", "category_code": 1}
+                for code, name in [
+                    ("0000000000004", "Abc"),
+                    ("0000000000005", "Abc"),
+                    ("0000000000006", "Bez cene"),
+                ]
+            ],
+        )
+        connection.execute(
+            db.prices_current.insert(),
+            [
+                {
+                    "barcode": code,
+                    "format_id": f,
+                    "regular": 0,
+                    "unit_price": 0,
+                    "vat": 20,
+                    "list_date": AS_OF,
+                }
+                for code in ("0000000000004", "0000000000005")
+                for f in (1, 2)
+            ],
+        )
+    response = client.get("/api/search", params={"category": 1})
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["total"] == 4
+    assert [item["barcode"] for item in data["items"]] == [
+        B1,
+        "0000000000004",
+        "0000000000005",
+        B2,
+    ]
+    assert [item["n_formats"] for item in data["items"]] == [3, 2, 2, 2]
+    assert data["items"][1]["min_effective_para"] == 0
+    assert data["items"][0]["min_effective_para"] == 10
+    assert data["items"][0]["any_discount"] is True
+    assert data["items"][0]["list_date"] == (AS_OF - timedelta(days=1)).isoformat()
+    assert data["as_of"] == AS_OF.isoformat()
+    assert response.headers["cache-control"] == "public, max-age=300"
+    page = client.get("/api/search", params={"category": 1, "limit": 2, "offset": 1}).json()
+    assert page["items"] == data["items"][1:3]
+    assert page["total"] == 4
+    for category in (3, 25):
+        assert client.get("/api/search", params={"category": category}).json() == {
+            "items": [],
+            "total": 0,
+            "as_of": AS_OF.isoformat(),
+        }
+
+
+def test_category_browsing_excludes_withdrawn_products(
+    client: TestClient,
+    engine: Engine,
+) -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            db.monthly_snapshots.insert().values(
+                format_id=1,
+                barcode=B1,
+                month=AS_OF.replace(day=1),
+                regular=100,
+            )
+        )
+        connection.execute(db.prices_current.delete().where(db.prices_current.c.barcode == B1))
+    data = client.get("/api/search", params={"category": 1}).json()
+    assert data["total"] == 1
+    assert [item["barcode"] for item in data["items"]] == [B2]
+
+
+def test_search_openapi_documents_optional_text_and_category_requirement() -> None:
+    operation = app.openapi()["paths"]["/api/search"]["get"]
+    params = {p["name"]: p for p in operation["parameters"]}
+    assert params["q"]["required"] is False
+    assert params["category"]["required"] is False
+    assert "At least one of q or category is required" in operation["description"]
+
+
 @pytest.mark.parametrize("query", ["mleko", "0000000000004"])
 def test_search_excludes_products_without_current_prices(
     client: TestClient,
@@ -324,6 +410,18 @@ def test_basket_keeps_a_found_product_with_a_genuine_zero_price(
 @pytest.mark.parametrize(
     "params",
     [
+        {},
+        {"category": 0},
+        {"category": 26},
+        {"category": 1, "q": ""},
+        {"category": 1, "q": "a"},
+        {"category": 1, "q": "   "},
+        {"category": 1, "q": "a" * 101},
+        {"category": 1, "limit": 0},
+        {"category": 1, "limit": 51},
+        {"category": 1, "offset": -1},
+        {"category": 1, "offset": 1001},
+        {"category": 1, "unexpected": "value"},
         {"q": "a"},
         {"q": " " * 3},
         {"q": "a" * 101},

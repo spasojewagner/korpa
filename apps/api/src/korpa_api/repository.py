@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from korpa_ingest import db
 from sqlalchemy.engine import RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import Select
+from sqlalchemy.sql import ColumnElement, Select
 
 from korpa_api.pricing import effective_price
 from korpa_api.schemas import (
@@ -27,31 +27,29 @@ def search_statements(
     params: SearchParams, as_of: date
 ) -> tuple[Select[int], Select[*tuple[object, ...]]]:
     p, prices = db.products, db.prices_current
-    query = normalize_query(params.q)
-    config = sa.literal_column("'simple'::regconfig", type_=sa.Text())
-    rank = sa.func.ts_rank(p.c.search_tsv, sa.func.plainto_tsquery(config, query))
-    similarity = sa.func.similarity(p.c.search_norm, query)
-    if re.fullmatch(r"[0-9]{13}", params.q):
-        condition = p.c.barcode == params.q
+    n_formats = sa.select(sa.func.count()).where(prices.c.barcode == p.c.barcode).scalar_subquery()
+    condition: ColumnElement[bool] = sa.select(1).where(prices.c.barcode == p.c.barcode).exists()
+    score: ColumnElement[float]
+    if params.q is None:
+        score = n_formats
     else:
-        condition = sa.or_(
-            p.c.search_tsv.op("@@")(sa.func.plainto_tsquery(config, query)),
-            p.c.search_norm.op("%>")(query),
-        )
+        query = normalize_query(params.q)
+        config = sa.literal_column("'simple'::regconfig", type_=sa.Text())
+        rank = sa.func.ts_rank(p.c.search_tsv, sa.func.plainto_tsquery(config, query))
+        similarity = sa.func.similarity(p.c.search_norm, query)
+        if re.fullmatch(r"[0-9]{13}", params.q):
+            text_condition = p.c.barcode == params.q
+        else:
+            text_condition = sa.or_(
+                p.c.search_tsv.op("@@")(sa.func.plainto_tsquery(config, query)),
+                p.c.search_norm.op("%>")(query),
+            )
+        condition = sa.and_(condition, text_condition)
+        # Prefer names starting with the query and products sold in more formats.
+        starts = sa.case((p.c.search_norm.startswith(query, autoescape=True), 1.0), else_=0.0)
+        score = rank + similarity + starts + 0.25 * sa.func.ln(1 + n_formats)
     if params.category is not None:
         condition = sa.and_(condition, p.c.category_code == params.category)
-    condition = sa.and_(
-        condition,
-        sa.select(1).where(prices.c.barcode == p.c.barcode).exists(),
-    )
-    # Relevance: text rank and trigram similarity, plus a bonus when the name starts with the
-    # query ("Mleko 2,8%" before "Zamena za mleko") and a small one for products sold in more
-    # formats, which are the ones people usually look for.
-    starts = sa.case((p.c.search_norm.startswith(query, autoescape=True), 1.0), else_=0.0)
-    n_formats = (
-        sa.select(sa.func.count()).where(prices.c.barcode == p.c.barcode).scalar_subquery()
-    )
-    score = rank + similarity + starts + 0.25 * sa.func.ln(1 + n_formats)
     matches = sa.select(p, score.label("score")).where(condition).cte("matches")
     count = sa.select(sa.func.count()).select_from(matches)
     page = (

@@ -57,7 +57,14 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Search */
+        /**
+         * Search
+         * @description Search current-priced products by text and/or category.
+         *
+         *     At least one of q or category is required. With category alone, order by number of
+         *     current retail formats descending, then name; barcode breaks ties for stable pagination.
+         *     Text queries retain relevance ranking, optionally filtered by category.
+         */
         get: operations["search_api_search_get"];
         put?: never;
         post?: never;
@@ -557,11 +564,12 @@ export interface operations {
     };
     search_api_search_get: {
         parameters: {
-            query: {
+            query?: {
                 category?: number | null;
                 limit?: number;
                 offset?: number;
-                q: string;
+                /** @description Text query; required unless category is supplied. */
+                q?: string | null;
             };
             header?: never;
             path?: never;
