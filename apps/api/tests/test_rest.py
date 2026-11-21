@@ -620,6 +620,7 @@ def test_static_export_matches_rest_responses(
     client: TestClient, engine: Engine, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv("DATABASE_URL", engine.url.render_as_string(hide_password=False))
+    monkeypatch.setattr("korpa_api.export_static.belgrade_today", lambda: AS_OF)
     asyncio.run(export(tmp_path))
     for name, path in (("categories.json", "/api/categories"), ("quality.json", "/api/quality")):
         assert json.loads((tmp_path / name).read_text("utf-8")) == client.get(path).json()
