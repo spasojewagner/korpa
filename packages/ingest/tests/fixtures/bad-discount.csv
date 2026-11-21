@@ -1,0 +1,2 @@
+KATEGORIJA;NAZIV KATEGORIJE;Naziv proizvoda;Robna marka;Barkod proizvoda;Jedinica mere;Naziv trgovca - formata;Datum cenovnika;Redovna cena;Cena po jedinici mere;Snižena cena;Datum početka sniženja;Datum kraja sniženja;Stopa PDV;VRSTA_CENOVNIKA
+1;Mleko, jaja;"Mleko ""sveže""";;0001234567890;l;Demo market;19-11-2026;129.99;129.99;150.00;;;10;VAŽEĆI_CENOVNIK

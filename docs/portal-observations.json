@@ -1,0 +1,128 @@
+{
+  "observed_on": "2026-11-21",
+  "retailers": [
+    {
+      "retailer": "beltorg-doo-1",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/68f73e230d9e360e4cf10781/",
+      "resource_url": "https://svetofor.rs/wp-content/uploads/prices/cene_proizvoda_Beltorg_DOO.csv",
+      "license": "sodl",
+      "etag": null,
+      "last_modified": "Fri, 20 Nov 2026 18:57:58 GMT",
+      "bytes": 323328,
+      "rows_total": 2075,
+      "rows_valid": 0,
+      "errors": {
+        "list_type": 2075
+      },
+      "sample_lines": {
+        "list_type": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "conditional_status": 304
+    },
+    {
+      "retailer": "lidl",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/68f61917f9daecc02d803b84/",
+      "resource_url": "https://www.lidl.rs/explore/assets/webPriceData/rs/cene_proizvoda_Lidl.csv",
+      "license": "sodl",
+      "etag": null,
+      "last_modified": null,
+      "bytes": 1897040,
+      "rows_total": 12628,
+      "rows_valid": 0,
+      "errors": {
+        "header": 12628
+      },
+      "sample_lines": {
+        "header": [
+          0
+        ]
+      }
+    },
+    {
+      "retailer": "luki-komerc-d-o-o",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/6a91d391dfc7b0e00c8ba69c/",
+      "resource_url": "https://luki.co.rs/cene_proizvoda_luki_komerc.csv",
+      "license": "sodl",
+      "etag": "\"3ba5d4-660aef7f44cfa\"",
+      "last_modified": "Fri, 20 Nov 2026 06:01:00 GMT",
+      "bytes": 3909076,
+      "rows_total": 25181,
+      "rows_valid": 0,
+      "errors": {
+        "list_type": 25105,
+        "unit": 76
+      },
+      "sample_lines": {
+        "list_type": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "unit": [
+          37,
+          176,
+          181,
+          1028,
+          1029
+        ]
+      },
+      "conditional_status": 304
+    },
+    {
+      "retailer": "metro-cash-carry-doo-beograd",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/6a96d3a0338fe94f9cc9a03f/",
+      "resource_url": "https://data.gov.rs/s/resources/cenovnici-proizvoda-prema-pravilniku-o-uslovima-sadrzaju-i-nacinu-objavljivanja-cenovnika-metro/20261120-061928/cene-proizvoda-metro.csv",
+      "license": "sodl",
+      "etag": "\"6affe670-525803\"",
+      "last_modified": "Fri, 20 Nov 2026 06:19:28 GMT",
+      "bytes": 5396483,
+      "rows_total": 38039,
+      "rows_valid": 0,
+      "errors": {
+        "unit": 38039
+      },
+      "sample_lines": {
+        "unit": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "conditional_status": 304
+    },
+    {
+      "retailer": "yuhor-d-o-o",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/6ad9fd914432daa976576a1a/",
+      "resource_url": "https://tadelspace.com/yuhor/cene_proizvoda_yuhor.csv",
+      "license": "sodl",
+      "etag": "\"c3682-65f96fcf65880\"",
+      "last_modified": "Fri, 06 Nov 2026 07:59:14 GMT",
+      "bytes": 800386,
+      "rows_total": 4612,
+      "rows_valid": 0,
+      "errors": {
+        "list_type": 4612
+      },
+      "sample_lines": {
+        "list_type": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      "conditional_status": 304
+    }
+  ]
+}
