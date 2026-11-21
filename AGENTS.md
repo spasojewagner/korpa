@@ -52,6 +52,13 @@ month the list valid that day is also published as `MESEČNI_PRESEK` and kept fo
 Invalid rows are counted and reported per retailer, never silently dropped and never "fixed" by guessing.
 Do not invent the portal API shape: verify it and record findings in `docs/data-notes.md`.
 
+### Source compatibility profile `compat-2026-11`
+Observed publisher variants are accepted only through exact, documented mappings. Every applied mapping is counted per retailer as a deviation in the quality report; it is never silent and never turns an invalid value into a valid one by guessing.
+- `VRSTA_CENOVNIKA`: `MESECNI_PRESEK` -> `MESEČNI_PRESEK`, `VAZECI_CENOVNIK` -> `VAŽEĆI_CENOVNIK`.
+- `Jedinica mere`: case-insensitive match to the six allowed units (`KG` -> `kg`).
+- Headers: only the aliases listed in `docs/data-notes.md`, each of the 15 columns mapped exactly once.
+Any other variant stays an error. A new mapping needs a maintainer decision and a new profile id.
+
 ## Conventions
 - Python: FastAPI, Pydantic v2, SQLAlchemy 2.x, Alembic, httpx, typer; ruff + mypy --strict on new code; pytest.
 - API: REST for search, basket, categories and data quality; a read-only GraphQL endpoint (`/graphql`, Strawberry)

@@ -1,0 +1,264 @@
+{
+  "observed_on": "2026-11-21",
+  "profile": "compat-2026-11",
+  "benchmark": {
+    "mode": "empty local PostgreSQL 16 database, sequential HTTP downloads and imports, no validators; includes discovery",
+    "all_five_seconds": 18.6895,
+    "discovery_seconds": 0.8497,
+    "baseline_metro": {
+      "records": 38039,
+      "accepted": 20372,
+      "parse_seconds": 1.3636991000021226,
+      "baseline_write_seconds": 40.8911506000004,
+      "baseline_parse_write_seconds": 42.254849700002524,
+      "database_state": "no product, current-price, or history data; five retailer records and rejected-run audit metadata retained from the strict-only spike"
+    },
+    "bulk_metro_parse_write_seconds": 1.869,
+    "baseline_commit": "e4832ed6349dfcfade8e63c4bd52131625c8c9f0",
+    "bulk_metro_cold": {
+      "records": 38039,
+      "accepted": 20372,
+      "parse_seconds": 0.7745,
+      "write_seconds": 3.8936,
+      "parse_write_seconds": 4.6682,
+      "mode": "same cached bytes, empty PostgreSQL database, no network in either writer timing"
+    }
+  },
+  "retailers": [
+    {
+      "retailer": "beltorg-doo-1",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/68f73e230d9e360e4cf10781/",
+      "resource_url": "https://svetofor.rs/wp-content/uploads/prices/cene_proizvoda_Beltorg_DOO.csv",
+      "license": "sodl",
+      "etag": null,
+      "last_modified": "Fri, 20 Nov 2026 18:57:58 GMT",
+      "bytes": 323328,
+      "sha256": "a60c919b40aed39ae75c4379cc35c5b024d70b06c142a50298ff6f12dd7a20d0",
+      "download_seconds": 0.4295,
+      "parse_seconds": 0.05,
+      "write_seconds": 0.3803,
+      "rows_total": 2075,
+      "rows_valid": 1799,
+      "errors": {
+        "conflicting_duplicate": 276
+      },
+      "sample_lines": {
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "conflicting_duplicate": 276
+      },
+      "deviations": {
+        "list_type_ascii": 2075
+      },
+      "profile": "compat-2026-11",
+      "conditional_status": 304
+    },
+    {
+      "retailer": "lidl",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/68f61917f9daecc02d803b84/",
+      "resource_url": "https://www.lidl.rs/explore/assets/webPriceData/rs/cene_proizvoda_Lidl.csv",
+      "license": "sodl",
+      "etag": null,
+      "last_modified": null,
+      "bytes": 1897040,
+      "sha256": "1fb558f010f161333147228f6b3707970ba44e24604e2c19aa309599797f81ff",
+      "download_seconds": 1.6488,
+      "parse_seconds": 0.4859,
+      "write_seconds": 1.9334,
+      "rows_total": 12628,
+      "rows_valid": 9781,
+      "errors": {
+        "unit": 2684,
+        "price": 84,
+        "conflicting_duplicate": 79
+      },
+      "sample_lines": {
+        "unit": [
+          17,
+          19,
+          24,
+          33,
+          44
+        ],
+        "price": [
+          500,
+          501,
+          542,
+          543,
+          605
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "unit": 2684,
+        "price": 99,
+        "conflicting_duplicate": 79
+      },
+      "deviations": {
+        "header_alias": 1,
+        "list_type_ascii": 12628
+      },
+      "profile": "compat-2026-11"
+    },
+    {
+      "retailer": "luki-komerc-d-o-o",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/6a91d391dfc7b0e00c8ba69c/",
+      "resource_url": "https://luki.co.rs/cene_proizvoda_luki_komerc.csv",
+      "license": "sodl",
+      "etag": "\"3ba5d4-660aef7f44cfa\"",
+      "last_modified": "Fri, 20 Nov 2026 06:01:00 GMT",
+      "bytes": 3909076,
+      "sha256": "d4edddd7196c0cf92e662559d052cbed069327c9cbe0aabd0ecf810d4f071e58",
+      "download_seconds": 2.7247,
+      "parse_seconds": 0.7251,
+      "write_seconds": 2.3838,
+      "rows_total": 25181,
+      "rows_valid": 24990,
+      "errors": {
+        "unit": 76,
+        "price": 97,
+        "conflicting_duplicate": 18
+      },
+      "sample_lines": {
+        "unit": [
+          37,
+          176,
+          181,
+          1028,
+          1029
+        ],
+        "price": [
+          291,
+          293,
+          535,
+          536,
+          539
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "unit": 76,
+        "price": 113,
+        "conflicting_duplicate": 18
+      },
+      "deviations": {
+        "list_type_ascii": 25181
+      },
+      "profile": "compat-2026-11",
+      "conditional_status": 304
+    },
+    {
+      "retailer": "metro-cash-carry-doo-beograd",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/6a96d3a0338fe94f9cc9a03f/",
+      "resource_url": "https://data.gov.rs/s/resources/cenovnici-proizvoda-prema-pravilniku-o-uslovima-sadrzaju-i-nacinu-objavljivanja-cenovnika-metro/20261120-061928/cene-proizvoda-metro.csv",
+      "license": "sodl",
+      "etag": "\"6affe670-525803\"",
+      "last_modified": "Fri, 20 Nov 2026 06:19:28 GMT",
+      "bytes": 5396483,
+      "sha256": "c5dba69174be4502719f26432e8ec848a2f9e57c332ecf9112e791ce47481187",
+      "download_seconds": 4.1482,
+      "parse_seconds": 0.9241,
+      "write_seconds": 0.9449,
+      "rows_total": 38039,
+      "rows_valid": 20372,
+      "errors": {
+        "price": 13292,
+        "unit": 4269,
+        "conflicting_duplicate": 106
+      },
+      "sample_lines": {
+        "price": [
+          3,
+          18,
+          20,
+          22,
+          24
+        ],
+        "unit": [
+          7,
+          40,
+          56,
+          66,
+          84
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "price": 16593,
+        "unit": 4269,
+        "conflicting_duplicate": 106
+      },
+      "deviations": {
+        "list_type_ascii": 38039,
+        "unit_case": 33770
+      },
+      "profile": "compat-2026-11",
+      "conditional_status": 304
+    },
+    {
+      "retailer": "yuhor-d-o-o",
+      "dataset_api": "https://data.gov.rs/api/1/datasets/6ad9fd914432daa976576a1a/",
+      "resource_url": "https://tadelspace.com/yuhor/cene_proizvoda_yuhor.csv",
+      "license": "sodl",
+      "etag": "\"c3682-65f96fcf65880\"",
+      "last_modified": "Fri, 06 Nov 2026 07:59:14 GMT",
+      "bytes": 800386,
+      "sha256": "69d6b404fb78adc43e0000b5257e8537a2787a72a9a22875e86aaa411813b79b",
+      "download_seconds": 0.6067,
+      "parse_seconds": 0.1822,
+      "write_seconds": 0.2579,
+      "rows_total": 4612,
+      "rows_valid": 4268,
+      "errors": {
+        "price": 312,
+        "conflicting_duplicate": 32
+      },
+      "sample_lines": {
+        "price": [
+          84,
+          96,
+          142,
+          272,
+          274
+        ],
+        "conflicting_duplicate": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "price": 312,
+        "conflicting_duplicate": 32
+      },
+      "deviations": {
+        "list_type_ascii": 4612
+      },
+      "profile": "compat-2026-11",
+      "conditional_status": 304
+    }
+  ]
+}
