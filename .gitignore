@@ -39,3 +39,7 @@ Thumbs.db
 
 # local scratch
 work/
+
+# generated nightly from the database, never committed
+apps/web/public/data/
+.vercel/

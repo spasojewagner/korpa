@@ -26,6 +26,13 @@ def ingest(
         bool, typer.Option("--all", help="Import all discovered retailers")
     ] = False,
     dry_run: Annotated[bool, typer.Option(help="Validate without connecting to the DB")] = False,
+    report_row_errors: Annotated[
+        bool,
+        typer.Option(
+            "--report-row-errors",
+            help="Exit 0 when the only problems are invalid rows (still counted and reported)",
+        ),
+    ] = False,
 ) -> None:
     """Discover price lists, validate them, and report every rejected row."""
     if bool(retailer) == all_retailers:
@@ -103,7 +110,7 @@ def ingest(
     finally:
         if engine is not None:
             engine.dispose()
-    if failed:
+    if failed and not report_row_errors:
         raise typer.Exit(1)
 
 

@@ -1,0 +1,21 @@
+# Render Blueprint for the read-only API (blueprint path: infra/render.yaml).
+# Secrets are set in the Render dashboard (sync: false); nothing secret lives in this file.
+services:
+  - type: web
+    name: korpa-api
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: pip install uv && uv sync --frozen
+    startCommand: .venv/bin/uvicorn korpa_api.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips '*'
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: ENV
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
