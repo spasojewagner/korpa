@@ -39,6 +39,8 @@ test('search → product → basket ranks retailers', async ({ page }) => {
   await page.getByRole('link', { name: 'Mleko 2,8% 1 l' }).click()
   await expect(h1(page)).toHaveText('Mleko 2,8% 1 l')
   await expect(page.getByText('Najjeftinije')).toHaveCount(1)
+  // Para must never be rounded away (browser locale data has 0 decimals for RSD).
+  await expect(page.getByText(/^139,99\sRSD$/)).toBeVisible()
   await expect(page.getByText('Sniženo do 30.11.2026.')).toBeVisible()
   await expectNoViolations(page)
 

@@ -1,6 +1,9 @@
 // All money arrives from the API as integer para (price × 100). Format it here, never in components.
 
-const money = new Intl.NumberFormat('sr-Latn-RS', { style: 'currency', currency: 'RSD' })
+// Browsers' locale data list RSD with 0 decimals and would round 139,99 to 140: always show para.
+const money = new Intl.NumberFormat('sr-Latn-RS', {
+  style: 'currency', currency: 'RSD', minimumFractionDigits: 2, maximumFractionDigits: 2,
+})
 
 export function formatPrice(para: number): string {
   return money.format(para / 100)
