@@ -2,6 +2,9 @@
 
 Free tier only: Neon (Postgres), Render (API), Vercel (static site), GitHub Actions (nightly job).
 
+- Site: https://ai-korpa.vercel.app
+- API: https://korpa-api.onrender.com (`/health`, `/api/...`, `/graphql`)
+
 ```
 GitHub Actions (.github/workflows/deploy.yml)
   nightly 03:17 UTC, manual, and on every push to main
@@ -11,7 +14,7 @@ GitHub Actions (.github/workflows/deploy.yml)
   → vercel build + deploy --prod    (site with that morning's data)
 
 Render: korpa-api (infra/render.yaml), auto-deploys main; sleeps after 15 min idle.
-Vercel: korpa-web, root directory apps/web, deployed only from the workflow (no Git integration).
+Vercel: korpa, root directory apps/web, deployed only from the workflow (no Git integration).
 ```
 
 The site reads `/data/categories.json` and `/data/quality.json` first, so Home and the data quality page never
@@ -25,8 +28,8 @@ wait for a sleeping API. Search, product and basket call the API; the first requ
 | | `VERCEL_TOKEN` | Vercel access token for this project |
 | | `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` | from the Vercel project settings |
 | Render → korpa-api → Environment | `DATABASE_URL` | same Neon connection string |
-| | `CORS_ORIGINS` | the production site URL, e.g. `https://korpa.vercel.app` |
-| Vercel → korpa-web → Environment (Production) | `VITE_API_URL` | the Render API URL, e.g. `https://korpa-api.onrender.com` |
+| | `CORS_ORIGINS` | `https://ai-korpa.vercel.app` plus the project's other `*.vercel.app` aliases |
+| Vercel → korpa → Environment (Production) | `VITE_API_URL` | `https://korpa-api.onrender.com` |
 
 Plain `postgresql://…?sslmode=require&channel_binding=require` URLs work for both drivers: the sync driver gets
 `postgresql+psycopg`, the async API translates `sslmode` to asyncpg's `ssl` and drops `channel_binding`.
