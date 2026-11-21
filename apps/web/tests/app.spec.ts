@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { MILK, basket, categories, product, quality, search, summary } from './fixtures'
+import { MILK, basket, categories, priceIndex, product, quality, search, signals, summary } from './fixtures'
 
 // The built site talks to the default local API; every call is answered from fixtures.
 const API = 'http://127.0.0.1:8000'
@@ -10,6 +10,8 @@ test.beforeEach(async ({ page }) => {
   await page.route(`${API}/api/categories`, (route) => route.fulfill({ json: categories }))
   await page.route(`${API}/api/quality`, (route) => route.fulfill({ json: quality }))
   await page.route(`${API}/api/basket`, (route) => route.fulfill({ json: basket }))
+  await page.route(`${API}/api/index`, (route) => route.fulfill({ json: priceIndex }))
+  await page.route(`${API}/api/signals`, (route) => route.fulfill({ json: signals }))
   await page.route(`${API}/graphql`, (route) => {
     const query = String((route.request().postDataJSON() as { query?: string }).query)
     return route.fulfill({ json: { data: query.includes('ProductDetail') ? product : summary } })
@@ -87,3 +89,26 @@ for (const path of ['/pretraga', '/korpa', '/indeks', '/kvalitet', '/o-projektu'
     await expectNoViolations(page)
   })
 }
+
+test('price index: overall value, categories, signals filter', async ({ page }) => {
+  await page.goto('/indeks')
+  await expect(h1(page)).toHaveText('Indeks cena')
+  await expect(page.getByText(/^101,4$/)).toBeVisible()
+  await expect(page.getByText('+1,4 %').first()).toBeVisible()
+  await expect(page.getByRole('row', { name: /Mleko i mlečni proizvodi/ })).toContainText('97,5')
+  await expect(page.getByRole('row', { name: /Sirće/ })).toContainText('premalo proizvoda')
+  await expect(page.getByRole('listitem').filter({ hasText: 'Redovna cena porasla je za +27,0 %' })).toBeVisible()
+  await page.getByRole('button', { name: 'Odstupanje od drugih' }).click()
+  await expect(page.getByRole('button', { name: 'Odstupanje od drugih' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByText(/1,56× srednje cene/)).toBeVisible()
+  await expect(page.getByText(/porasla je za/)).toHaveCount(0)
+  await expectNoViolations(page)
+})
+
+test('home categories open category browsing', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('link', { name: /Mleko i mlečni proizvodi/ }).click()
+  await expect(h1(page)).toHaveText('Mleko i mlečni proizvodi')
+  await expect(page.getByText('Pronađena su 2 proizvoda')).toBeVisible()
+  await expectNoViolations(page)
+})

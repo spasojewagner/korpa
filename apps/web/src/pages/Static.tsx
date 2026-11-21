@@ -1,19 +1,7 @@
 import { createLazyRoute } from '@tanstack/react-router'
-import { StateView } from '../components'
 import { useI18n } from '../i18n/I18nProvider'
 import type { CopyKey } from '../i18n/sr-Latn'
 import { usePageMeta } from '../lib/meta'
-
-function IndexPage() {
-  const { t } = useI18n()
-  usePageMeta(t('indexHeading'))
-  return (
-    <>
-      <h1 className="mb-6 text-2xl font-semibold">{t('indexHeading')}</h1>
-      <StateView kind="empty" title={t('indexHeading')} message={t('indexSoon')} />
-    </>
-  )
-}
 
 const sections: [CopyKey, CopyKey][] = [
   ['aboutNotHeading', 'aboutNot'],
@@ -46,5 +34,4 @@ function AboutPage() {
   )
 }
 
-export const IndexRoute = createLazyRoute('/indeks')({ component: IndexPage })
 export const AboutRoute = createLazyRoute('/o-projektu')({ component: AboutPage })

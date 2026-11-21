@@ -16,14 +16,16 @@ function SearchPage() {
   const navigate = useNavigate({ from: '/pretraga' })
   const inBasket = new Set(useBasket().map((item) => item.barcode))
   const selectId = useId()
-  const ready = q.length >= 2
-  const heading = ready ? t('searchTitle', { q }) : t('searchHeading')
+  const categories = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
+  // A query of 2+ characters, or a category alone (browsing).
+  const ready = q.length >= 2 || kategorija !== undefined
+  const categoryName = categories.data?.find((category) => category.code === kategorija)?.name
+  const heading = q.length >= 2 ? t('searchTitle', { q }) : (categoryName ?? t('searchHeading'))
   usePageMeta(heading)
 
-  const categories = useQuery({ queryKey: ['categories'], queryFn: fetchCategories })
   const results = useInfiniteQuery({
     queryKey: ['search', q, kategorija],
-    queryFn: ({ pageParam }) => searchProducts(q, kategorija, pageParam),
+    queryFn: ({ pageParam }) => searchProducts(q.length >= 2 ? q : '', kategorija, pageParam),
     initialPageParam: 0,
     getNextPageParam: (last, pages) => {
       const loaded = pages.length * PAGE_SIZE
@@ -64,7 +66,7 @@ function SearchPage() {
               <StateView kind={results.error instanceof ApiError && results.error.status === 0 ? 'offline' : 'error'}
                 onRetry={() => void results.refetch()} />
             ) : items.length === 0 ? (
-              <StateView kind="empty" message={t('emptySearch', { q })} />
+              <StateView kind="empty" message={q ? t('emptySearch', { q }) : t('emptyCategory')} />
             ) : (
               <>
                 <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
