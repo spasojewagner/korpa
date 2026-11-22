@@ -9,7 +9,9 @@ import { loadHome, useStatic, type HomeData } from './home-data'
 
 /** The hero film; until the files exist the still image is shown. Paths are relative to /public. */
 const HERO_VIDEO: { webm?: string; mp4?: string } = {}
-const HERO_POSTER = '/media/hero-poster.webp'
+const HERO_POSTER = '/media/hero-1120.webp'
+const HERO_SRCSET = '/media/hero-640.webp 640w, /media/hero-1120.webp 1120w'
+const HERO_SIZES = '(min-width: 1024px) 34rem, (min-width: 640px) 28rem, 92vw'
 
 function HeroMedia() {
   const { tr } = useI18n()
@@ -32,13 +34,13 @@ function HeroMedia() {
       <div className="overflow-hidden rounded-xl bg-paper-raised shadow-card">
         {hasVideo ? (
           <video ref={video} muted loop playsInline preload="metadata" poster={HERO_POSTER} aria-hidden="true"
-            className="aspect-[5/6] w-full object-cover">
+            className="aspect-square w-full object-cover">
             {HERO_VIDEO.webm && <source src={HERO_VIDEO.webm} type="video/webm" />}
             {HERO_VIDEO.mp4 && <source src={HERO_VIDEO.mp4} type="video/mp4" />}
           </video>
         ) : (
-          <img src={HERO_POSTER} alt="" width={480} height={577} fetchPriority="high"
-            className="aspect-[5/6] w-full object-cover" />
+          <img src={HERO_POSTER} srcSet={HERO_SRCSET} sizes={HERO_SIZES} alt="" width={1120} height={1120}
+            fetchPriority="high" className="aspect-square w-full object-cover" />
         )}
         <div aria-hidden="true" className="kilim" />
       </div>
@@ -70,7 +72,7 @@ function Hero({ data }: { data: HomeData | null }) {
       .replace('{date}', formatDate(data.newest))
     : null
   return (
-    <section aria-labelledby="hero-title" className="wrap grid items-center gap-14 pt-10 pb-16 lg:min-h-[calc(100svh-5.5rem)] lg:grid-cols-[1.05fr_1fr] lg:py-12">
+    <section aria-labelledby="hero-title" className="wrap grid items-center gap-14 overflow-x-clip pt-10 pb-16 lg:min-h-[calc(100svh-5.5rem)] lg:grid-cols-[1.05fr_1fr] lg:py-12">
       <div>
         <p className="enter inline-flex items-center gap-2 rounded-full bg-brand-subtle px-4 py-1.5 text-sm font-semibold text-brand">
           <span aria-hidden="true" className="size-2 rounded-full bg-brand" />

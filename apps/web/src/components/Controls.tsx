@@ -100,7 +100,7 @@ export function ScriptToggle({ tone = 'light' }: { tone?: 'light' | 'dark' }) {
       <legend className="sr-only">{t('scriptLabel')}</legend>
       {options.map(({ value, label, short }) => (
         <label key={value}
-          className={`relative flex min-h-10 min-w-11 cursor-pointer items-center justify-center rounded-full px-3 text-sm font-semibold has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${script === value ? active : idle}`}>
+          className={`relative flex min-h-10 min-w-11 cursor-pointer items-center justify-center rounded-full px-2.5 text-sm font-semibold has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${script === value ? active : idle}`}>
           <input type="radio" name="script" value={value} className="absolute inset-0 m-0 cursor-pointer appearance-none rounded-full"
             checked={script === value} onChange={() => setScript(value)} />
           <span aria-hidden="true" lang={value === 'cyrl' ? 'sr-Cyrl' : 'sr-Latn'}>{short}</span>

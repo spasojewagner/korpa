@@ -47,7 +47,7 @@ export function SiteFooter({ repoUrl = 'https://github.com/spasojewagner/korpa' 
       <div aria-hidden="true" className="kilim kilim-lg" />
       <div className="wrap grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
         <div>
-          <p className="font-display text-2xl font-semibold text-ink">{t('brand')}</p>
+          <img src="/logo.svg" alt={t('brand')} width={107} height={32} className="h-8 w-auto" />
           <p className="mt-2 max-w-sm">{t('footerTagline')}</p>
           <p className="mt-4 max-w-sm text-sm">{t('disclaimer')}</p>
         </div>

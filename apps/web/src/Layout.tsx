@@ -6,15 +6,12 @@ import { useBasket } from './lib/basket'
 
 const activeNav = { 'aria-current': 'page' as const, className: 'is-active' }
 
+/** The logo is a static SVG (no JS cost); the dark variant sits on the Podaci band. */
 function Logo({ tone }: { tone: 'light' | 'dark' }) {
   const { t } = useI18n()
-  const mark = tone === 'dark' ? 'bg-paper text-brand-deep' : 'bg-brand text-paper'
   return (
-    <Link to="/" aria-label={t('homeLabel')} className="inline-flex min-h-11 items-center gap-2.5">
-      <span aria-hidden="true" className={`grid size-10 place-items-center rounded-full ${mark}`}>
-        <Icon name="basket" className="size-5" />
-      </span>
-      <span aria-hidden="true" className="font-display text-2xl font-semibold">{t('brand')}</span>
+    <Link to="/" aria-label={t('homeLabel')} className="inline-flex min-h-11 items-center">
+      <img src={tone === 'dark' ? '/logo-dark.svg' : '/logo.svg'} alt="" width={120} height={36} className="h-9 w-auto" />
     </Link>
   )
 }
@@ -29,20 +26,20 @@ function ShopHeader({ pathname, q }: { pathname: string; q: string }) {
   return (
     <header>
       <div aria-hidden="true" className="kilim" />
-      <div className="wrap grid grid-cols-[1fr_auto] items-center gap-x-6 gap-y-1 py-3 sm:grid-cols-[auto_1fr_auto_auto]">
+      <div className="wrap grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 py-3 sm:grid-cols-[auto_1fr_auto_auto] sm:gap-x-6">
         <div className="order-1"><Logo tone="light" /></div>
         <nav aria-label={t('navLabel')} className="order-3 sm:order-2 sm:justify-self-center">
-          <ul className="flex flex-wrap items-center gap-x-5 sm:gap-x-7">
+          <ul className="flex flex-wrap items-center gap-x-4 sm:gap-x-7">
             <li><Link to="/pretraga" className={link} activeProps={activeNav}>{t('navSearch')}</Link></li>
             <li><Link to="/podaci" className={link} activeProps={activeNav}>{t('navData')}</Link></li>
-            <li><Link to="/o-projektu" className={link} activeProps={activeNav}>{t('navAbout')}</Link></li>
+            <li className="hidden sm:list-item"><Link to="/o-projektu" className={link} activeProps={activeNav}>{t('navAbout')}</Link></li>
           </ul>
         </nav>
-        <div className="order-4 sm:order-3"><ScriptToggle /></div>
+        <div className="order-4 justify-self-end sm:order-3"><ScriptToggle /></div>
         <Link to="/korpa" className="btn btn-primary order-2 min-h-11 px-4 sm:order-4" activeProps={{ 'aria-current': 'page' }}>
           <Icon name="basket" className="size-5" />
           <span className="sr-only">{`${t('navBasket')}: ${count}`}</span>
-          <span aria-hidden="true">{t('navBasket')}</span>
+          <span aria-hidden="true" className="max-[359px]:hidden">{t('navBasket')}</span>
           <span aria-hidden="true" className="rounded-full bg-paper px-2 text-sm text-brand tabular-nums">{items.length}</span>
         </Link>
       </div>

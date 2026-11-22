@@ -133,3 +133,14 @@ test('data area has its own navigation and keeps old addresses', async ({ page }
   await expect(h1(page)).toContainText('Ista korpa.')
   await expect(page.getByRole('navigation', { name: 'Glavni meni' })).toBeVisible()
 })
+
+test('no sideways scroll on small phones', async ({ page }) => {
+  for (const path of ['/', '/podaci', '/podaci/api', '/korpa']) {
+    for (const width of [390, 320]) {
+      await page.setViewportSize({ width, height: 800 })
+      await page.goto(path)
+      await expect(page.locator('h1')).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth), `${path} at ${width}`).toBeLessThanOrEqual(width)
+    }
+  }
+})
