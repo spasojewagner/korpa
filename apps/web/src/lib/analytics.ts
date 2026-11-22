@@ -20,6 +20,8 @@ export interface IndexResponse {
   as_of: string
   base_month: string
   categories: IndexCategory[]
+  /** Only in the nightly index.json, and only when at least one sentence passed the number check. */
+  notes?: { model: string; items: string[] }
 }
 
 export type SignalType = 'jump' | 'outlier'

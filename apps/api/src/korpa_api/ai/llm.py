@@ -83,13 +83,19 @@ class GeminiExtractor:
 
     async def extract_raw(self, sentence: str) -> str:
         """Return the unmodified response text for reproducible evaluation recordings."""
+        return await self.generate_json(PROMPT, sentence, SCHEMA)
+
+    async def generate_json(
+        self, system: str, user: str, schema: dict[str, object], timeout: float = 10
+    ) -> str:
+        """One structured-output call; returns the response text, unvalidated."""
         body = {
-            "systemInstruction": {"parts": [{"text": PROMPT}]},
-            "contents": [{"role": "user", "parts": [{"text": sentence}]}],
+            "systemInstruction": {"parts": [{"text": system}]},
+            "contents": [{"role": "user", "parts": [{"text": user}]}],
             "generationConfig": {
                 "temperature": 0,
                 "maxOutputTokens": 1024,
-                "responseFormat": {"text": {"mimeType": "APPLICATION_JSON", "schema": SCHEMA}},
+                "responseFormat": {"text": {"mimeType": "APPLICATION_JSON", "schema": schema}},
             },
         }
         try:
@@ -97,12 +103,11 @@ class GeminiExtractor:
                 f"{self.base_url}/models/{self.model}:generateContent",
                 headers={"x-goog-api-key": self.api_key},
                 json=body,
-                timeout=10,
+                timeout=timeout,
             )
             response.raise_for_status()
             parts = response.json()["candidates"][0]["content"]["parts"]
-            text = "".join(part.get("text", "") for part in parts)
-            return text
+            return "".join(part.get("text", "") for part in parts)
         except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
             # Never echo the response body into errors; the key travels in a header only.
             raise ModelError(type(exc).__name__) from exc
@@ -135,6 +140,11 @@ def _client() -> httpx.AsyncClient:
 
 def configured_extractor() -> Extractor | None:
     """The extractor from the environment, or None when AI is not configured."""
+    return configured_model()
+
+
+def configured_model() -> GeminiExtractor | None:
+    """The Gemini client from LLM_PROVIDER, LLM_API_KEY and LLM_MODEL, or None if one is unset."""
     provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
     key = os.environ.get("LLM_API_KEY", "").strip()
     model = os.environ.get("LLM_MODEL", "").strip()

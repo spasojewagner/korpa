@@ -8,6 +8,7 @@ and GET /api/signals (limit 200).
 import argparse
 import asyncio
 import json
+import sys
 from pathlib import Path
 
 import sqlalchemy as sa
@@ -17,9 +18,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 from korpa_api import analytics, repository
+from korpa_api.ai.llm import ModelError, configured_model
+from korpa_api.ai.notes import index_notes
 from korpa_api.database import async_database_url
 from korpa_api.pricing import belgrade_today
-from korpa_api.schemas import CategoryItem, SignalsParams
+from korpa_api.schemas import CategoryItem, IndexResponse, SignalsParams
 
 
 async def export(out: Path) -> list[Path]:
@@ -42,7 +45,7 @@ async def export(out: Path) -> list[Path]:
     payloads = {
         "categories.json": TypeAdapter(list[CategoryItem]).dump_python(categories, mode="json"),
         "quality.json": quality.model_dump(mode="json"),
-        "index.json": index.model_dump(mode="json"),
+        "index.json": index.model_dump(mode="json") | await notes(index),
         "signals.json": signals.model_dump(mode="json"),
     }
     out.mkdir(parents=True, exist_ok=True)
@@ -52,6 +55,20 @@ async def export(out: Path) -> list[Path]:
         path.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), "utf-8")
         written.append(path)
     return written
+
+
+async def notes(index: IndexResponse) -> dict[str, object]:
+    """Grounded notes for index.json, or nothing when AI is off or the model fails."""
+    model = configured_model()
+    if model is None:
+        return {}
+    try:
+        kept, proposed = await index_notes(model, index)
+    except ModelError as exc:
+        print(f"index notes skipped: {exc}", file=sys.stderr)
+        return {}
+    print(f"index notes: kept {len(kept)} of {proposed}", file=sys.stderr)
+    return {"notes": {"model": model.model, "items": kept}} if kept else {}
 
 
 def main() -> None:

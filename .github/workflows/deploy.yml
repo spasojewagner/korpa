@@ -41,6 +41,11 @@ jobs:
         # Invalid rows are reported on the data quality page; a crash or the storage guard still fails the job.
         run: uv run korpa ingest --all --report-row-errors
       - name: Export static data
+        # Index notes are written only when both secrets exist; without them the export is unchanged.
+        env:
+          LLM_PROVIDER: gemini
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
         run: uv run python -m korpa_api.export_static --out apps/web/public/data
       - name: Deploy web
         run: |
