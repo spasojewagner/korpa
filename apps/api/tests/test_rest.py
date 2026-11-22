@@ -348,6 +348,26 @@ def test_basket_ranks_complete_before_partial_and_merges_duplicates(client: Test
     assert formats[2]["missing_barcodes"] == [B2]
     assert result["as_of"] == AS_OF.isoformat()
 
+    assert result["split"] == {
+        "total_para": 240,
+        "saving_vs_best_para": 360,
+        "n_formats": 2,
+        "items": [
+            {
+                "barcode": B1,
+                "format": {"id": 3, "name": "Delimični market"},
+                "price_para": 10,
+                "list_date": "2026-11-18",
+            },
+            {
+                "barcode": B2,
+                "format": {"id": 2, "name": "Market B"},
+                "price_para": 190,
+                "list_date": "2026-11-19",
+            },
+        ],
+    }
+
 
 def test_basket_partial_ranking_prefers_more_found_over_cheaper_total(client: TestClient) -> None:
     formats = sorted(
@@ -383,7 +403,49 @@ def test_basket_omits_formats_and_retailers_with_no_requested_products(client: T
 def test_basket_returns_no_formats_when_every_barcode_is_missing(client: TestClient) -> None:
     response = client.post("/api/basket", json={"items": [{"barcode": "0000000000099", "qty": 1}]})
     assert response.status_code == 200
-    assert response.json() == {"retailers": [], "as_of": AS_OF.isoformat()}
+    assert response.json() == {"retailers": [], "split": None, "as_of": AS_OF.isoformat()}
+
+
+def test_basket_split_missing_one_item(client: TestClient) -> None:
+    response = client.post(
+        "/api/basket",
+        json={
+            "items": [
+                {"barcode": B1, "qty": 1},
+                {"barcode": "0000000000099", "qty": 1},
+            ]
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["retailers"]
+    assert response.json()["split"] is None
+
+
+def test_basket_split_without_complete_single_format(client: TestClient, engine: Engine) -> None:
+    with engine.begin() as connection:
+        connection.execute(
+            db.prices_current.delete().where(
+                sa.or_(
+                    sa.and_(db.prices_current.c.format_id == 1, db.prices_current.c.barcode == B2),
+                    sa.and_(db.prices_current.c.format_id != 1, db.prices_current.c.barcode == B1),
+                )
+            )
+        )
+    response = client.post(
+        "/api/basket",
+        json={
+            "items": [
+                {"barcode": B1, "qty": 2},
+                {"barcode": B2, "qty": 1},
+            ]
+        },
+    )
+    assert response.status_code == 200
+    split = response.json()["split"]
+    assert split["total_para"] == 350
+    assert split["n_formats"] == 2
+    assert split["saving_vs_best_para"] is None
+    assert [item["price_para"] for item in split["items"]] == [80, 190]
 
 
 def test_basket_keeps_a_found_product_with_a_genuine_zero_price(

@@ -8,6 +8,7 @@ import { basket, useBasket } from '../lib/basket'
 import { usePageMeta } from '../lib/meta'
 import { WithQuery } from '../lib/query'
 import { BasketAssistant } from '../components/BasketAssistant'
+import { BasketSplit } from '../components/BasketSplit'
 
 export function toTotals(response: Schemas['BasketResponse']): BasketTotal[] {
   return response.retailers.flatMap((retailer) => retailer.formats.map((format) => ({
@@ -89,7 +90,11 @@ function BasketPage() {
             ) : toTotals(totals.data).length === 0 ? (
               <StateView kind="empty" />
             ) : (
-              <BasketSummary totals={toTotals(totals.data)} headingLevel={3} />
+              <>
+                <BasketSummary totals={toTotals(totals.data)} headingLevel={3} />
+                {totals.data.split && <BasketSplit split={totals.data.split} names={byBarcode}
+                  quantities={new Map(items.map((item) => [item.barcode, item.qty]))} />}
+              </>
             )}
           </section>
         </div>

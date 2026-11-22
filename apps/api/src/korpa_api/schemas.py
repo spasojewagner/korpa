@@ -102,8 +102,30 @@ class BasketRetailer(BaseModel):
     formats: list[BasketFormat]
 
 
+class BasketSplitFormat(BaseModel):
+    id: int
+    name: str
+
+
+class BasketSplitItem(BaseModel):
+    barcode: str
+    format: BasketSplitFormat
+    price_para: int = Field(description="Effective unit price, before basket quantity.")
+    list_date: date
+
+
+class BasketSplit(BaseModel):
+    total_para: int
+    saving_vs_best_para: int | None = Field(
+        description="Saving against the cheapest complete single format; null if none exists."
+    )
+    n_formats: int
+    items: list[BasketSplitItem]
+
+
 class BasketResponse(BaseModel):
     retailers: list[BasketRetailer]
+    split: BasketSplit | None
     as_of: date
 
 

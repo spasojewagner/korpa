@@ -40,6 +40,7 @@ test('history uses the lowest regular price of each month', () => {
 test('basket response maps to totals with missing counts and dates', () => {
   const totals = toTotals({
     as_of: '2026-11-21',
+    split: null,
     retailers: [{ id: 1, name: 'Alfa', slug: 'alfa', formats: [{
       id: 7, name: 'Hiper', total_para: 1000, found_barcodes: ['1'], missing_barcodes: ['2', '3'],
       complete: false, rank: 1, list_date_min: null, list_date_max: null,

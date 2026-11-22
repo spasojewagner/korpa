@@ -238,10 +238,21 @@
             },
             "title": "Retailers",
             "type": "array"
+          },
+          "split": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BasketSplit"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "retailers",
+          "split",
           "as_of"
         ],
         "title": "BasketResponse",
@@ -276,6 +287,92 @@
           "formats"
         ],
         "title": "BasketRetailer",
+        "type": "object"
+      },
+      "BasketSplit": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BasketSplitItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "n_formats": {
+            "title": "N Formats",
+            "type": "integer"
+          },
+          "saving_vs_best_para": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Saving against the cheapest complete single format; null if none exists.",
+            "title": "Saving Vs Best Para"
+          },
+          "total_para": {
+            "title": "Total Para",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_para",
+          "saving_vs_best_para",
+          "n_formats",
+          "items"
+        ],
+        "title": "BasketSplit",
+        "type": "object"
+      },
+      "BasketSplitFormat": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "BasketSplitFormat",
+        "type": "object"
+      },
+      "BasketSplitItem": {
+        "properties": {
+          "barcode": {
+            "title": "Barcode",
+            "type": "string"
+          },
+          "format": {
+            "$ref": "#/components/schemas/BasketSplitFormat"
+          },
+          "list_date": {
+            "format": "date",
+            "title": "List Date",
+            "type": "string"
+          },
+          "price_para": {
+            "description": "Effective unit price, before basket quantity.",
+            "title": "Price Para",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "barcode",
+          "format",
+          "price_para",
+          "list_date"
+        ],
+        "title": "BasketSplitItem",
         "type": "object"
       },
       "CategoryItem": {

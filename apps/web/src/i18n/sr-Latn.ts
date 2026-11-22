@@ -89,6 +89,12 @@ export const copy = {
   goToBasket: 'Idi u korpu',
 
   basketHeading: 'Korpa',
+  basketSplitHeading: 'Najjeftinije po stavci',
+  basketSplitNote: 'Za ovu cenu kupuješ svaku stavku tamo gde je najjeftinija. To može značiti obilazak više prodavnica. Trošak puta nije uračunat. Podaci razlikuju formate trgovaca, ne pojedinačne prodavnice.',
+  basketSplitSaving: 'Ušteda prema najjeftinijoj celoj korpi u jednom formatu: {saving}.',
+  basketSplitNoComparison: 'Nijedan format nema celu korpu, pa ušteda prema kupovini na jednom mestu nije dostupna.',
+  basketSplitDetails: 'Prikaži stavke i prodavnice',
+  basketSplitUnitPrice: '{qty} × {price} po komadu',
   basketEmpty: 'Korpa je još prazna. Dodaj proizvode preko pomoćnika ili pretrage.',
   goToSearch: 'Idi na pretragu',
   basketItemsHeading: 'Proizvodi u korpi',
@@ -160,6 +166,7 @@ export const plurals = {
     other: 'Nedostaje {n} proizvoda',
   },
   basketItems: { one: '{n} proizvod', few: '{n} proizvoda', other: '{n} proizvoda' },
+  basketStores: { one: 'Kupovina u {n} formatu prodavnice', few: 'Kupovina u {n} formata prodavnica', other: 'Kupovina u {n} formata prodavnica' },
   results: {
     one: 'Pronađen je {n} proizvod',
     few: 'Pronađena su {n} proizvoda',

@@ -8,12 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import ColumnElement, Select
 
 from korpa_api.analytics import suspected_price_errors
-from korpa_api.pricing import effective_price
+from korpa_api.pricing import effective_price, split_basket
 from korpa_api.schemas import (
     BasketFormat,
     BasketRequest,
     BasketResponse,
     BasketRetailer,
+    BasketSplitFormat,
+    BasketSplitItem,
     CategoryItem,
     NameVariantExample,
     NameVariants,
@@ -211,7 +213,44 @@ async def basket(session: AsyncSession, request: BasketRequest, as_of: date) -> 
                 list_date_max=row["list_date_max"],
             )
         )
-    return BasketResponse(retailers=list(grouped.values()), as_of=as_of)
+    prices, formats = db.prices_current, db.retail_formats
+    offers = (
+        await session.execute(
+            sa.select(
+                prices.c.barcode,
+                formats.c.id,
+                formats.c.name,
+                prices.c.list_date,
+                effective_price(
+                    prices.c.regular,
+                    prices.c.discounted,
+                    prices.c.disc_from,
+                    prices.c.disc_to,
+                    as_of,
+                ).label("price_para"),
+            )
+            .select_from(prices.join(formats))
+            .where(prices.c.barcode.in_(barcodes))
+        )
+    ).mappings()
+    best_total = min(
+        (f.total_para for r in grouped.values() for f in r.formats if f.complete),
+        default=None,
+    )
+    split = split_basket(
+        request.items,
+        [
+            BasketSplitItem(
+                barcode=row["barcode"],
+                format=BasketSplitFormat(id=row["id"], name=row["name"]),
+                price_para=row["price_para"],
+                list_date=row["list_date"],
+            )
+            for row in offers
+        ],
+        best_total,
+    )
+    return BasketResponse(retailers=list(grouped.values()), split=split, as_of=as_of)
 
 
 async def categories(session: AsyncSession) -> list[CategoryItem]:
