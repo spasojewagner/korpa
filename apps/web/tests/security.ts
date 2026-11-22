@@ -16,4 +16,3 @@ export const test = base.extend<{ cspGuard: void }>({
     expect(errors, 'CSP violations').toEqual([])
   }, { auto: true }],
 })
-

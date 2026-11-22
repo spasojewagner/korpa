@@ -57,5 +57,3 @@ try {
   if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, report)
 }
 if (failed) throw new Error('Lighthouse thresholds failed; see lighthouse-results/scores.md and reports')
-
-
