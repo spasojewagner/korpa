@@ -16,23 +16,23 @@ function AboutPage() {
   const a = (key: AboutKey) => tr(aboutCopy[key])
   usePageMeta(a('aboutHeading'))
   return (
-    <article className="flex max-w-3xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">{a('aboutHeading')}</h1>
+    <article className="flex max-w-3xl flex-col gap-8">
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{a('aboutHeading')}</h1>
       <p className="text-lg text-ink-soft">{a('aboutWhat')}</p>
       {sections.map(([heading, body]) => (
-        <section key={heading}>
-          <h2 className="text-xl font-semibold">{a(heading)}</h2>
+        <section key={heading} className="border-t border-line pt-8">
+          <h2 className="font-display text-2xl">{a(heading)}</h2>
           <p className="mt-2 text-ink-soft">{a(body)}</p>
         </section>
       ))}
-      <section>
-        <h2 className="text-xl font-semibold">{a('aboutContactHeading')}</h2>
+      <section className="border-t border-line pt-8">
+        <h2 className="font-display text-2xl">{a('aboutContactHeading')}</h2>
         <p className="mt-2 text-ink-soft">
           {a('aboutContact')}{' '}
           <a href="https://github.com/spasojewagner/korpa/issues" className="text-brand underline underline-offset-2">{a('reportIssue')}</a>
         </p>
       </section>
-      <p className="text-sm text-ink-muted">{t('disclaimer')}</p>
+      <p className="border-t border-line pt-8 text-sm text-ink-muted">{t('disclaimer')}</p>
     </article>
   )
 }

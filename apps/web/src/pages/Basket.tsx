@@ -43,23 +43,23 @@ function BasketPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('basketHeading')}</h1>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('basketHeading')}</h1>
       <BasketAssistant />
       {items.length === 0 ? (
-        <div className="mt-4 flex flex-col items-start gap-3">
-          <p className="text-ink-soft">{t('basketEmpty')}</p>
-          <Link to="/pretraga" className="text-brand underline underline-offset-2">{t('goToSearch')}</Link>
+        <div className="mt-6 flex flex-col items-start gap-4 rounded-lg bg-paper-raised p-5">
+          <p className="font-display text-2xl">{t('basketEmpty')}</p>
+          <Link to="/pretraga" className="btn btn-primary">{t('goToSearch')}</Link>
         </div>
       ) : (
         <div className="mt-6 grid gap-10 lg:grid-cols-2">
           <section aria-labelledby="items">
-            <h2 id="items" className="mb-3 text-xl font-semibold">{t('basketItemsHeading')}</h2>
-            <ul className="flex flex-col">
+            <h2 id="items" className="mb-5 font-display text-2xl">{t('basketItemsHeading')}</h2>
+            <ul className="flex flex-col gap-4">
               {items.map((item) => {
                 const product = byBarcode.get(item.barcode)
                 const name = product?.name ?? t('unknownProduct')
                 return (
-                  <li key={item.barcode} className="flex flex-wrap items-center justify-between gap-3 border-b border-line py-3">
+                  <li key={item.barcode} className="flex flex-col gap-4 rounded-lg border border-line bg-white p-5">
                     <div className="min-w-0 flex-1">
                       <Link to="/proizvod/$barcode" params={{ barcode: item.barcode }} className="font-semibold text-ink underline-offset-4 hover:underline">
                         {name}
@@ -68,18 +68,19 @@ function BasketPage() {
                         {product ? [product.brand, product.unit].filter(Boolean).join(' · ') : item.barcode}
                       </p>
                     </div>
-                    <QuantityStepper value={item.qty} name={name} onChange={(qty) => basket.setQty(item.barcode, qty)} />
-                    <button type="button" onClick={() => basket.remove(item.barcode)}
-                      className="min-h-11 px-2 text-danger underline underline-offset-2">
-                      {t('remove')}<span className="sr-only">: {name}</span>
-                    </button>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <QuantityStepper value={item.qty} name={name} onChange={(qty) => basket.setQty(item.barcode, qty)} />
+                      <button type="button" onClick={() => basket.remove(item.barcode)} className="btn btn-secondary">
+                        {t('remove')}<span className="sr-only">: {name}</span>
+                      </button>
+                    </div>
                   </li>
                 )
               })}
             </ul>
           </section>
           <section aria-labelledby="compare">
-            <h2 id="compare" className="mb-3 text-xl font-semibold">{t('compareHeading')}</h2>
+            <h2 id="compare" className="mb-5 font-display text-2xl">{t('compareHeading')}</h2>
             {totals.isPending ? (
               <StateView kind="loading" lines={2} />
             ) : totals.isError ? (

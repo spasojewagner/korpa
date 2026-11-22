@@ -20,10 +20,10 @@ function Change({ point }: { point: IndexPoint }) {
   return <Badge variant={ratio > 1 ? 'increase' : 'decrease'}>{formatChange(ratio)}</Badge>
 }
 
-function PointNote({ point }: { point: IndexPoint }) {
+function PointNote({ point, dark = false }: { point: IndexPoint; dark?: boolean }) {
   const { t } = useI18n()
   return (
-    <span className="text-sm text-ink-muted">
+    <span className={`text-sm ${dark ? 'text-sand' : 'text-ink-muted'}`}>
       {point.provisional ? t('indexProvisional', { date: formatDate(point.month) }) : formatMonth(point.month)}
     </span>
   )
@@ -34,15 +34,18 @@ function Overall({ category }: { category: IndexCategory }) {
   const point = latestPoint(category)
   if (!point || point.value === null) return null
   return (
-    <section aria-labelledby="overall" className="rounded-lg bg-paper-raised p-6">
-      <h2 id="overall" className="text-lg font-semibold">{t('indexOverall')}</h2>
+    <section aria-labelledby="overall" className="overflow-hidden rounded-lg bg-brand-deep text-paper">
+      <div aria-hidden="true" className="kilim" />
+      <div className="p-5 sm:p-8">
+      <h2 id="overall" className="font-display text-2xl">{t('indexOverall')}</h2>
       <p className="mt-2 flex flex-wrap items-baseline gap-3">
-        <strong className="text-3xl font-semibold tabular-nums">{formatIndex(point.value)}</strong>
+        <strong className="font-display text-5xl font-semibold tabular-nums sm:text-6xl">{formatIndex(point.value)}</strong>
         <Change point={point} />
       </p>
-      <p className="mt-1 flex flex-wrap gap-x-4"><PointNote point={point} />
-        <span className="text-sm text-ink-muted">{t('colProducts')}: {formatNumber(point.n_products)}</span>
+      <p className="mt-4 flex flex-wrap gap-x-4"><PointNote point={point} dark />
+        <span className="text-sm text-sand">{t('colProducts')}: {formatNumber(point.n_products)}</span>
       </p>
+      </div>
     </section>
   )
 }
@@ -51,8 +54,8 @@ function Notes({ notes, asOf }: { notes: IndexResponse['notes']; asOf: string })
   const { tr } = useI18n()
   if (!notes?.items.length) return null
   return (
-    <section aria-labelledby="index-notes" className="max-w-3xl rounded-lg border border-line p-4">
-      <h2 id="index-notes" className="text-lg font-semibold">{tr(indexNotesCopy.heading)}</h2>
+    <section aria-labelledby="index-notes" className="max-w-3xl rounded-lg border border-line bg-white p-5">
+      <h2 id="index-notes" className="font-display text-2xl">{tr(indexNotesCopy.heading)}</h2>
       <ul className="mt-2 list-disc pl-5">
         {notes.items.map((text) => <li key={text} className="mt-1">{tr(text)}</li>)}
       </ul>
@@ -66,14 +69,14 @@ function Notes({ notes, asOf }: { notes: IndexResponse['notes']; asOf: string })
 function CategoryTable({ categories }: { categories: IndexCategory[] }) {
   const { t } = useI18n()
   return (
-    <div className="overflow-x-auto">
+    <div role="region" aria-label={t('indexCaption')} tabIndex={0} className="overflow-x-auto rounded-lg border border-line bg-white p-5">
       <table className="w-full min-w-[32rem] border-collapse text-left">
         <caption className="sr-only">{t('indexCaption')}</caption>
         <thead>
-          <tr className="border-b border-ink-muted text-sm text-ink-soft">
+          <tr className="border-b border-line text-sm uppercase tracking-wide text-ink-muted">
             <th scope="col" className="py-2 pr-4 font-semibold">{t('colCategory')}</th>
             <th scope="col" className="py-2 pr-4 text-right font-semibold">{t('colIndex')}</th>
-            <th scope="col" className="py-2 pr-4 font-semibold">{t('colChange')}</th>
+            <th scope="col" className="py-2 pr-4 text-right font-semibold">{t('colChange')}</th>
             <th scope="col" className="py-2 text-right font-semibold">{t('colProducts')}</th>
           </tr>
         </thead>
@@ -86,11 +89,12 @@ function CategoryTable({ categories }: { categories: IndexCategory[] }) {
                   <Link to="/pretraga" search={{ kategorija: category.code }} className="text-ink underline-offset-4 hover:underline">
                     {category.name}
                   </Link>
+                  {point && <span className="mt-1 block"><PointNote point={point} /></span>}
                 </th>
                 <td className="py-3 pr-4 text-right tabular-nums">
                   {point?.value != null ? formatIndex(point.value) : <span className="text-sm text-ink-muted">{t('indexTooFew')}</span>}
                 </td>
-                <td className="py-3 pr-4">{point && <Change point={point} />}</td>
+                <td className="py-3 pr-4 text-right tabular-nums">{point && <Change point={point} />}</td>
                 <td className="py-3 text-right tabular-nums">{point ? formatNumber(point.n_products) : '—'}</td>
               </tr>
             )
@@ -111,7 +115,7 @@ function SignalItem({ signal }: { signal: Signal }) {
   const { t } = useI18n()
   const prices = { after: formatPrice(signal.price_para), before: formatPrice(signal.reference_para), reference: formatPrice(signal.reference_para) }
   return (
-    <li className="flex flex-col gap-1 border-b border-line py-3">
+    <li className="card-link flex flex-col gap-2 rounded-lg border border-line bg-white p-5">
       <span className="flex flex-wrap items-center gap-2">
         <Link to="/proizvod/$barcode" params={{ barcode: signal.barcode }} className="font-semibold text-ink underline-offset-4 hover:underline">
           {signal.name}
@@ -135,12 +139,12 @@ function Signals() {
   const items = query.data?.items.filter((item) => filter === 'all' || item.type === filter) ?? []
   return (
     <section aria-labelledby="signals" className="mt-12">
-      <h2 id="signals" className="text-xl font-semibold">{t('signalsHeading')}</h2>
-      <p className="mt-2 max-w-3xl text-ink-soft">{t('signalsIntro')}</p>
+      <h2 id="signals" className="font-display text-2xl">{t('signalsHeading')}</h2>
+      <p className="mt-2 max-w-3xl text-lg text-ink-soft">{t('signalsIntro')}</p>
       <div role="group" aria-label={t('signalsFilter')} className="mt-4 flex flex-wrap gap-2">
         {filters.map(({ value, label }) => (
           <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}
-            className="min-h-11 rounded-md border border-ink-muted px-4 aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-white">
+            className="min-h-11 rounded-full border border-ink-muted bg-white px-4 font-semibold aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-white">
             {t(label)}
           </button>
         ))}
@@ -150,7 +154,7 @@ function Signals() {
           : query.isError && !(query.error instanceof ApiError && query.error.status === 404)
             ? <StateView kind="error" onRetry={() => void query.refetch()} />
             : items.length === 0 ? <StateView kind="empty" message={t('signalsEmpty')} />
-              : <ul>{items.map((item) => <SignalItem key={`${item.type}-${item.barcode}-${item.format}-${item.date}`} signal={item} />)}</ul>}
+              : <ul className="grid gap-4 sm:grid-cols-2">{items.map((item) => <SignalItem key={`${item.type}-${item.barcode}-${item.format}-${item.date}`} signal={item} />)}</ul>}
       </div>
     </section>
   )
@@ -164,7 +168,7 @@ function PriceIndexPage() {
   const categories = query.data?.categories.filter((category) => category.code !== 0) ?? []
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('indexHeading')}</h1>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('indexHeading')}</h1>
       {query.isPending ? (
         <div className="mt-6"><StateView kind="loading" lines={2} /></div>
       ) : query.isError ? (
@@ -175,7 +179,7 @@ function PriceIndexPage() {
         </div>
       ) : (
         <>
-          <p className="mt-4 max-w-3xl text-ink-soft">{t('indexIntro', { month: formatMonth(query.data.base_month) })}</p>
+          <p className="mt-4 max-w-3xl text-lg text-ink-soft">{t('indexIntro', { month: formatMonth(query.data.base_month) })}</p>
           <details className="mt-3 max-w-3xl">
             <summary className="cursor-pointer font-semibold text-brand">{t('indexMethodHeading')}</summary>
             <p className="mt-2 text-ink-soft">{t('indexMethod')}</p>

@@ -38,24 +38,24 @@ export function ProductCard({ product, href, renderLink, onAdd, added = false, h
     ? formatPrice(minPara)
     : t('priceRange', { min: formatPrice(minPara), max: formatPrice(maxPara) })
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-line bg-white p-4">
+    <article className="card-link flex h-full flex-col gap-4 rounded-lg border border-line bg-white p-5">
       <div>
-        <Heading className="text-lg font-semibold">
+        <Heading className="font-display text-2xl font-semibold">
           {renderLink ? renderLink(name, linkClass) : <a href={href} className={linkClass}>{name}</a>}
         </Heading>
         <p className="text-sm text-ink-muted">{[brand, unit].filter(Boolean).join(' · ')}</p>
       </div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-lg font-semibold tabular-nums">{price}</span>
+      <div className="flex flex-col gap-1">
+        <span className="font-display text-2xl font-semibold tabular-nums">{t('priceFrom', { price: formatPrice(minPara) })}</span>
+        {minPara !== maxPara && <span className="font-display text-lg tabular-nums">{price}</span>}
         <span className="text-sm text-ink-soft">{tp('formats', nFormats)}</span>
       </div>
       {anyDiscount && <span><Badge variant="discount" /></span>}
-      <SourceDate date={listDate} today={today} />
+      <div className="mt-auto"><SourceDate date={listDate} today={today} /></div>
       {onAdd && (
         // One button in both states, so keyboard focus stays in place after adding.
         <button type="button" aria-disabled={added || undefined} onClick={() => { if (!added) onAdd(barcode) }}
-          className={`inline-flex min-h-11 items-center gap-1 self-start rounded-md border px-4 font-semibold text-brand ${
-            added ? 'border-transparent' : 'border-brand hover:bg-brand-subtle'}`}>
+          className="btn btn-secondary self-start">
           {added && <Icon name="check" />}
           {t(added ? 'inBasket' : 'addToBasket')}<span className="sr-only">: {name}</span>
         </button>
@@ -85,7 +85,7 @@ export function PriceComparison({ rows, unit, today }: { rows: FormatPrice[]; un
     <table className="w-full border-collapse text-left">
       <caption className="sr-only">{t('comparisonCaption')}</caption>
       <thead>
-        <tr className="border-b border-ink-muted text-sm text-ink-soft">
+        <tr className="border-b border-line text-sm uppercase tracking-wide text-ink-muted">
           <th scope="col" className="py-2 pr-4 font-semibold">{t('colFormat')}</th>
           <th scope="col" aria-sort="ascending" className="py-2 text-right font-semibold">{t('colPrice')}</th>
         </tr>
@@ -108,7 +108,7 @@ export function PriceComparison({ rows, unit, today }: { rows: FormatPrice[]; un
                 </span>
                 <SourceDate date={row.listDate} today={today} />
               </th>
-              <td className="py-3 text-right">
+              <td className="py-3 text-right tabular-nums">
                 <Price para={row.para} regularPara={row.regularPara} unitPara={row.unitPara} unit={unit} />
               </td>
             </tr>
@@ -142,7 +142,7 @@ export function Sparkline({ points, width = 240, height = 56 }: { points: MonthP
   return (
     <figure className="m-0 flex flex-col gap-1">
       <svg aria-hidden="true" focusable="false" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none"
-        className="h-14 w-full max-w-60 text-brand">
+        className="h-32 w-full text-brand">
         <path d={path} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" />
         <circle cx={x(points.length - 1)} cy={y(last.para)} r={3} fill="currentColor" />
       </svg>
