@@ -52,4 +52,3 @@ export function QuantityStepper({ value, onChange, name, min = 1, max = 99 }: Qu
     </div>
   )
 }
-
