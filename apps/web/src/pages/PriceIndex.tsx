@@ -3,9 +3,11 @@ import { Link, createLazyRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Badge, StateView } from '../components'
 import { useI18n } from '../i18n/I18nProvider'
+import { indexNotesCopy } from '../i18n/index-notes'
 import type { CopyKey } from '../i18n/sr-Latn'
 import {
-  fetchIndex, fetchSignals, latestPoint, type IndexCategory, type IndexPoint, type Signal, type SignalType,
+  fetchIndex, fetchSignals, latestPoint, type IndexCategory, type IndexPoint, type IndexResponse, type Signal,
+  type SignalType,
 } from '../lib/analytics'
 import { ApiError } from '../lib/api'
 import { formatChange, formatDate, formatIndex, formatMonth, formatNumber, formatPrice, formatTimes } from '../lib/format'
@@ -40,6 +42,22 @@ function Overall({ category }: { category: IndexCategory }) {
       </p>
       <p className="mt-1 flex flex-wrap gap-x-4"><PointNote point={point} />
         <span className="text-sm text-ink-muted">{t('colProducts')}: {formatNumber(point.n_products)}</span>
+      </p>
+    </section>
+  )
+}
+
+function Notes({ notes, asOf }: { notes: IndexResponse['notes']; asOf: string }) {
+  const { tr } = useI18n()
+  if (!notes?.items.length) return null
+  return (
+    <section aria-labelledby="index-notes" className="max-w-3xl rounded-lg border border-line p-4">
+      <h2 id="index-notes" className="text-lg font-semibold">{tr(indexNotesCopy.heading)}</h2>
+      <ul className="mt-2 list-disc pl-5">
+        {notes.items.map((text) => <li key={text} className="mt-1">{tr(text)}</li>)}
+      </ul>
+      <p className="mt-3 text-sm text-ink-muted">
+        {tr(indexNotesCopy.label).replace('{date}', formatDate(asOf))}
       </p>
     </section>
   )
@@ -164,6 +182,7 @@ function PriceIndexPage() {
           </details>
           <div className="mt-6 flex flex-col gap-8">
             {overall && <Overall category={overall} />}
+            <Notes notes={query.data.notes} asOf={query.data.as_of} />
             <CategoryTable categories={categories} />
           </div>
         </>

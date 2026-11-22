@@ -67,6 +67,7 @@ export const basket: Schemas['BasketResponse'] = {
 export const priceIndex: IndexResponse = {
   as_of: asOf,
   base_month: '2026-11-01',
+  notes: { model: 'test-model', items: ['Ukupni indeks je 101,4, što je rast od 1,4 % od novembra 2026.'] },
   categories: [
     { code: 0, name: 'Sve kategorije', points: [
       { month: '2026-11-01', value: 100, n_products: 61234, n_excluded: 0, provisional: false },
