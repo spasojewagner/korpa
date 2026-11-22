@@ -22,7 +22,8 @@ The site reads `/data/categories.json`, `/data/quality.json`, `/data/index.json`
 indices after history compaction; the export also refreshes them before reading. Current-month snapshots
 are final. The export and `GET /api/index` append an on-read provisional point dated `as_of`.
 `signals.json` matches `GET /api/signals?limit=200`; the endpoint defaults to 100 and accepts
-an optional `type=jump|outlier` filter. Signals are prompts for review, never accusations.
+an optional `type=jump|outlier|discount_after_jump` filter. Signals are prompts for review, never accusations.
+The discount signal and informational name variants are documented in [signals.md](signals.md).
 Search, product and basket call the API; the first request after idle takes about a minute.
 
 ## Settings (names only; values are entered in the dashboards, never committed)

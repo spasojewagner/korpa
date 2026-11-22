@@ -272,6 +272,54 @@ export interface components {
             /** Name */
             name: string;
         };
+        /** DiscountAfterJumpSignal */
+        DiscountAfterJumpSignal: {
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+            /** Barcode */
+            barcode: string;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Disc From
+             * Format: date
+             */
+            disc_from: string;
+            /** Discounted Para */
+            discounted_para: number;
+            /** Format */
+            format: string;
+            /** Name */
+            name: string;
+            /** New Regular Para */
+            new_regular_para: number;
+            /** Old Regular Para */
+            old_regular_para: number;
+            /** Price Para */
+            price_para: number;
+            /** Ratio */
+            ratio: number;
+            /** Reference Para */
+            reference_para: number;
+            /** Retailer */
+            retailer: string;
+            /**
+             * Rise Date
+             * Format: date
+             */
+            rise_date: string;
+            /**
+             * Type
+             * @constant
+             */
+            type: "discount_after_jump";
+        };
         /** IndexCategory */
         IndexCategory: {
             /** Code */
@@ -311,6 +359,22 @@ export interface components {
             base_month: string;
             /** Categories */
             categories: components["schemas"]["IndexCategory"][];
+        };
+        /** NameVariantExample */
+        NameVariantExample: {
+            /** Barcode */
+            barcode: string;
+            /** Names */
+            names: components["schemas"]["RetailerProductName"][];
+        };
+        /** NameVariants */
+        NameVariants: {
+            /** Barcodes */
+            barcodes: number;
+            /** Examples */
+            examples: components["schemas"]["NameVariantExample"][];
+            /** Share Of Products */
+            share_of_products: number;
         };
         /** QualityItem */
         QualityItem: {
@@ -363,8 +427,16 @@ export interface components {
              * Format: date
              */
             as_of: string;
+            name_variants: components["schemas"]["NameVariants"];
             /** Retailers */
             retailers: components["schemas"]["QualityItem"][];
+        };
+        /** RetailerProductName */
+        RetailerProductName: {
+            /** Name */
+            name: string;
+            /** Retailer */
+            retailer: string;
         };
         /** SearchItem */
         SearchItem: {
@@ -439,7 +511,7 @@ export interface components {
              */
             as_of: string;
             /** Items */
-            items: components["schemas"]["SignalItem"][];
+            items: (components["schemas"]["SignalItem"] | components["schemas"]["DiscountAfterJumpSignal"])[];
         };
     };
     responses: never;
@@ -1175,7 +1247,7 @@ export interface operations {
         parameters: {
             query?: {
                 limit?: number;
-                type?: ("jump" | "outlier") | null;
+                type?: ("jump" | "outlier" | "discount_after_jump") | null;
             };
             header?: never;
             path?: never;

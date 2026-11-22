@@ -9,6 +9,7 @@ const sections: [AboutKey, AboutKey][] = [
   ['aboutNotHeading', 'aboutNot'],
   ['aboutSourceHeading', 'aboutSource'],
   ['aboutMethodHeading', 'aboutMethod'],
+  ['aboutSignalsHeading', 'aboutSignals'],
 ]
 
 function AboutPage() {
