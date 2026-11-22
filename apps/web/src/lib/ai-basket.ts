@@ -1,6 +1,6 @@
 import { ApiError, type Schemas } from './api'
 import { MAX_ITEMS, MAX_QTY, type BasketItem } from './basket'
-import { assistantCopy } from '../i18n/sr-Latn'
+import { assistantCopy } from '../i18n/assistant'
 import type { I18n } from '../i18n/I18nProvider'
 
 export class AssistantError extends ApiError {
@@ -56,4 +56,12 @@ export function mergeBasketItems(current: BasketItem[], chosen: BasketItem[]): B
     merged.set(item.barcode, { barcode: item.barcode, qty: Math.min(MAX_QTY, Math.max(1, Math.round(qty))) })
   }
   return merged.size > MAX_ITEMS ? null : [...merged.values()]
+}
+
+/** Lowest possible total of the chosen products: each at its cheapest format. A lower bound, not a chain total. */
+export function selectedTotal(items: { qty: number; selected: string; candidates: { barcode: string; min_effective_para: number }[] }[]): number {
+  return items.reduce((sum, item) => {
+    const chosen = item.candidates.find((candidate) => candidate.barcode === item.selected)
+    return chosen ? sum + item.qty * chosen.min_effective_para : sum
+  }, 0)
 }

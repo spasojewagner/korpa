@@ -1,7 +1,52 @@
-@import '@fontsource-variable/source-sans-3/wght.css';
+@import '@fontsource-variable/onest/wght.css';
+@import '@fontsource-variable/lora/wght.css';
 @import 'tailwindcss';
 @import './styles/theme.css';
 
-body { margin: 0; font-size: var(--text-base); line-height: 1.6; }
-.skip-link { position: absolute; left: 1rem; top: -5rem; background: var(--color-paper); padding: 1rem; }
+body { margin: 0; font-size: var(--text-base); line-height: 1.65; }
+.skip-link { position: absolute; left: 1rem; top: -5rem; z-index: 50; background: var(--color-paper); padding: 1rem; }
 .skip-link:focus { top: 1rem; }
+
+/* Pirot kilim band: stepped paprika diamonds on sand. Decorative only (aria-hidden on the element). */
+.kilim {
+  height: 16px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='16' viewBox='0 0 32 16'%3E%3Crect width='32' height='16' fill='%23e9dcc3'/%3E%3Cpath fill='%23b23a1e' d='M15 1h2v2h2v2h2v2h2v2h-2v2h-2v2h-2v2h-2v-2h-2v-2h-2v-2H9V7h2V5h2V3h2z'/%3E%3Cpath fill='%23fbf7ef' d='M15 5h2v2h2v2h-2v2h-2V9h-2V7h2z'/%3E%3Crect x='15' y='7' width='2' height='2' fill='%231f4d3a'/%3E%3Cpath fill='%231f4d3a' d='M0 4l4 4-4 4zM32 4l-4 4 4 4z'/%3E%3C/svg%3E") repeat-x left center / 32px 16px;
+}
+.kilim-lg { height: 24px; background-size: 48px 24px; }
+
+/* Buttons: one primary and one secondary style across the site. */
+.btn {
+  display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; gap: 0.5rem;
+  border-radius: 999px; padding: 0 1.5rem; font-weight: 600; text-decoration: none;
+  transition: transform 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--color-brand); color: #fff; box-shadow: var(--shadow-card); }
+.btn-primary:hover { background: var(--color-brand-hover); }
+.btn-secondary { border: 2px solid var(--color-ink); color: var(--color-ink); background: transparent; }
+.btn-secondary:hover { background: var(--color-paper-raised); }
+.btn-on-dark { background: var(--color-paper); color: var(--color-brand-deep); }
+.btn-on-dark:hover { background: var(--color-sand); }
+
+/* Linked cards lift slightly on hover. */
+.card-link { transition: transform 150ms ease, box-shadow 150ms ease; }
+.card-link:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+
+/* Hero entrance, once on load. */
+/* Transform only: text keeps full contrast from the first frame. */
+@keyframes rise { from { transform: translateY(14px); } to { transform: none; } }
+.enter { animation: rise 600ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.enter-2 { animation-delay: 120ms; }
+.enter-3 { animation-delay: 240ms; }
+
+/* Page width: every section lines up on the same left and right edges. */
+.wrap { margin-inline: auto; width: 100%; max-width: 76rem; padding-inline: 1.25rem; }
+@media (min-width: 640px) { .wrap { padding-inline: 2rem; } }
+
+/* Active navigation: an underline that does not rely on colour alone. */
+.nav-link { position: relative; font-weight: 500; }
+.nav-link::after { content: ''; position: absolute; left: 0.25rem; right: 0.25rem; bottom: 0.5rem; height: 2px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform 200ms ease; }
+.nav-link:hover::after, .nav-link.is-active::after { transform: scaleX(1); }
+.nav-link.is-active { font-weight: 700; }
+.data-tab.is-active { border-color: var(--color-sand); color: var(--color-paper); font-weight: 700; }

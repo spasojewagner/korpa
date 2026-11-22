@@ -1,32 +1,35 @@
 import { createLazyRoute } from '@tanstack/react-router'
 import { useI18n } from '../i18n/I18nProvider'
-import type { CopyKey } from '../i18n/sr-Latn'
+import { aboutCopy } from '../i18n/about'
 import { usePageMeta } from '../lib/meta'
 
-const sections: [CopyKey, CopyKey][] = [
+type AboutKey = keyof typeof aboutCopy
+
+const sections: [AboutKey, AboutKey][] = [
   ['aboutNotHeading', 'aboutNot'],
   ['aboutSourceHeading', 'aboutSource'],
   ['aboutMethodHeading', 'aboutMethod'],
 ]
 
 function AboutPage() {
-  const { t } = useI18n()
-  usePageMeta(t('aboutHeading'))
+  const { t, tr } = useI18n()
+  const a = (key: AboutKey) => tr(aboutCopy[key])
+  usePageMeta(a('aboutHeading'))
   return (
     <article className="flex max-w-3xl flex-col gap-6">
-      <h1 className="text-2xl font-semibold">{t('aboutHeading')}</h1>
-      <p className="text-lg text-ink-soft">{t('aboutWhat')}</p>
+      <h1 className="text-2xl font-semibold">{a('aboutHeading')}</h1>
+      <p className="text-lg text-ink-soft">{a('aboutWhat')}</p>
       {sections.map(([heading, body]) => (
         <section key={heading}>
-          <h2 className="text-xl font-semibold">{t(heading)}</h2>
-          <p className="mt-2 text-ink-soft">{t(body)}</p>
+          <h2 className="text-xl font-semibold">{a(heading)}</h2>
+          <p className="mt-2 text-ink-soft">{a(body)}</p>
         </section>
       ))}
       <section>
-        <h2 className="text-xl font-semibold">{t('aboutContactHeading')}</h2>
+        <h2 className="text-xl font-semibold">{a('aboutContactHeading')}</h2>
         <p className="mt-2 text-ink-soft">
-          {t('aboutContact')}{' '}
-          <a href="https://github.com/spasojewagner/korpa/issues" className="text-brand underline underline-offset-2">{t('reportIssue')}</a>
+          {a('aboutContact')}{' '}
+          <a href="https://github.com/spasojewagner/korpa/issues" className="text-brand underline underline-offset-2">{a('reportIssue')}</a>
         </p>
       </section>
       <p className="text-sm text-ink-muted">{t('disclaimer')}</p>

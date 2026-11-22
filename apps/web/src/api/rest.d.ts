@@ -172,6 +172,11 @@ export interface components {
             candidates: components["schemas"]["SearchItem"][];
             /** Phrase */
             phrase: string;
+            /**
+             * Proposed
+             * @description Suggested by the model for a goal, not named by the shopper
+             */
+            proposed: boolean;
             /** Qty */
             qty: number;
             /** Query */
@@ -189,6 +194,11 @@ export interface components {
              * Format: date
              */
             as_of: string;
+            /**
+             * Budget Para
+             * @description Budget the shopper stated, if any
+             */
+            budget_para: number | null;
             /** Items */
             items: components["schemas"]["AiBasketItem"][];
             /** Model */

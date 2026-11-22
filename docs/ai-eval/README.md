@@ -46,3 +46,6 @@ Exact item count is averaged across sentences. Metrics are also shown separately
 no expected items. A zero denominator is reported as N/A. Worst sentences are ranked by missed items,
 extra items and incorrect matched quantities (plus invalid outputs); retrieval misses break ties
 when enabled, followed by id order. CI checks successful execution, with no minimum score threshold.
+
+Goal sentences (a meal or an occasion instead of products) may return items with `proposed: true`.
+They are suggestions the shopper confirms, so the evaluation drops them and scores only named products.

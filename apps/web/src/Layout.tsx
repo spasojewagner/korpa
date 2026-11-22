@@ -1,16 +1,95 @@
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
-import { ScriptToggle, SearchForm, SiteFooter } from './components'
+import { Icon, ScriptToggle, SearchForm, SiteFooter } from './components'
 import { useI18n } from './i18n/I18nProvider'
 import { useBasket } from './lib/basket'
 
-const navLink = 'inline-flex min-h-11 items-center text-ink underline-offset-4 hover:underline'
-const activeNav = { className: 'font-semibold underline', 'aria-current': 'page' as const }
+const activeNav = { 'aria-current': 'page' as const, className: 'is-active' }
 
-export function RootLayout() {
+/** The logo is a static SVG (no JS cost); the dark variant sits on the Podaci band. */
+function Logo({ tone }: { tone: 'light' | 'dark' }) {
+  const { t } = useI18n()
+  return (
+    <Link to="/" aria-label={t('homeLabel')} className="inline-flex min-h-11 items-center">
+      <img src={tone === 'dark' ? '/logo-dark.svg' : '/logo.svg'} alt="" width={120} height={36} className="h-9 w-auto" />
+    </Link>
+  )
+}
+
+/** Shopper area: search, basket, product pages and the About page. */
+function ShopHeader({ pathname, q }: { pathname: string; q: string }) {
   const { t, tp } = useI18n()
   const items = useBasket()
   const navigate = useNavigate()
+  const count = tp('basketItems', items.length)
+  const link = 'nav-link inline-flex min-h-11 items-center px-1 text-ink'
+  return (
+    <header>
+      <div aria-hidden="true" className="kilim" />
+      <div className="wrap grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 py-3 sm:grid-cols-[auto_1fr_auto_auto] sm:gap-x-6">
+        <div className="order-1"><Logo tone="light" /></div>
+        <nav aria-label={t('navLabel')} className="order-3 sm:order-2 sm:justify-self-center">
+          <ul className="flex flex-wrap items-center gap-x-4 sm:gap-x-7">
+            <li><Link to="/pretraga" className={link} activeProps={activeNav}>{t('navSearch')}</Link></li>
+            <li><Link to="/podaci" className={link} activeProps={activeNav}>{t('navData')}</Link></li>
+            <li className="hidden sm:list-item"><Link to="/o-projektu" className={link} activeProps={activeNav}>{t('navAbout')}</Link></li>
+          </ul>
+        </nav>
+        <div className="order-4 justify-self-end sm:order-3"><ScriptToggle /></div>
+        <Link to="/korpa" className="btn btn-primary order-2 min-h-11 px-4 sm:order-4" activeProps={{ 'aria-current': 'page' }}>
+          <Icon name="basket" className="size-5" />
+          <span className="sr-only">{`${t('navBasket')}: ${count}`}</span>
+          <span aria-hidden="true" className="max-[359px]:hidden">{t('navBasket')}</span>
+          <span aria-hidden="true" className="rounded-full bg-paper px-2 text-sm text-brand tabular-nums">{items.length}</span>
+        </Link>
+      </div>
+      {pathname !== '/' && (
+        <div className="wrap pb-4">
+          <div className="max-w-2xl">
+            <SearchForm key={q} defaultValue={q} onSearch={(query) => navigate({ to: '/pretraga', search: { q: query } })} />
+          </div>
+        </div>
+      )}
+      <p aria-live="polite" className="sr-only">{t('basketLive', { items: count })}</p>
+    </header>
+  )
+}
+
+/** Data area for journalists, researchers and developers: its own band and tabs. */
+function DataHeader() {
+  const { t } = useI18n()
+  const tab = 'data-tab inline-flex min-h-11 items-center border-b-3 border-transparent px-1 text-paper/90 hover:text-paper'
+  return (
+    <header className="bg-brand-deep text-paper">
+      <div className="wrap flex flex-wrap items-center justify-between gap-4 pt-4">
+        <div className="flex items-center gap-3">
+          <Logo tone="dark" />
+          <span aria-hidden="true" className="text-sand">/</span>
+          <span className="font-display text-xl text-sand">{t('navData')}</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 font-semibold text-paper hover:bg-brand">
+            <Icon name="basket" className="size-5" />
+            {t('dataBack')}
+          </Link>
+          <ScriptToggle tone="dark" />
+        </div>
+      </div>
+      <nav aria-label={t('dataNavLabel')} className="wrap mt-2">
+        <ul className="flex flex-wrap gap-x-6">
+          <li><Link to="/podaci" className={tab} activeOptions={{ exact: true }} activeProps={activeNav}>{t('dataOverview')}</Link></li>
+          <li><Link to="/podaci/indeks" className={tab} activeProps={activeNav}>{t('dataIndex')}</Link></li>
+          <li><Link to="/podaci/kvalitet" className={tab} activeProps={activeNav}>{t('dataQuality')}</Link></li>
+          <li><Link to="/podaci/api" className={tab} activeProps={activeNav}>{t('dataApi')}</Link></li>
+        </ul>
+      </nav>
+      <div aria-hidden="true" className="kilim" />
+    </header>
+  )
+}
+
+export function RootLayout() {
+  const { t } = useI18n()
   const { pathname, q } = useRouterState({
     select: (state) => ({
       pathname: state.location.pathname,
@@ -28,39 +107,13 @@ export function RootLayout() {
     document.getElementById('main')?.focus()
   }, [pathname])
 
-  const count = tp('basketItems', items.length)
+  const dataArea = pathname === '/podaci' || pathname.startsWith('/podaci/')
+  const fullBleed = pathname === '/'
   return (
-    <div className="mx-auto flex min-h-screen max-w-6xl flex-col px-4 sm:px-6">
+    <div className="flex min-h-screen flex-col">
       <a className="skip-link" href="#main">{t('skip')}</a>
-      <header className="flex flex-col gap-4 border-b border-line py-4">
-        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
-          <Link to="/" className="inline-flex min-h-11 items-center text-2xl font-semibold text-ink">{t('brand')}</Link>
-          <nav aria-label={t('navLabel')}>
-            <ul className="flex flex-wrap items-center gap-x-5">
-              <li>
-                <Link to="/korpa" className={navLink} activeProps={activeNav}>
-                  <span className="sr-only">{`${t('navBasket')}: ${count}`}</span>
-                  <span aria-hidden="true">
-                    {t('navBasket')}
-                    <span className="ml-2 rounded-sm bg-brand px-2 text-sm font-semibold text-white tabular-nums">{items.length}</span>
-                  </span>
-                </Link>
-              </li>
-              <li><Link to="/indeks" className={navLink} activeProps={activeNav}>{t('navIndex')}</Link></li>
-              <li><Link to="/kvalitet" className={navLink} activeProps={activeNav}>{t('navQuality')}</Link></li>
-              <li><Link to="/o-projektu" className={navLink} activeProps={activeNav}>{t('navAbout')}</Link></li>
-            </ul>
-          </nav>
-          <ScriptToggle />
-        </div>
-        {pathname !== '/' && (
-          <div className="max-w-2xl">
-            <SearchForm key={q} defaultValue={q} onSearch={(query) => navigate({ to: '/pretraga', search: { q: query } })} />
-          </div>
-        )}
-        <p aria-live="polite" className="sr-only">{t('basketLive', { items: count })}</p>
-      </header>
-      <main id="main" tabIndex={-1} className="flex-1 py-8 focus:outline-none">
+      {dataArea ? <DataHeader /> : <ShopHeader pathname={pathname} q={q} />}
+      <main id="main" tabIndex={-1} className={`flex-1 focus:outline-none ${fullBleed ? '' : 'wrap py-10'}`}>
         <Outlet />
       </main>
       <SiteFooter />

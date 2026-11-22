@@ -7,7 +7,7 @@ import { transliterate } from '../i18n/transliterate'
 import { daysSince, formatDate, formatPrice } from '../lib/format'
 import {
   BasketSummary, Badge, Price, PriceComparison, ProductCard, QuantityStepper, ScriptToggle,
-  SearchForm, SiteFooter, SourceDate, Sparkline, StateView, type BasketTotal, type FormatPrice,
+  SearchForm, SourceDate, Sparkline, StateView, type BasketTotal, type FormatPrice,
 } from '.'
 
 const today = new Date(2026, 10, 21)
@@ -135,8 +135,8 @@ test('all components together have no axe violations', async () => {
     <Sparkline points={[{ month: '2026-01-01', para: 1 }, { month: '2026-02-01', para: 2 }]} />
     <Badge variant="increase" />
     <StateView kind="empty" />
-    <SiteFooter />
   </main>)
+  // SiteFooter uses router links; Playwright + axe check it on every page.
   // jsdom cannot compute colors; contrast is verified in docs/design and by Playwright + axe in the browser.
   const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false }, region: { enabled: false } } })
   expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`)).toEqual([])

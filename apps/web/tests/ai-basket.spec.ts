@@ -108,3 +108,25 @@ test('Home never requests assistant status or displays its form', async ({ page 
   await expect(page.getByRole('textbox', { name: 'Napiši šta kupuješ' })).toHaveCount(0)
   expect(calls).toBe(0)
 })
+
+test('a goal shows proposals, the budget check and example chips', async ({ page }) => {
+  const goal = {
+    as_of: '2026-11-21', model: 'recorded', budget_para: 50000, items: [
+      { phrase: 'mleko', query: 'mleko', qty: 2, proposed: true, candidates: search.items },
+    ],
+  }
+  await page.route(`${API}/api/ai/basket`, (route) => route.fulfill({ json: goal }))
+  await page.goto('/korpa#pomocnik')
+  const field = page.getByRole('textbox', { name: 'Napiši šta kupuješ', exact: true })
+  await expect(field).toBeFocused()
+  await page.getByRole('button', { name: 'ručak za četvoro do 500 din' }).click()
+  await expect(field).toHaveValue('ručak za četvoro do 500 din')
+  await page.getByRole('button', { name: 'Predloži proizvode' }).click()
+  await expect(page.getByText('Ovo je predlog za tvoj cilj.')).toBeVisible()
+  await expect(page.getByRole('group', { name: /mleko Predlog/ })).toBeVisible()
+  await expect(page.getByText('Budžet', { exact: true })).toBeVisible()
+  await expect(page.getByText(/U okviru budžeta|Preko budžeta za/)).toBeVisible()
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()
+  expect(results.violations.map((v) => v.id)).toEqual([])
+})
+

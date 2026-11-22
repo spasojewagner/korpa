@@ -271,7 +271,10 @@ async def run(args: argparse.Namespace) -> None:
             else:
                 text = recordings[phrase.id].text
             try:
-                results.append(Result(phrase, parse_extraction(text).items))
+                # Goal proposals are suggestions the shopper confirms; only named products count.
+                results.append(
+                    Result(phrase, [i for i in parse_extraction(text).items if not i.proposed])
+                )
             except ModelError:
                 results.append(Result(phrase, [], error="invalid model output"))
     finally:

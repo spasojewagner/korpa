@@ -1,4 +1,4 @@
-import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
+import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { RootLayout } from './Layout'
 import { NotFound } from './pages/NotFound'
 
@@ -29,15 +29,33 @@ const product = createRoute({ getParentRoute: () => rootRoute, path: '/proizvod/
   .lazy(() => import('./pages/Product').then((m) => m.Route))
 const basketPage = createRoute({ getParentRoute: () => rootRoute, path: '/korpa' })
   .lazy(() => import('./pages/Basket').then((m) => m.Route))
-const index = createRoute({ getParentRoute: () => rootRoute, path: '/indeks' })
-  .lazy(() => import('./pages/PriceIndex').then((m) => m.Route))
-const quality = createRoute({ getParentRoute: () => rootRoute, path: '/kvalitet' })
-  .lazy(() => import('./pages/Quality').then((m) => m.Route))
 const about = createRoute({ getParentRoute: () => rootRoute, path: '/o-projektu' })
   .lazy(() => import('./pages/Static').then((m) => m.AboutRoute))
 
+// Data area (index, signals, quality, API) for journalists, researchers and developers.
+const data = createRoute({ getParentRoute: () => rootRoute, path: '/podaci' })
+  .lazy(() => import('./pages/Data').then((m) => m.OverviewRoute))
+const index = createRoute({ getParentRoute: () => rootRoute, path: '/podaci/indeks' })
+  .lazy(() => import('./pages/PriceIndex').then((m) => m.Route))
+const quality = createRoute({ getParentRoute: () => rootRoute, path: '/podaci/kvalitet' })
+  .lazy(() => import('./pages/Quality').then((m) => m.Route))
+const api = createRoute({ getParentRoute: () => rootRoute, path: '/podaci/api' })
+  .lazy(() => import('./pages/Data').then((m) => m.ApiRoute))
+
+// Old addresses keep working.
+const oldIndex = createRoute({
+  getParentRoute: () => rootRoute, path: '/indeks',
+  beforeLoad: () => { throw redirect({ to: '/podaci/indeks', replace: true }) },
+})
+const oldQuality = createRoute({
+  getParentRoute: () => rootRoute, path: '/kvalitet',
+  beforeLoad: () => { throw redirect({ to: '/podaci/kvalitet', replace: true }) },
+})
+
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([home, search, product, basketPage, index, quality, about]),
+  routeTree: rootRoute.addChildren([
+    home, search, product, basketPage, about, data, index, quality, api, oldIndex, oldQuality,
+  ]),
   defaultPreload: 'intent',
   scrollRestoration: true,
 })

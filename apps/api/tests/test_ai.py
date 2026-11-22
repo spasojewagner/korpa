@@ -5,6 +5,8 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 from korpa_api import routes
+from korpa_api.ai import basket
+from korpa_api.ai.basket import ExtractionCache
 from korpa_api.ai.limits import RateLimiter
 from korpa_api.ai.llm import (
     Extraction,
@@ -39,6 +41,7 @@ class FailingExtractor:
 @pytest.fixture(autouse=True)
 def fresh_limits(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(routes, "ai_limits", RateLimiter())
+    monkeypatch.setattr(basket, "cache", ExtractionCache())
     monkeypatch.setattr(routes, "belgrade_today", lambda: AS_OF)
     yield
     app.dependency_overrides.clear()
@@ -144,3 +147,60 @@ def test_rate_limiter_windows() -> None:
     assert limiter.check("a", 61, day) is None
     assert limiter.check("b", 62, day) == 3600
     assert limiter.check("b", 62, date(2026, 11, 23)) is None
+
+
+def test_goal_proposals_are_capped_and_budget_is_read() -> None:
+    raw = {
+        "items": [{"phrase": "hleb", "query": "hleb", "qty": 1, "proposed": False}]
+        + [
+            {"phrase": f"p{i}", "query": f"sastojak {i}", "qty": 1, "proposed": True}
+            for i in range(12)
+        ],
+        "budget_rsd": 500,
+        "people": 4,
+    }
+    extraction = parse_extraction(json.dumps(raw))
+    assert [i.proposed for i in extraction.items].count(True) == 8
+    assert extraction.items[0].proposed is False
+    assert extraction.budget_para == 50_000
+    for bad in (0, -5, 2_000_000, "500", True, 49.5):
+        assert parse_extraction(json.dumps({"items": [], "budget_rsd": bad})).budget_para is None
+
+
+def test_cache_reuses_an_extraction_and_expires() -> None:
+    cache = ExtractionCache(size=2, seconds=10)
+    first = Extraction(items=[])
+    cache.put("m", "Ručak  za ČETVORO", first, now=0)
+    assert cache.get("m", "ručak za četvoro", now=5) is first
+    assert cache.get("other-model", "ručak za četvoro", now=5) is None
+    assert cache.get("m", "ručak za četvoro", now=11) is None
+    cache.put("m", "a", first, now=0)
+    cache.put("m", "b", first, now=0)
+    cache.put("m", "c", first, now=0)
+    assert cache.get("m", "a", now=1) is None and cache.get("m", "c", now=1) is first
+
+
+class CountingExtractor(FakeExtractor):
+    calls = 0
+
+    async def extract(self, sentence: str) -> Extraction:
+        CountingExtractor.calls += 1
+        return await super().extract(sentence)
+
+
+def test_ai_basket_marks_proposals_returns_budget_and_caches(client: TestClient) -> None:
+    text = json.dumps(
+        {
+            "items": [{"phrase": "mleko", "query": "mleko", "qty": 2, "proposed": True}],
+            "budget_rsd": 500,
+        }
+    )
+    extractor = CountingExtractor(text)
+    app.dependency_overrides[configured_extractor] = lambda: extractor
+    for _ in range(2):
+        response = client.post("/api/ai/basket", json={"sentence": "ručak za četvoro do 500 din"})
+        assert response.status_code == 200
+    body = response.json()
+    assert body["budget_para"] == 50_000
+    assert body["items"][0]["proposed"] is True
+    assert CountingExtractor.calls == 1
