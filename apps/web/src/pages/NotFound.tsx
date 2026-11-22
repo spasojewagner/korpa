@@ -6,10 +6,12 @@ export function NotFound() {
   const { t } = useI18n()
   usePageMeta(t('notFoundHeading'))
   return (
-    <>
-      <h1 className="text-2xl font-semibold">{t('notFoundHeading')}</h1>
-      <p className="mt-4 text-ink-soft">{t('notFoundText')}</p>
-      <Link to="/" className="mt-4 inline-block text-brand underline underline-offset-2">{t('goHome')}</Link>
-    </>
+    <article className="max-w-3xl">
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('notFoundHeading')}</h1>
+      <p className="mt-4 text-lg text-ink-soft">{t('notFoundText')}</p>
+      <div className="mt-8 border-t border-line pt-8">
+        <Link to="/" className="btn btn-primary">{t('goHome')}</Link>
+      </div>
+    </article>
   )
 }
