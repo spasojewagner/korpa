@@ -121,6 +121,36 @@ test('home categories open category browsing', async ({ page }) => {
   await expectNoViolations(page)
 })
 
+test('discount after jump filter exposes its method and dates with axe', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/podaci/indeks')
+  const filter = page.getByRole('button', { name: 'Sniženje posle skoka redovne cene', exact: true })
+  await filter.focus()
+  await page.keyboard.press('Enter')
+  await expect(filter).toHaveAttribute('aria-pressed', 'true')
+  const signal = page.getByRole('listitem').filter({ hasText: 'Signal: redovna cena' })
+  await expect(signal).toHaveCount(1)
+  await expect(signal).toContainText('najmanje 20 %')
+  await expect(signal).toContainText('najmanje 98 %')
+  await expect(signal).toContainText('15.11.2026.')
+  await expect(signal).toContainText('21.11.2026.')
+  await expect(page.getByText(/1,56× srednje cene/)).toHaveCount(0)
+  await expectNoViolations(page)
+})
+
+test('name variants are informational and dated with axe', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 })
+  await page.goto('/podaci/kvalitet')
+  const block = page.getByRole('region', { name: 'Isti barkod, različiti nazivi' })
+  await expect(block).toContainText('nisu greška')
+  await expect(block).toContainText(/50\s*%/)
+  await expect(block).toContainText('21.11.2026.')
+  await expect(block).toContainText(MILK)
+  await expect(block).toContainText('Alfa: MLEKO 2,8% 1L IMLEK')
+  await expect(block).toContainText('Beta: Mleko 2,8% 1 l')
+  await expectNoViolations(page)
+})
+
 test('data area has its own navigation and keeps old addresses', async ({ page }) => {
   await page.goto('/kvalitet')
   await expect(page).toHaveURL(/\/podaci\/kvalitet$/)

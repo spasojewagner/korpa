@@ -15,8 +15,11 @@ from korpa_api.schemas import (
     BasketResponse,
     BasketRetailer,
     CategoryItem,
+    NameVariantExample,
+    NameVariants,
     QualityItem,
     QualityResponse,
+    RetailerProductName,
     SearchItem,
     SearchParams,
     SearchResponse,
@@ -298,4 +301,60 @@ async def quality(session: AsyncSession, as_of: date) -> QualityResponse:
                 }
             )
         )
-    return QualityResponse(retailers=result, as_of=as_of)
+    return QualityResponse(
+        retailers=result, name_variants=await name_variants(session), as_of=as_of
+    )
+
+
+async def name_variants(session: AsyncSession) -> NameVariants:
+    """Exact publisher-name differences, informational only; denominator is all products."""
+    names, retailers = db.product_names, db.retailers
+    variants = (
+        sa.select(names.c.barcode)
+        .group_by(names.c.barcode)
+        .having(sa.func.count(sa.distinct(names.c.raw_name.collate("C"))) > 1)
+        .cte("name_variants")
+    )
+    count = int(await session.scalar(sa.select(sa.func.count()).select_from(variants)) or 0)
+    products = int(await session.scalar(sa.select(sa.func.count()).select_from(db.products)) or 0)
+    sample = sa.select(variants.c.barcode).order_by(variants.c.barcode).limit(5).subquery()
+    # One representative retailer for each distinct raw name, then at most three per barcode.
+    distinct_names = (
+        sa.select(
+            names.c.barcode,
+            names.c.raw_name.collate("C").label("raw_name"),
+            sa.func.min(retailers.c.name.collate("C")).label("retailer"),
+        )
+        .select_from(names.join(sample, sample.c.barcode == names.c.barcode).join(retailers))
+        .group_by(names.c.barcode, names.c.raw_name.collate("C"))
+        .subquery()
+    )
+    ranked = sa.select(
+        distinct_names,
+        sa.func.row_number()
+        .over(
+            partition_by=distinct_names.c.barcode,
+            order_by=(distinct_names.c.raw_name, distinct_names.c.retailer),
+        )
+        .label("rank"),
+    ).subquery()
+    rows = (
+        await session.execute(
+            sa.select(ranked).where(ranked.c.rank <= 3).order_by(ranked.c.barcode, ranked.c.rank)
+        )
+    ).mappings()
+    examples: dict[str, NameVariantExample] = {}
+    for row in rows:
+        example = examples.setdefault(
+            row["barcode"],
+            NameVariantExample(
+                barcode=row["barcode"],
+                names=[],
+            ),
+        )
+        example.names.append(RetailerProductName(retailer=row["retailer"], name=row["raw_name"]))
+    return NameVariants(
+        barcodes=count,
+        share_of_products=count / products if products else 0,
+        examples=list(examples.values()),
+    )

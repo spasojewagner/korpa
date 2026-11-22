@@ -22,6 +22,10 @@ export const categories: Schemas['CategoryItem'][] = [{ code: 2, name: 'Mleko i 
 
 export const quality: Schemas['QualityResponse'] = {
   as_of: asOf,
+  name_variants: { barcodes: 1, share_of_products: 0.5, examples: [
+    { barcode: MILK, names: [{ retailer: 'Alfa', name: 'MLEKO 2,8% 1L IMLEK' },
+      { retailer: 'Beta', name: 'Mleko 2,8% 1 l' }] },
+  ] },
   retailers: [{
     id: 1, name: 'Alfa', slug: 'alfa', status: 'partial', http_status: 200, rows_total: 1000, rows_valid: 930,
     errors: { price: 70 }, suspected_errors: { price_outlier: 3 }, errors_by_rule: { price: 70 }, deviations: { price_decimals: 120 }, profile: 'compat-2026-11.2',
@@ -86,6 +90,10 @@ export const priceIndex: IndexResponse = {
 export const signals: SignalsResponse = {
   as_of: asOf,
   items: [
+    { type: 'discount_after_jump', barcode: MILK, name: 'Mleko 2,8% 1 l', retailer: 'Alfa',
+      format: 'Alfa Hiper', date: '2026-11-10', price_para: 18000, reference_para: 15000,
+      ratio: 1.2, old_regular_para: 15000, new_regular_para: 18000, discounted_para: 14900,
+      rise_date: '2026-11-10', disc_from: '2026-11-15', as_of: asOf },
     { type: 'jump', barcode: MILK, name: 'Mleko 2,8% 1 l', retailer: 'Alfa', format: 'Alfa Hiper', date: '2026-11-20',
       price_para: 18999, reference_para: 14999, ratio: 1.27 },
     { type: 'outlier', barcode: '8600000000002', name: 'Mleko 0,9% 1 l', retailer: 'Beta', format: 'Beta Market',

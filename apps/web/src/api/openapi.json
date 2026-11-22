@@ -301,6 +301,102 @@
         "title": "CategoryItem",
         "type": "object"
       },
+      "DiscountAfterJumpSignal": {
+        "properties": {
+          "as_of": {
+            "format": "date",
+            "title": "As Of",
+            "type": "string"
+          },
+          "barcode": {
+            "maxLength": 13,
+            "minLength": 13,
+            "pattern": "^[0-9]{13}$",
+            "title": "Barcode",
+            "type": "string"
+          },
+          "date": {
+            "format": "date",
+            "title": "Date",
+            "type": "string"
+          },
+          "disc_from": {
+            "format": "date",
+            "title": "Disc From",
+            "type": "string"
+          },
+          "discounted_para": {
+            "minimum": 0.0,
+            "title": "Discounted Para",
+            "type": "integer"
+          },
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "new_regular_para": {
+            "minimum": 0.0,
+            "title": "New Regular Para",
+            "type": "integer"
+          },
+          "old_regular_para": {
+            "exclusiveMinimum": 0.0,
+            "title": "Old Regular Para",
+            "type": "integer"
+          },
+          "price_para": {
+            "minimum": 0.0,
+            "title": "Price Para",
+            "type": "integer"
+          },
+          "ratio": {
+            "title": "Ratio",
+            "type": "number"
+          },
+          "reference_para": {
+            "exclusiveMinimum": 0.0,
+            "title": "Reference Para",
+            "type": "integer"
+          },
+          "retailer": {
+            "title": "Retailer",
+            "type": "string"
+          },
+          "rise_date": {
+            "format": "date",
+            "title": "Rise Date",
+            "type": "string"
+          },
+          "type": {
+            "const": "discount_after_jump",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "barcode",
+          "name",
+          "retailer",
+          "format",
+          "price_para",
+          "reference_para",
+          "ratio",
+          "old_regular_para",
+          "new_regular_para",
+          "discounted_para",
+          "rise_date",
+          "disc_from",
+          "as_of",
+          "date"
+        ],
+        "title": "DiscountAfterJumpSignal",
+        "type": "object"
+      },
       "IndexCategory": {
         "properties": {
           "code": {
@@ -399,6 +495,61 @@
           "categories"
         ],
         "title": "IndexResponse",
+        "type": "object"
+      },
+      "NameVariantExample": {
+        "properties": {
+          "barcode": {
+            "maxLength": 13,
+            "minLength": 13,
+            "pattern": "^[0-9]{13}$",
+            "title": "Barcode",
+            "type": "string"
+          },
+          "names": {
+            "items": {
+              "$ref": "#/components/schemas/RetailerProductName"
+            },
+            "maxItems": 3,
+            "title": "Names",
+            "type": "array"
+          }
+        },
+        "required": [
+          "barcode",
+          "names"
+        ],
+        "title": "NameVariantExample",
+        "type": "object"
+      },
+      "NameVariants": {
+        "properties": {
+          "barcodes": {
+            "minimum": 0.0,
+            "title": "Barcodes",
+            "type": "integer"
+          },
+          "examples": {
+            "items": {
+              "$ref": "#/components/schemas/NameVariantExample"
+            },
+            "maxItems": 5,
+            "title": "Examples",
+            "type": "array"
+          },
+          "share_of_products": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Share Of Products",
+            "type": "number"
+          }
+        },
+        "required": [
+          "barcodes",
+          "share_of_products",
+          "examples"
+        ],
+        "title": "NameVariants",
         "type": "object"
       },
       "QualityItem": {
@@ -560,6 +711,9 @@
             "title": "As Of",
             "type": "string"
           },
+          "name_variants": {
+            "$ref": "#/components/schemas/NameVariants"
+          },
           "retailers": {
             "items": {
               "$ref": "#/components/schemas/QualityItem"
@@ -570,9 +724,28 @@
         },
         "required": [
           "retailers",
+          "name_variants",
           "as_of"
         ],
         "title": "QualityResponse",
+        "type": "object"
+      },
+      "RetailerProductName": {
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "retailer": {
+            "title": "Retailer",
+            "type": "string"
+          }
+        },
+        "required": [
+          "retailer",
+          "name"
+        ],
+        "title": "RetailerProductName",
         "type": "object"
       },
       "SearchItem": {
@@ -733,7 +906,14 @@
           },
           "items": {
             "items": {
-              "$ref": "#/components/schemas/SignalItem"
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SignalItem"
+                },
+                {
+                  "$ref": "#/components/schemas/DiscountAfterJumpSignal"
+                }
+              ]
             },
             "maxItems": 200,
             "title": "Items",
@@ -2580,7 +2760,8 @@
                 {
                   "enum": [
                     "jump",
-                    "outlier"
+                    "outlier",
+                    "discount_after_jump"
                   ],
                   "type": "string"
                 },

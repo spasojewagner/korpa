@@ -85,6 +85,27 @@ function QualityPage() {
           </table>
         )}
       </div>
+      {query.data?.name_variants && (
+        <section aria-labelledby="name-variants" className="mt-8 rounded-lg border border-line bg-paper-raised p-5">
+          <h2 id="name-variants" className="font-display text-2xl">{t('nameVariantsHeading')}</h2>
+          <p className="mt-2 text-ink-soft">{t('nameVariantsIntro')}</p>
+          <p className="mt-2">{t('nameVariantsCount', {
+            count: formatNumber(query.data.name_variants.barcodes),
+            share: formatPercent(query.data.name_variants.share_of_products),
+            date: formatDate(query.data.as_of),
+          })}</p>
+          <ul className="mt-4 space-y-3">
+            {query.data.name_variants.examples.map((example) => (
+              <li key={example.barcode} className="break-words">
+                <span className="font-semibold">{example.barcode}</span>
+                <ul>{example.names.map((name) => (
+                  <li key={`${name.retailer}-${name.name}`}>{name.retailer}: {name.name}</li>
+                ))}</ul>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   )
 }

@@ -13,6 +13,7 @@ from sqlalchemy.sql import Select, Subquery
 
 from korpa_api.pricing import effective_price
 from korpa_api.schemas import (
+    DiscountAfterJumpSignal,
     IndexCategory,
     IndexPoint,
     IndexResponse,
@@ -266,7 +267,20 @@ def signal_candidates(
 
 
 def signals_statement(as_of: date, params: SignalsParams) -> Select[*tuple[object, ...]]:
-    candidates = signal_candidates(as_of, params.type)
+    legacy = signal_candidates(as_of, params.type if params.type != "discount_after_jump" else None)
+    legacy_rows = sa.select(
+        legacy,
+        sa.cast(sa.null(), sa.Integer).label("discounted_para"),
+        sa.cast(sa.null(), sa.Date).label("disc_from"),
+    )
+    if params.type == "discount_after_jump":
+        candidates = discount_after_jump_candidates(as_of).subquery("published_signals")
+    elif params.type is None:
+        candidates = sa.union_all(legacy_rows, discount_after_jump_candidates(as_of)).subquery(
+            "published_signals"
+        )
+    else:
+        candidates = legacy_rows.subquery("published_signals")
     ratio = sa.cast(candidates.c.price_para, sa.Numeric) / candidates.c.reference_para
     p, f, r = db.products, db.retail_formats, db.retailers
     return (
@@ -279,6 +293,8 @@ def signals_statement(as_of: date, params: SignalsParams) -> Select[*tuple[objec
             candidates.c.date,
             candidates.c.price_para,
             candidates.c.reference_para,
+            candidates.c.discounted_para,
+            candidates.c.disc_from,
             sa.func.round(
                 sa.cast(candidates.c.price_para, sa.Numeric)
                 / sa.func.nullif(candidates.c.reference_para, 0),
@@ -310,7 +326,80 @@ async def signals(session: AsyncSession, params: SignalsParams, as_of: date) -> 
     # sort of effective prices adds avoidable work on PostgreSQL 16.
     await session.execute(sa.text("SET LOCAL enable_presorted_aggregate = off"))
     rows = (await session.execute(signals_statement(as_of, params))).mappings()
-    return SignalsResponse(as_of=as_of, items=[SignalItem.model_validate(row) for row in rows])
+    items: list[SignalItem | DiscountAfterJumpSignal] = []
+    for row in rows:
+        if row["type"] == "discount_after_jump":
+            items.append(
+                DiscountAfterJumpSignal.model_validate(
+                    {
+                        **row,
+                        "old_regular_para": row["reference_para"],
+                        "new_regular_para": row["price_para"],
+                        "rise_date": row["date"],
+                        "as_of": as_of,
+                    }
+                )
+            )
+        else:
+            items.append(SignalItem.model_validate(row))
+    return SignalsResponse(as_of=as_of, items=items)
+
+
+def discount_after_jump_candidates(as_of: date) -> Select[*tuple[object, ...]]:
+    """Active discounts following consecutive regular-price rises in the preceding 60 days."""
+    p, changes = db.prices_current, db.price_changes
+    history = (
+        sa.select(
+            changes.c.format_id,
+            changes.c.barcode,
+            changes.c.changed_on,
+            changes.c.regular,
+            sa.func.lag(changes.c.regular)
+            .over(
+                partition_by=(changes.c.format_id, changes.c.barcode),
+                order_by=changes.c.changed_on,
+            )
+            .label("previous"),
+        )
+        .where(changes.c.changed_on <= as_of)
+        .cte("discount_history")
+    )
+    return (
+        sa.select(
+            sa.literal("discount_after_jump").label("type"),
+            history.c.format_id,
+            history.c.barcode,
+            history.c.changed_on.label("date"),
+            history.c.regular.label("price_para"),
+            history.c.previous.label("reference_para"),
+            p.c.discounted.label("discounted_para"),
+            p.c.disc_from,
+        )
+        .select_from(
+            history.join(
+                p,
+                sa.and_(
+                    p.c.format_id == history.c.format_id,
+                    p.c.barcode == history.c.barcode,
+                ),
+            )
+        )
+        .where(
+            p.c.list_date <= as_of,
+            p.c.discounted.is_not(None),
+            p.c.disc_from <= as_of,
+            p.c.disc_to >= as_of,
+            history.c.changed_on >= p.c.disc_from - 60,
+            history.c.changed_on < p.c.disc_from,
+            history.c.previous > 0,
+            sa.cast(history.c.regular, sa.BigInteger) * 5
+            >= sa.cast(history.c.previous, sa.BigInteger) * 6,
+            sa.cast(history.c.regular, sa.BigInteger)
+            <= sa.cast(history.c.previous, sa.BigInteger) * 3,
+            sa.cast(p.c.discounted, sa.BigInteger) * 100
+            >= sa.cast(history.c.previous, sa.BigInteger) * 98,
+        )
+    )
 
 
 async def suspected_price_errors(session: AsyncSession, as_of: date) -> dict[int, int]:

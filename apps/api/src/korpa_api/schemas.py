@@ -131,8 +131,25 @@ class QualityItem(BaseModel):
     days_since_list_date: int | None
 
 
+class RetailerProductName(BaseModel):
+    retailer: str
+    name: str
+
+
+class NameVariantExample(BaseModel):
+    barcode: Barcode
+    names: list[RetailerProductName] = Field(max_length=3)
+
+
+class NameVariants(BaseModel):
+    barcodes: int = Field(ge=0)
+    share_of_products: float = Field(ge=0, le=1)
+    examples: list[NameVariantExample] = Field(max_length=5)
+
+
 class QualityResponse(BaseModel):
     retailers: list[QualityItem]
+    name_variants: NameVariants
     as_of: date
 
 
@@ -158,7 +175,7 @@ class IndexResponse(BaseModel):
 
 class SignalsParams(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    type: Literal["jump", "outlier"] | None = None
+    type: Literal["jump", "outlier", "discount_after_jump"] | None = None
     limit: int = Field(default=100, ge=1, le=200)
 
 
@@ -174,9 +191,27 @@ class SignalItem(BaseModel):
     ratio: float = Field(allow_inf_nan=False)
 
 
+class DiscountAfterJumpSignal(BaseModel):
+    type: Literal["discount_after_jump"]
+    barcode: Barcode
+    name: str
+    retailer: str
+    format: str
+    price_para: int = Field(ge=0)
+    reference_para: int = Field(gt=0)
+    ratio: float = Field(allow_inf_nan=False)
+    old_regular_para: int = Field(gt=0)
+    new_regular_para: int = Field(ge=0)
+    discounted_para: int = Field(ge=0)
+    rise_date: date
+    disc_from: date
+    as_of: date
+    date: date
+
+
 class SignalsResponse(BaseModel):
     as_of: date
-    items: list[SignalItem] = Field(max_length=200)
+    items: list[SignalItem | DiscountAfterJumpSignal] = Field(max_length=200)
 
 
 class AiBasketRequest(BaseModel):

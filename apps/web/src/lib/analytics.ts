@@ -1,6 +1,5 @@
 // Shapes of index.json / GET /api/index and signals.json / GET /api/signals (docs/tasks/M4b.md).
-// Hand-written until the API publishes them in OpenAPI; then switch to the generated types.
-import { staticFirst } from './api'
+import { staticFirst, type Schemas } from './api'
 
 export interface IndexPoint {
   month: string
@@ -24,24 +23,9 @@ export interface IndexResponse {
   notes?: { model: string; items: string[] }
 }
 
-export type SignalType = 'jump' | 'outlier'
-
-export interface Signal {
-  type: SignalType
-  barcode: string
-  name: string
-  retailer: string
-  format: string
-  date: string
-  price_para: number
-  reference_para: number
-  ratio: number
-}
-
-export interface SignalsResponse {
-  as_of: string
-  items: Signal[]
-}
+export type SignalsResponse = Schemas['SignalsResponse']
+export type Signal = SignalsResponse['items'][number]
+export type SignalType = Signal['type']
 
 export const fetchIndex = () => staticFirst<IndexResponse>('index.json', '/api/index')
 export const fetchSignals = () => staticFirst<SignalsResponse>('signals.json', '/api/signals')

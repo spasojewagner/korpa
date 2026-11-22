@@ -109,6 +109,7 @@ const filters: { value: SignalType | 'all'; label: CopyKey }[] = [
   { value: 'all', label: 'signalsAll' },
   { value: 'jump', label: 'signalsJump' },
   { value: 'outlier', label: 'signalsOutlier' },
+  { value: 'discount_after_jump', label: 'signalsDiscountAfterJump' },
 ]
 
 function SignalItem({ signal }: { signal: Signal }) {
@@ -120,13 +121,19 @@ function SignalItem({ signal }: { signal: Signal }) {
         <Link to="/proizvod/$barcode" params={{ barcode: signal.barcode }} className="font-semibold text-ink underline-offset-4 hover:underline">
           {signal.name}
         </Link>
-        <Badge variant="increase">{t(signal.type === 'jump' ? 'signalsJump' : 'signalsOutlier')}</Badge>
+        <Badge variant="increase">{t(signal.type === 'jump' ? 'signalsJump' : signal.type === 'outlier' ? 'signalsOutlier' : 'signalsDiscountAfterJump')}</Badge>
       </span>
       <span className="text-sm text-ink-soft">{signal.retailer} · {signal.format} · <time dateTime={signal.date}>{formatDate(signal.date)}</time></span>
       <span className="text-ink-soft">
-        {signal.type === 'jump'
-          ? t('signalJumpRule', { ...prices, change: formatChange(signal.ratio) })
-          : t('signalOutlierRule', { ...prices, ratio: formatTimes(signal.ratio) })}
+        {signal.type === 'discount_after_jump'
+          ? t('signalDiscountAfterJumpRule', {
+              before: formatPrice(signal.old_regular_para), after: formatPrice(signal.new_regular_para),
+              discounted: formatPrice(signal.discounted_para), start: formatDate(signal.disc_from),
+              asOf: formatDate(signal.as_of),
+            })
+          : signal.type === 'jump'
+            ? t('signalJumpRule', { ...prices, change: formatChange(signal.ratio) })
+            : t('signalOutlierRule', { ...prices, ratio: formatTimes(signal.ratio) })}
       </span>
     </li>
   )
