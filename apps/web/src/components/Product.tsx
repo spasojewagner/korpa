@@ -38,24 +38,24 @@ export function ProductCard({ product, href, renderLink, onAdd, added = false, h
     ? formatPrice(minPara)
     : t('priceRange', { min: formatPrice(minPara), max: formatPrice(maxPara) })
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-line bg-white p-4">
+    <article className="card-link flex h-full flex-col gap-4 rounded-lg border border-line bg-white p-5">
       <div>
-        <Heading className="text-lg font-semibold">
+        <Heading className="font-display text-2xl font-semibold">
           {renderLink ? renderLink(name, linkClass) : <a href={href} className={linkClass}>{name}</a>}
         </Heading>
         <p className="text-sm text-ink-muted">{[brand, unit].filter(Boolean).join(' · ')}</p>
       </div>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-lg font-semibold tabular-nums">{price}</span>
+      <div className="flex flex-col gap-1">
+        <span className="font-display text-2xl font-semibold tabular-nums">{t('priceFrom', { price: formatPrice(minPara) })}</span>
+        {minPara !== maxPara && <span className="font-display text-lg tabular-nums">{price}</span>}
         <span className="text-sm text-ink-soft">{tp('formats', nFormats)}</span>
       </div>
       {anyDiscount && <span><Badge variant="discount" /></span>}
-      <SourceDate date={listDate} today={today} />
+      <div className="mt-auto"><SourceDate date={listDate} today={today} /></div>
       {onAdd && (
         // One button in both states, so keyboard focus stays in place after adding.
         <button type="button" aria-disabled={added || undefined} onClick={() => { if (!added) onAdd(barcode) }}
-          className={`inline-flex min-h-11 items-center gap-1 self-start rounded-md border px-4 font-semibold text-brand ${
-            added ? 'border-transparent' : 'border-brand hover:bg-brand-subtle'}`}>
+          className="btn btn-secondary self-start">
           {added && <Icon name="check" />}
           {t(added ? 'inBasket' : 'addToBasket')}<span className="sr-only">: {name}</span>
         </button>

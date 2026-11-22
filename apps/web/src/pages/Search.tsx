@@ -38,25 +38,29 @@ function SearchPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">{heading}</h1>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{heading}</h1>
       {!ready ? (
-        <p className="mt-4 text-ink-soft">{t('searchHint')}</p>
+        <p className="mt-4 text-lg text-ink-soft">{t('searchHint')}</p>
       ) : (
         <>
-          <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
+          <div className="mt-6 flex flex-col gap-4">
             <p role="status" className="text-ink-soft">{results.isSuccess ? tp('results', total) : ''}</p>
-            <div className="flex flex-col gap-1">
-              <label htmlFor={selectId} className="text-sm font-semibold">{t('categoryLabel')}</label>
-              <select id={selectId} value={kategorija ?? ''}
-                onChange={(event) => navigate({
-                  search: (previous) => ({ ...previous, kategorija: event.target.value ? Number(event.target.value) : undefined }),
-                })}
-                className="min-h-11 rounded-md border border-ink-muted bg-white px-3">
-                <option value="">{t('allCategories')}</option>
+            <div role="group" aria-labelledby={selectId}>
+              <p id={selectId} className="text-sm font-semibold uppercase tracking-wide text-ink-muted">{t('categoryLabel')}</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button type="button" aria-pressed={kategorija === undefined}
+                  onClick={() => navigate({ search: (previous) => ({ ...previous, kategorija: undefined }) })}
+                  className="min-h-11 rounded-full border border-ink-muted bg-white px-4 font-semibold aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-white">
+                  {t('allCategories')}
+                </button>
                 {categories.data?.map((category) => (
-                  <option key={category.code} value={category.code}>{category.name}</option>
+                  <button key={category.code} type="button" aria-pressed={kategorija === category.code}
+                    onClick={() => navigate({ search: (previous) => ({ ...previous, kategorija: category.code }) })}
+                    className="min-h-11 rounded-full border border-ink-muted bg-white px-4 font-semibold aria-pressed:border-brand aria-pressed:bg-brand aria-pressed:text-white">
+                    {category.name}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
           <div className="mt-6">
@@ -92,7 +96,7 @@ function SearchPage() {
                 </ul>
                 {results.hasNextPage && (
                   <button type="button" disabled={results.isFetchingNextPage} onClick={() => void results.fetchNextPage()}
-                    className="mt-6 min-h-11 rounded-md border border-brand px-5 font-semibold text-brand hover:bg-brand-subtle disabled:opacity-50">
+                    className="btn btn-secondary mt-6 disabled:opacity-50">
                     {results.isFetchingNextPage ? t('loading') : t('showMore')}
                   </button>
                 )}
