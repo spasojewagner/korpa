@@ -9,7 +9,7 @@ from datetime import date
 @dataclass
 class RateLimiter:
     per_minute: int = 10
-    per_day: int = 500
+    per_day: int | None = 500
     _recent: dict[str, deque[float]] = field(default_factory=lambda: defaultdict(deque))
     _day: date = field(default_factory=date.today)
     _today: int = 0
@@ -21,7 +21,7 @@ class RateLimiter:
         if today != self._day:
             self._day, self._today = today, 0
             self._recent.clear()
-        if self._today >= self.per_day:
+        if self.per_day is not None and self._today >= self.per_day:
             return 3600
         window = self._recent[client]
         while window and now - window[0] >= 60:

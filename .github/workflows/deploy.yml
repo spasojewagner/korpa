@@ -39,7 +39,15 @@ jobs:
       - name: Ingest
         if: github.event_name != 'push'
         # Invalid rows are reported on the data quality page; a crash or the storage guard still fails the job.
-        run: uv run korpa ingest --all --report-row-errors
+        run: uv run korpa ingest --all --report-row-errors --archive-dir data/raw
+      - name: Archive downloaded price lists
+        if: always() && github.event_name != 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-price-lists
+          path: data/raw/*.csv
+          retention-days: 7
+          if-no-files-found: warn
       - name: Export static data
         # Index notes are written only when both secrets exist; without them the export is unchanged.
         env:

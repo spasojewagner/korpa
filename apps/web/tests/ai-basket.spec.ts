@@ -1,8 +1,9 @@
+import { test } from './security'
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
 import { basket, search, summary } from './fixtures'
 
-const API = 'http://127.0.0.1:8000'
+const API = 'https://korpa-api.onrender.com'
 const result = {
   as_of: '2026-11-21', model: 'recorded', items: [
     { phrase: '2 mleka', query: 'mleko', qty: 2, candidates: search.items },

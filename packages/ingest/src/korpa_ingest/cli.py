@@ -1,7 +1,9 @@
+import hashlib
 import json
 import logging
 import os
 from datetime import UTC, date, datetime
+from pathlib import Path
 from typing import Annotated
 from zoneinfo import ZoneInfo
 
@@ -31,6 +33,9 @@ def ingest(
         bool, typer.Option("--all", help="Import all discovered retailers")
     ] = False,
     dry_run: Annotated[bool, typer.Option(help="Validate without connecting to the DB")] = False,
+    archive_dir: Annotated[
+        Path | None, typer.Option(help="Write downloaded CSVs to this local artifact directory")
+    ] = None,
     report_row_errors: Annotated[
         bool,
         typer.Option(
@@ -80,6 +85,13 @@ def ingest(
                         validators(engine, source) if engine is not None else (None, None)
                     )
                     download = portal.download(source, etag, modified)
+                    if archive_dir is not None and download.status == 200:
+                        archive_dir.mkdir(parents=True, exist_ok=True)
+                        # Use a digest, never a publisher-controlled path or URL.
+                        name = hashlib.sha256(
+                            f"{source.slug}:{source.dataset_id}:{source.url}".encode()
+                        ).hexdigest()
+                        (archive_dir / f"{name}.csv").write_bytes(download.content)
                     parsed = (
                         normalize(read_csv(download.content, profile=PROFILE))
                         if download.status != 304

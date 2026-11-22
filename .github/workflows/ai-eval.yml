@@ -1,0 +1,33 @@
+name: AI evaluation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - run: uv sync --frozen
+      - name: Evaluate live extraction and database retrieval
+        env:
+          LLM_PROVIDER: gemini
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: uv run python -m korpa_api.ai.evaluate --live --database --record live.jsonl --out results-live.md
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-evaluation
+          path: |
+            live.jsonl
+            results-live.md
+          if-no-files-found: warn

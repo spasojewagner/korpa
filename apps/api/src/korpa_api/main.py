@@ -10,6 +10,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 
+from korpa_api.ai.limits import RateLimiter
 from korpa_api.database import async_database_url
 from korpa_api.gql.router import make_router, validate_request
 from korpa_api.mcp_server import create_server, endpoint
@@ -33,21 +34,10 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="Korpa", lifespan=lifespan, responses=problem_responses())
 install_problem_handlers(app)
+mcp_limits = RateLimiter(per_minute=60, per_day=None)
 app.mount("/mcp", endpoint)
 app.include_router(router)
 app.include_router(make_router(), prefix="/graphql")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        s.strip()
-        for s in (os.getenv("CORS_ORIGINS") or "http://localhost:5173,http://127.0.0.1:5173").split(
-            ","
-        )
-    ],
-    allow_methods=["GET", "POST"],
-    allow_headers=["*"],
-    expose_headers=["Retry-After"],
-)
 
 
 @app.middleware("http")
@@ -71,3 +61,40 @@ async def cache_headers(request: Request, call_next: RequestResponseEndpoint) ->
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.middleware("http")
+async def mcp_rate_limit(request: Request, call_next: RequestResponseEndpoint) -> Response:
+    path = request.url.path
+    wait = (
+        mcp_limits.check(request.client.host if request.client else "unknown")
+        if path == "/mcp" or path.startswith("/mcp/")
+        else None
+    )
+    if wait is not None:
+        response = problem(request, 429, "MCP request limit exceeded")
+        response.headers["Retry-After"] = str(wait)
+        return response
+    return await call_next(request)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        s.strip()
+        for s in (os.getenv("CORS_ORIGINS") or "http://localhost:5173,http://127.0.0.1:5173").split(
+            ","
+        )
+    ],
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
+    expose_headers=["Retry-After"],
+)
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next: RequestResponseEndpoint) -> Response:
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response

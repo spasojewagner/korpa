@@ -23,7 +23,11 @@ def problem(request: Request, status: int, detail: str, **extensions: object) ->
                 **extensions,
             }
         ).model_dump(exclude_none=True),
-        headers={"Cache-Control": "no-store"},
+        headers={
+            "Cache-Control": "no-store",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "strict-origin-when-cross-origin",
+        },
     )
 
 
