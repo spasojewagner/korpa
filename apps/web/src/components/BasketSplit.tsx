@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import type { Schemas } from '../lib/api'
 import { formatPrice } from '../lib/format'
 import { SourceDate } from './Price'
@@ -9,7 +9,7 @@ export function BasketSplit({ split, names, quantities }: {
   names: ReadonlyMap<string, { name: string }>
   quantities: ReadonlyMap<string, number>
 }) {
-  const { t, tp } = useI18n()
+  const { t, tp } = usePageI18n()
   const headingId = useId()
   const oldestDate = split.items.map((item) => item.list_date).sort()[0]
   return (

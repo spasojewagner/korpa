@@ -1,5 +1,5 @@
 import { createLazyRoute } from '@tanstack/react-router'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { aboutCopy } from '../i18n/about'
 import { usePageMeta } from '../lib/meta'
 
@@ -13,9 +13,9 @@ const sections: [AboutKey, AboutKey][] = [
 ]
 
 function AboutPage() {
-  const { t, tr } = useI18n()
+  const { t, tr } = usePageI18n()
   const a = (key: AboutKey) => tr(aboutCopy[key])
-  usePageMeta(a('aboutHeading'))
+  usePageMeta(a('aboutHeading'), tr(aboutCopy.staticDescription))
   return (
     <article className="flex max-w-3xl flex-col gap-8">
       <h1 className="font-display text-3xl font-semibold sm:text-4xl">{a('aboutHeading')}</h1>

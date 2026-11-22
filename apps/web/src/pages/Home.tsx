@@ -1,4 +1,4 @@
-import { Link, createLazyRoute } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { Icon } from '../components'
 import { homeCopy } from '../i18n/home'
@@ -105,8 +105,9 @@ function Hero({ data }: { data: HomeData | null }) {
 
 const HomeSections = lazy(() => import('./HomeSections'))
 
-function Home() {
-  usePageMeta()
+export function Home() {
+  const { tr } = useI18n()
+  usePageMeta(undefined, tr(homeCopy.homeDescription))
   const data = useStatic(loadHome)
   return (
     <>
@@ -117,5 +118,3 @@ function Home() {
     </>
   )
 }
-
-export const Route = createLazyRoute('/')({ component: Home })

@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { formatPrice } from '../lib/format'
 import { Badge } from './Badge'
 import { SourceDate } from './Price'
@@ -27,7 +27,7 @@ export interface BasketSummaryProps {
  * share a ranking with complete ones: their totals are not comparable.
  */
 export function BasketSummary({ totals, headingLevel = 2, today }: BasketSummaryProps) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const completeId = useId()
   const partialId = useId()
   const Heading = headingLevel === 3 ? 'h3' : 'h2'
@@ -55,7 +55,7 @@ export function BasketSummary({ totals, headingLevel = 2, today }: BasketSummary
 }
 
 function TotalsList({ totals, cheapest, today }: { totals: BasketTotal[]; cheapest?: number; today?: Date }) {
-  const { t, tp } = useI18n()
+  const { t, tp } = usePageI18n()
   return (
     <ol className="flex flex-col gap-3">
       {totals.map((total, index) => (

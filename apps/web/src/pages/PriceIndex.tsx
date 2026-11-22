@@ -1,10 +1,11 @@
+import { pageCopy } from '../i18n/pages'
 import { useQuery } from '@tanstack/react-query'
-import { Link, createLazyRoute } from '@tanstack/react-router'
+import { Link, createLazyRoute, useLoaderData } from '@tanstack/react-router'
 import { useState } from 'react'
 import { Badge, StateView } from '../components'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { indexNotesCopy } from '../i18n/index-notes'
-import type { CopyKey } from '../i18n/sr-Latn'
+import type { PageKey as CopyKey } from '../i18n/usePageI18n'
 import {
   fetchIndex, fetchSignals, latestPoint, type IndexCategory, type IndexPoint, type IndexResponse, type Signal,
   type SignalType,
@@ -21,7 +22,7 @@ function Change({ point }: { point: IndexPoint }) {
 }
 
 function PointNote({ point, dark = false }: { point: IndexPoint; dark?: boolean }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   return (
     <span className={`text-sm ${dark ? 'text-sand' : 'text-ink-muted'}`}>
       {point.provisional ? t('indexProvisional', { date: formatDate(point.month) }) : formatMonth(point.month)}
@@ -30,7 +31,7 @@ function PointNote({ point, dark = false }: { point: IndexPoint; dark?: boolean 
 }
 
 function Overall({ category }: { category: IndexCategory }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const point = latestPoint(category)
   if (!point || point.value === null) return null
   return (
@@ -51,7 +52,7 @@ function Overall({ category }: { category: IndexCategory }) {
 }
 
 function Notes({ notes, asOf }: { notes: IndexResponse['notes']; asOf: string }) {
-  const { tr } = useI18n()
+  const { tr } = usePageI18n()
   if (!notes?.items.length) return null
   return (
     <section aria-labelledby="index-notes" className="max-w-3xl rounded-lg border border-line bg-white p-5">
@@ -67,7 +68,7 @@ function Notes({ notes, asOf }: { notes: IndexResponse['notes']; asOf: string })
 }
 
 function CategoryTable({ categories }: { categories: IndexCategory[] }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   return (
     <div role="region" aria-label={t('indexCaption')} tabIndex={0} className="overflow-x-auto rounded-lg border border-line bg-white p-5">
       <table className="w-full min-w-[32rem] border-collapse text-left">
@@ -113,7 +114,7 @@ const filters: { value: SignalType | 'all'; label: CopyKey }[] = [
 ]
 
 function SignalItem({ signal }: { signal: Signal }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const prices = { after: formatPrice(signal.price_para), before: formatPrice(signal.reference_para), reference: formatPrice(signal.reference_para) }
   return (
     <li className="card-link flex flex-col gap-2 rounded-lg border border-line bg-white p-5">
@@ -140,7 +141,7 @@ function SignalItem({ signal }: { signal: Signal }) {
 }
 
 function Signals() {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const [filter, setFilter] = useState<SignalType | 'all'>('all')
   const query = useQuery({ queryKey: ['signals'], queryFn: fetchSignals })
   const items = query.data?.items.filter((item) => filter === 'all' || item.type === filter) ?? []
@@ -168,9 +169,10 @@ function Signals() {
 }
 
 function PriceIndexPage() {
-  const { t } = useI18n()
-  usePageMeta(t('indexHeading'))
-  const query = useQuery({ queryKey: ['index'], queryFn: fetchIndex })
+  const { t, tr } = usePageI18n()
+  usePageMeta(t('indexHeading'), tr(pageCopy.priceindexDescription))
+  const initialData = useLoaderData({ from: '/podaci/indeks' }) ?? undefined
+  const query = useQuery({ queryKey: ['index'], queryFn: fetchIndex, initialData })
   const overall = query.data?.categories.find((category) => category.code === 0)
   const categories = query.data?.categories.filter((category) => category.code !== 0) ?? []
   return (

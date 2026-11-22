@@ -1,8 +1,9 @@
+import { pageCopy } from '../i18n/pages'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link, createLazyRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { useId } from 'react'
 import { ProductCard, StateView } from '../components'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { ApiError, PAGE_SIZE, fetchCategories, searchProducts } from '../lib/api'
 import { basket, useBasket } from '../lib/basket'
 import { usePageMeta } from '../lib/meta'
@@ -11,7 +12,7 @@ import { WithQuery } from '../lib/query'
 const MAX_OFFSET = 1000
 
 function SearchPage() {
-  const { t, tp } = useI18n()
+  const { t, tp, tr } = usePageI18n()
   const { q = '', kategorija } = useSearch({ from: '/pretraga' })
   const navigate = useNavigate({ from: '/pretraga' })
   const inBasket = new Set(useBasket().map((item) => item.barcode))
@@ -21,7 +22,7 @@ function SearchPage() {
   const ready = q.length >= 2 || kategorija !== undefined
   const categoryName = categories.data?.find((category) => category.code === kategorija)?.name
   const heading = q.length >= 2 ? t('searchTitle', { q }) : (categoryName ?? t('searchHeading'))
-  usePageMeta(heading)
+  usePageMeta(heading, tr(pageCopy.searchDescription))
 
   const results = useInfiniteQuery({
     queryKey: ['search', q, kategorija],

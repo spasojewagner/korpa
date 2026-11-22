@@ -1,5 +1,6 @@
 /** Copy for the home page; only the Home chunk imports it. */
 export const homeCopy = {
+  homeDescription: 'Uporedite cene namirnica, pronađite proizvode i sastavite najpovoljniju korpu iz javnih cenovnika u Srbiji.',
   eyebrow: 'Zvanični cenovnici trgovaca, svako jutro',
   titleA: 'Ista korpa.',
   titleB: 'Drugačiji račun.',

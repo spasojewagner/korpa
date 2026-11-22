@@ -1,6 +1,7 @@
+import { lazy } from 'react'
 import { createRootRoute, createRoute, createRouter, redirect } from '@tanstack/react-router'
 import { RootLayout } from './Layout'
-import { NotFound } from './pages/NotFound'
+import { Home } from './pages/Home'
 
 export interface SearchQuery {
   q?: string
@@ -18,11 +19,13 @@ export function parseSearch(search: Record<string, unknown>): SearchQuery {
   }
 }
 
-const rootRoute = createRootRoute({ component: RootLayout, notFoundComponent: NotFound })
+const rootRoute = createRootRoute({
+  component: RootLayout,
+  notFoundComponent: lazy(() => import('./pages/NotFound').then((m) => ({ default: m.NotFound }))),
+})
 
-// Every page is its own chunk; Home stays small because only data pages pull in TanStack Query.
-const home = createRoute({ getParentRoute: () => rootRoute, path: '/' })
-  .lazy(() => import('./pages/Home').then((m) => m.Route))
+// Home renders with the shell; other pages and data helpers load on demand.
+const home = createRoute({ getParentRoute: () => rootRoute, path: '/', component: Home })
 const search = createRoute({ getParentRoute: () => rootRoute, path: '/pretraga', validateSearch: parseSearch })
   .lazy(() => import('./pages/Search').then((m) => m.Route))
 const product = createRoute({ getParentRoute: () => rootRoute, path: '/proizvod/$barcode' })
@@ -35,7 +38,14 @@ const about = createRoute({ getParentRoute: () => rootRoute, path: '/o-projektu'
 // Data area (index, signals, quality, API) for journalists, researchers and developers.
 const data = createRoute({ getParentRoute: () => rootRoute, path: '/podaci' })
   .lazy(() => import('./pages/Data').then((m) => m.OverviewRoute))
-const index = createRoute({ getParentRoute: () => rootRoute, path: '/podaci/indeks' })
+const index = createRoute({
+  getParentRoute: () => rootRoute, path: '/podaci/indeks',
+  // Start the static read alongside the page chunk instead of after its first render.
+  loader: async () => {
+    try { return await (await import('./lib/analytics')).fetchIndex() }
+    catch { return null } // The page retains its existing retry and unavailable states.
+  },
+})
   .lazy(() => import('./pages/PriceIndex').then((m) => m.Route))
 const quality = createRoute({ getParentRoute: () => rootRoute, path: '/podaci/kvalitet' })
   .lazy(() => import('./pages/Quality').then((m) => m.Route))

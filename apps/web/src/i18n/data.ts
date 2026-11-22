@@ -1,5 +1,7 @@
 /** Copy for the Podaci overview and API pages; only these lazy pages import it. */
 export const dataCopy = {
+  overviewDescription: 'Otvoreni podaci o cenama namirnica: indeks cena, signali za proveru, kvalitet cenovnika i pristup podacima.',
+  apiDescription: 'Dokumentacija otvorenog REST i GraphQL pristupa podacima Korpe i MCP veze za čitanje cena proizvoda.',
   overviewTitle: 'Podaci o cenama namirnica',
   overviewLead: 'Za novinare, istraživače i programere: indeks cena po kategorijama, signali za proveru, kvalitet cenovnika po trgovcu i otvoren pristup podacima.',
   statsLabel: 'Poslednji uvoz',

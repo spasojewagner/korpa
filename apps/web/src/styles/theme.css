@@ -74,6 +74,7 @@
     outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
+  header.bg-brand-deep { --color-focus: var(--color-paper); }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;

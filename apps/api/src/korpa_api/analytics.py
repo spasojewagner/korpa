@@ -364,7 +364,7 @@ def discount_after_jump_candidates(as_of: date) -> Select[*tuple[object, ...]]:
         .where(changes.c.changed_on <= as_of)
         .cte("discount_history")
     )
-    return (
+    qualifying = (
         sa.select(
             sa.literal("discount_after_jump").label("type"),
             history.c.format_id,
@@ -388,7 +388,7 @@ def discount_after_jump_candidates(as_of: date) -> Select[*tuple[object, ...]]:
             p.c.list_date <= as_of,
             p.c.discounted.is_not(None),
             p.c.disc_from <= as_of,
-            p.c.disc_to >= as_of,
+            sa.or_(p.c.disc_to.is_(None), p.c.disc_to >= as_of),
             history.c.changed_on >= p.c.disc_from - 60,
             history.c.changed_on < p.c.disc_from,
             history.c.previous > 0,
@@ -400,6 +400,16 @@ def discount_after_jump_candidates(as_of: date) -> Select[*tuple[object, ...]]:
             >= sa.cast(history.c.previous, sa.BigInteger) * 98,
         )
     )
+
+    qualified = qualifying.subquery("qualifying_discount_rises")
+    ranked = sa.select(
+        *qualified.c,
+        sa.func.row_number().over(
+            partition_by=(qualified.c.format_id, qualified.c.barcode),
+            order_by=qualified.c.date.desc(),
+        ).label("rank"),
+    ).subquery("ranked_discount_rises")
+    return sa.select(*(ranked.c[key] for key in qualified.c.keys())).where(ranked.c.rank == 1)
 
 
 async def suspected_price_errors(session: AsyncSession, as_of: date) -> dict[int, int]:

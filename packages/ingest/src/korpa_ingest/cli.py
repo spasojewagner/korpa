@@ -2,6 +2,7 @@ import hashlib
 import json
 import logging
 import os
+import re
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Annotated
@@ -87,11 +88,13 @@ def ingest(
                     download = portal.download(source, etag, modified)
                     if archive_dir is not None and download.status == 200:
                         archive_dir.mkdir(parents=True, exist_ok=True)
-                        # Use a digest, never a publisher-controlled path or URL.
+                        # Keep the publisher traceable without allowing paths in artifact names.
                         name = hashlib.sha256(
                             f"{source.slug}:{source.dataset_id}:{source.url}".encode()
                         ).hexdigest()
-                        (archive_dir / f"{name}.csv").write_bytes(download.content)
+                        slug = re.sub(r"[^a-z0-9-]+", "-", source.slug.lower()).strip("-")
+                        slug = slug[:80] or "retailer"
+                        (archive_dir / f"{slug}-{name}.csv").write_bytes(download.content)
                     parsed = (
                         normalize(read_csv(download.content, profile=PROFILE))
                         if download.status != 304

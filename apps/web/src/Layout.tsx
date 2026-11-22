@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useRef } from 'react'
 import { Icon, ScriptToggle, SearchForm, SiteFooter } from './components'
@@ -7,7 +8,7 @@ import { useBasket } from './lib/basket'
 const activeNav = { 'aria-current': 'page' as const, className: 'is-active' }
 
 /** The logo is a static SVG (no JS cost); the dark variant sits on the Podaci band. */
-function Logo({ tone }: { tone: 'light' | 'dark' }) {
+export function Logo({ tone }: { tone: 'light' | 'dark' }) {
   const { t } = useI18n()
   return (
     <Link to="/" aria-label={t('homeLabel')} className="inline-flex min-h-11 items-center">
@@ -56,37 +57,7 @@ function ShopHeader({ pathname, q }: { pathname: string; q: string }) {
 }
 
 /** Data area for journalists, researchers and developers: its own band and tabs. */
-function DataHeader() {
-  const { t } = useI18n()
-  const tab = 'data-tab inline-flex min-h-11 items-center border-b-3 border-transparent px-1 text-paper/90 hover:text-paper'
-  return (
-    <header className="bg-brand-deep text-paper">
-      <div className="wrap flex flex-wrap items-center justify-between gap-4 pt-4">
-        <div className="flex items-center gap-3">
-          <Logo tone="dark" />
-          <span aria-hidden="true" className="text-sand">/</span>
-          <span className="font-display text-xl text-sand">{t('navData')}</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link to="/" className="inline-flex min-h-11 items-center gap-2 rounded-full px-3 font-semibold text-paper hover:bg-brand">
-            <Icon name="basket" className="size-5" />
-            {t('dataBack')}
-          </Link>
-          <ScriptToggle tone="dark" />
-        </div>
-      </div>
-      <nav aria-label={t('dataNavLabel')} className="wrap mt-2">
-        <ul className="flex flex-wrap gap-x-6">
-          <li><Link to="/podaci" className={tab} activeOptions={{ exact: true }} activeProps={activeNav}>{t('dataOverview')}</Link></li>
-          <li><Link to="/podaci/indeks" className={tab} activeProps={activeNav}>{t('dataIndex')}</Link></li>
-          <li><Link to="/podaci/kvalitet" className={tab} activeProps={activeNav}>{t('dataQuality')}</Link></li>
-          <li><Link to="/podaci/api" className={tab} activeProps={activeNav}>{t('dataApi')}</Link></li>
-        </ul>
-      </nav>
-      <div aria-hidden="true" className="kilim" />
-    </header>
-  )
-}
+const DataHeader = lazy(() => import('./components/DataHeader'))
 
 export function RootLayout() {
   const { t } = useI18n()
@@ -112,7 +83,7 @@ export function RootLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <a className="skip-link" href="#main">{t('skip')}</a>
-      {dataArea ? <DataHeader /> : <ShopHeader pathname={pathname} q={q} />}
+      {dataArea ? <Suspense fallback={<div className="h-40 bg-brand-deep" />}><DataHeader /></Suspense> : <ShopHeader pathname={pathname} q={q} />}
       <main id="main" tabIndex={-1} className={`flex-1 focus:outline-none ${fullBleed ? '' : 'wrap py-10'}`}>
         <Outlet />
       </main>

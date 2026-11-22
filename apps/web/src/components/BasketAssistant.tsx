@@ -2,12 +2,12 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { assistantExamples } from '../i18n/assistant'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { AssistantError, assistantErrorMessage, assistantStatus, assistantText, mergeBasketItems, selectedTotal, suggestBasket } from '../lib/ai-basket'
 import type { Schemas } from '../lib/api'
 import { basket, MAX_ITEMS, useBasket } from '../lib/basket'
 import { formatDate, formatPrice } from '../lib/format'
-import { QuantityStepper } from './Controls'
+import { QuantityStepper } from './QuantityStepper'
 import { Icon } from './Icon'
 
 type Proposal = Schemas['AiBasketItem'] & { selected: string }
@@ -21,7 +21,7 @@ export function BasketAssistant() {
 }
 
 function Budget({ budget, total }: { budget: number | null; total: number }) {
-  const i18n = useI18n()
+  const i18n = usePageI18n()
   const a = assistantText(i18n)
   const over = budget !== null && total > budget
   return (
@@ -50,7 +50,7 @@ function Budget({ budget, total }: { budget: number | null; total: number }) {
 }
 
 function AssistantForm() {
-  const i18n = useI18n()
+  const i18n = usePageI18n()
   const { t, tr } = i18n
   const a = assistantText(i18n)
   const id = useId()

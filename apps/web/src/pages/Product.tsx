@@ -1,9 +1,10 @@
+import { pageCopy } from '../i18n/pages'
 import { useQuery } from '@tanstack/react-query'
 import { Link, createLazyRoute, useParams } from '@tanstack/react-router'
 import { useRef } from 'react'
 import { PriceComparison, QuantityStepper, Sparkline, StateView, type MonthPoint } from '../components'
 import { ProductDetailDocument, type ProductDetailQuery } from '../gql/graphql'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { ApiError, graphql } from '../lib/api'
 import { basket, useBasket } from '../lib/basket'
 import { usePageMeta } from '../lib/meta'
@@ -17,7 +18,7 @@ export function monthlyLows(months: Product['monthlyPrices']): MonthPoint[] {
 }
 
 function ProductPage() {
-  const { t } = useI18n()
+  const { t, tr } = usePageI18n()
   const { barcode } = useParams({ from: '/proizvod/$barcode' })
   const valid = /^[0-9]{13}$/.test(barcode)
   const query = useQuery({
@@ -26,15 +27,15 @@ function ProductPage() {
     enabled: valid,
   })
   const product = query.data?.product
-  usePageMeta(product?.name ?? t('productHeading'))
+  usePageMeta(product?.name ?? t('productHeading'), tr(pageCopy.productDescription))
 
   if (!valid || (query.isSuccess && !product)) {
     return (
-      <>
+      <article className="rounded-lg bg-paper-raised p-6">
         <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('productNotFound')}</h1>
         <p className="mt-4 text-lg text-ink-soft">{t('productNotFoundText')}</p>
         <Link to="/pretraga" className="btn btn-primary mt-6">{t('goToSearch')}</Link>
-      </>
+      </article>
     )
   }
   if (query.isPending) return <StateView kind="loading" lines={2} />
@@ -46,7 +47,7 @@ function ProductPage() {
 }
 
 function ProductView({ product }: { product: Product }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const item = useBasket().find((entry) => entry.barcode === product.barcode)
   const history = monthlyLows(product.monthlyPrices)
   const actions = useRef<HTMLDivElement>(null)

@@ -1,8 +1,9 @@
+import { pageCopy } from '../i18n/pages'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, createLazyRoute } from '@tanstack/react-router'
 import { BasketSummary, QuantityStepper, StateView, type BasketTotal } from '../components'
 import { ProductsSummaryDocument } from '../gql/graphql'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { ApiError, compareBasket, graphql, type Schemas } from '../lib/api'
 import { basket, useBasket } from '../lib/basket'
 import { usePageMeta } from '../lib/meta'
@@ -23,10 +24,10 @@ export function toTotals(response: Schemas['BasketResponse']): BasketTotal[] {
 }
 
 function BasketPage() {
-  const { t } = useI18n()
+  const { t, tr } = usePageI18n()
   const items = useBasket()
   const barcodes = items.map((item) => item.barcode)
-  usePageMeta(t('basketHeading'))
+  usePageMeta(t('basketHeading'), tr(pageCopy.basketDescription))
 
   const names = useQuery({
     queryKey: ['names', barcodes],
@@ -48,7 +49,7 @@ function BasketPage() {
       <BasketAssistant />
       {items.length === 0 ? (
         <div className="mt-6 flex flex-col items-start gap-4 rounded-lg bg-paper-raised p-5">
-          <p className="font-display text-2xl">{t('basketEmpty')}</p>
+          <h2 className="font-display text-2xl">{t('basketEmpty')}</h2>
           <Link to="/pretraga" className="btn btn-primary">{t('goToSearch')}</Link>
         </div>
       ) : (
@@ -71,7 +72,10 @@ function BasketPage() {
                     </div>
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <QuantityStepper value={item.qty} name={name} onChange={(qty) => basket.setQty(item.barcode, qty)} />
-                      <button type="button" onClick={() => basket.remove(item.barcode)} className="btn btn-secondary">
+                      <button type="button" onClick={() => {
+                        basket.remove(item.barcode)
+                        requestAnimationFrame(() => document.getElementById('main')?.focus())
+                      }} className="btn btn-secondary">
                         {t('remove')}<span className="sr-only">: {name}</span>
                       </button>
                     </div>

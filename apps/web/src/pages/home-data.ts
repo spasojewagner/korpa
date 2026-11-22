@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchCategories, fetchQuality, type Schemas } from '../lib/api'
+import type { Schemas } from '../lib/api'
 
 // Home avoids TanStack Query on purpose (bundle budget); a few small fetches of static JSON are enough.
 export function useStatic<T>(load: () => Promise<T>): T | null {
@@ -22,6 +22,8 @@ export interface HomeData {
 }
 
 export async function loadHome(): Promise<HomeData> {
+  // The hero can render before its data helpers arrive; keep API code off the initial path.
+  const { fetchCategories, fetchQuality } = await import('../lib/api')
   const [categories, quality] = await Promise.all([fetchCategories(), fetchQuality()])
   const live = quality.retailers.filter((retailer) => (retailer.rows_valid ?? 0) > 0)
   const dates = live.map((retailer) => retailer.list_date).filter((date): date is string => !!date)

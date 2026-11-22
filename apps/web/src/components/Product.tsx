@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { formatDate, formatMonth, formatPrice } from '../lib/format'
 import { Badge } from './Badge'
 import { Icon } from './Icon'
@@ -30,7 +30,7 @@ export interface ProductCardProps {
 }
 
 export function ProductCard({ product, href, renderLink, onAdd, added = false, headingLevel = 2, today }: ProductCardProps) {
-  const { t, tp } = useI18n()
+  const { t, tp } = usePageI18n()
   const { barcode, name, brand, unit, minPara, maxPara, nFormats, anyDiscount, listDate } = product
   const linkClass = 'text-ink underline-offset-4 hover:underline'
   const Heading = headingLevel === 3 ? 'h3' : 'h2'
@@ -78,7 +78,7 @@ export interface FormatPrice {
 
 /** Prices of one product across retail formats, cheapest first. Ties share the "Najjeftinije" badge. */
 export function PriceComparison({ rows, unit, today }: { rows: FormatPrice[]; unit?: string; today?: Date }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const sorted = [...rows].sort((a, b) => a.para - b.para || a.retailer.localeCompare(b.retailer, 'sr'))
   const cheapest = sorted[0]?.para
   return (
@@ -127,7 +127,7 @@ export interface MonthPoint {
 
 /** Small price history line. The SVG is decorative; the caption carries the facts. */
 export function Sparkline({ points, width = 240, height = 56 }: { points: MonthPoint[]; width?: number; height?: number }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   if (points.length < 2) return null
   const values = points.map((point) => point.para)
   const min = Math.min(...values)

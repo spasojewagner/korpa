@@ -50,8 +50,8 @@ Plain `postgresql://…?sslmode=require&channel_binding=require` URLs work for b
 ## CI security and measurements
 
 The ingest writes downloaded HTTP 200 bodies byte-for-byte to `data/raw/` only when
-`--archive-dir data/raw` is passed. Filenames are digests of source identity, not publisher
-paths. Invalid CSVs are archived too; HTTP 304 has no new body. The deploy job uploads
+`--archive-dir data/raw` is passed. Filenames contain a sanitized retailer slug (`[a-z0-9-]` only), followed by a digest
+of source identity. Empty sanitized slugs use `retailer`; slugs are capped at 80 characters. Invalid CSVs are archived too; HTTP 304 has no new body. The deploy job uploads
 these ignored local files as `raw-price-lists` for 7 days, including after ingest failure.
 Raw files never enter the database or repository.
 

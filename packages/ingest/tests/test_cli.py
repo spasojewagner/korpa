@@ -110,8 +110,13 @@ def test_ingest_package_does_not_import_the_api_package() -> None:
 
 
 @pytest.mark.parametrize("status", [200, 304])
-def test_archive_keeps_exact_download_bytes_only_for_new_files(tmp_path: Path, status: int) -> None:
-    source = RetailerSource("../../escape", "Demo", "id", "https://example.org/cene.csv", "sodl")
+@pytest.mark.parametrize(("slug", "prefix"), [
+    ("../../escape", "escape"), ("DEMO Shop", "demo-shop"), ("../", "retailer"),
+])
+def test_archive_keeps_exact_download_bytes_only_for_new_files(
+    tmp_path: Path, status: int, slug: str, prefix: str,
+) -> None:
+    source = RetailerSource(slug, "Demo", "id", "https://example.org/cene.csv", "sodl")
     content = (FIXTURES / "mixed.csv").read_bytes()
     with (
         patch("korpa_ingest.cli.PortalClient.discover", return_value=[source]),
@@ -125,5 +130,5 @@ def test_archive_keeps_exact_download_bytes_only_for_new_files(tmp_path: Path, s
     files = list(tmp_path.iterdir())
     assert len(files) == (1 if status == 200 else 0)
     if files:
-        assert files[0].suffix == ".csv"
+        assert re.fullmatch(rf"{prefix}-[a-f0-9]{{64}}\.csv", files[0].name)
         assert files[0].read_bytes() == content
