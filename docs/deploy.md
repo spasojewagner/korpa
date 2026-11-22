@@ -9,7 +9,7 @@ Free tier only: Neon (Postgres), Render (API), Vercel (static site), GitHub Acti
 GitHub Actions (.github/workflows/deploy.yml)
   nightly 03:17 UTC, manual, and on every push to main
   → alembic upgrade head            (Neon)
-  → korpa ingest --all              (nightly and manual only)
+  → korpa ingest --all --archive-dir data/raw (nightly and manual only)
   → export_static → public/data/*.json
   → vercel build + deploy --prod    (site with that morning's data)
 
@@ -45,3 +45,40 @@ Plain `postgresql://…?sslmode=require&channel_binding=require` URLs work for b
   migration or the storage guard (90 % of Neon's 1 GB) fails it, and GitHub e-mails the repository owner.
 - **Rollback the site:** Vercel → Deployments → previous deployment → Promote to Production.
 - **Rollback the API:** Render → korpa-api → Events → previous deploy → Rollback. Migrations are additive.
+
+## CI security and measurements
+
+The ingest writes downloaded HTTP 200 bodies byte-for-byte to `data/raw/` only when
+`--archive-dir data/raw` is passed. Filenames are digests of source identity, not publisher
+paths. Invalid CSVs are archived too; HTTP 304 has no new body. The deploy job uploads
+these ignored local files as `raw-price-lists` for 7 days, including after ingest failure.
+Raw files never enter the database or repository.
+
+CI exports the frozen Python environment (including development tools) for `pip-audit`,
+which fails on any known vulnerability. Both npm lockfiles are audited with a high/critical
+failure threshold. The production CSP and other web security headers are read directly
+from `apps/web/vercel.json` by Vite preview. E2e builds use the production API origin,
+intercept it with fixtures, and fail on CSP console errors or violation events.
+
+`npm --prefix apps/web run lighthouse` measures the production build on five routes with
+mobile Lighthouse defaults and the same typed fixtures as e2e. Build with
+`VITE_API_URL=https://korpa-api.onrender.com` first. The runner mocks API and static JSON
+requests, seeds a populated basket, writes full HTML/JSON reports and `scores.md` to
+`apps/web/lighthouse-results/`, and publishes the table in the CI job summary. Thresholds:
+performance ≥ 90, accessibility = 100, best practices ≥ 95, SEO ≥ 95. Page improvements
+identified by these measurements are a separate follow-up.
+
+The API adds `nosniff` and `strict-origin-when-cross-origin`. `/mcp` and its children
+share a limit of 60 requests/minute per socket client address, with problem+json 429 and
+`Retry-After`. Like the AI limiter, it is in memory on a single API instance and resets
+on restart; additional workers would each have their own limit. It does not trust raw
+forwarded headers; the hosting proxy must supply the correct client address to ASGI.
+
+## Manual live evaluation
+
+The **AI evaluation** workflow accepts only a manual dispatch. It uses the existing
+`LLM_API_KEY`, `LLM_MODEL` and `DATABASE_URL` secrets, sets `LLM_PROVIDER=gemini`, and
+runs extraction plus read-only database retrieval. `live.jsonl` and `results-live.md`
+are uploaded as `live-evaluation`; partial recordings are retained on failure. It does
+not commit results. Only the maintainer should dispatch this workflow after reviewing
+model quota and database access. Adding any new secret or paid service needs approval.

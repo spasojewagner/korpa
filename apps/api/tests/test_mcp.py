@@ -5,6 +5,7 @@ import httpx2
 import pytest
 import test_rest
 from fastapi.testclient import TestClient
+from korpa_api.ai.limits import RateLimiter
 from korpa_api.main import app
 from mcp import Client
 from mcp.client.streamable_http import streamable_http_client
@@ -16,6 +17,7 @@ rest_client = test_rest.client
 
 @pytest.fixture()
 def client(rest_client: TestClient, monkeypatch: pytest.MonkeyPatch) -> TestClient:
+    monkeypatch.setattr("korpa_api.main.mcp_limits", RateLimiter(per_minute=60, per_day=None))
     monkeypatch.setattr("korpa_api.mcp_server.belgrade_today", lambda: AS_OF)
     return rest_client
 

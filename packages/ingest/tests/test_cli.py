@@ -107,3 +107,23 @@ def test_ingest_package_does_not_import_the_api_package() -> None:
     imports = re.compile(r"^\s*(from|import)\s+korpa_api\b", re.MULTILINE)
     offenders = [p.name for p in source.rglob("*.py") if imports.search(p.read_text("utf-8"))]
     assert offenders == []
+
+
+@pytest.mark.parametrize("status", [200, 304])
+def test_archive_keeps_exact_download_bytes_only_for_new_files(tmp_path: Path, status: int) -> None:
+    source = RetailerSource("../../escape", "Demo", "id", "https://example.org/cene.csv", "sodl")
+    content = (FIXTURES / "mixed.csv").read_bytes()
+    with (
+        patch("korpa_ingest.cli.PortalClient.discover", return_value=[source]),
+        patch("korpa_ingest.cli.PortalClient.download", return_value=Download(status, content)),
+        patch("korpa_ingest.cli.create_engine", side_effect=AssertionError("DB touched")),
+    ):
+        result = CliRunner().invoke(app, [
+            "ingest", "--all", "--dry-run", "--archive-dir", str(tmp_path), "--report-row-errors"
+        ])
+    assert result.exit_code == 0, result.output
+    files = list(tmp_path.iterdir())
+    assert len(files) == (1 if status == 200 else 0)
+    if files:
+        assert files[0].suffix == ".csv"
+        assert files[0].read_bytes() == content

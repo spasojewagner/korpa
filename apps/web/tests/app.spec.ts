@@ -1,9 +1,10 @@
+import { test } from './security'
 import AxeBuilder from '@axe-core/playwright'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
 import { MILK, basket, categories, priceIndex, product, quality, search, signals, summary } from './fixtures'
 
-// The built site talks to the default local API; every call is answered from fixtures.
-const API = 'http://127.0.0.1:8000'
+// The production API origin is allowed by CSP; every call is answered from fixtures.
+const API = 'https://korpa-api.onrender.com'
 
 test.beforeEach(async ({ page }) => {
   await page.route(`${API}/api/ai/status`, (route) => route.fulfill({ json: { enabled: false } }))
