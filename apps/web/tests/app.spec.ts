@@ -73,6 +73,56 @@ test('keyboard only: add to basket and raise the quantity', async ({ page }) => 
   await expect(quantity).toHaveValue('2')
 })
 
+test('split basket shows dated savings and keyboard expandable items with axe', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 900 })
+  await page.addInitScript((barcode) => {
+    localStorage.setItem('korpa', JSON.stringify([{ barcode, qty: 2 }, { barcode: '8600000000002', qty: 1 }]))
+  }, MILK)
+  await page.route(`${API}/api/basket`, (route) => route.fulfill({ json: {
+    ...basket,
+    split: { total_para: 40997, saving_vs_best_para: 3000, n_formats: 2, items: [
+      { barcode: MILK, format: { id: 1, name: 'Alfa Hiper' }, price_para: 13999, list_date: '2026-11-20' },
+      { barcode: '8600000000002', format: { id: 2, name: 'Beta Market' }, price_para: 12999, list_date: '2026-11-19' },
+    ] },
+  } }))
+  await page.goto('/korpa')
+  const card = page.getByRole('region', { name: 'Najjeftinije po stavci' })
+  await expect(card).toContainText(/409,97\sRSD/)
+  await expect(card).toContainText(/30,00\sRSD/)
+  await expect(card).toContainText('Kupovina u 2 formata prodavnica')
+  await expect(card).toContainText('obilazak više prodavnica')
+  await expect(card).toContainText('19.11.2026.')
+  await expect(card.getByRole('list')).toBeHidden()
+  await expectNoViolations(page)
+  const disclosure = card.locator('summary')
+  await disclosure.focus()
+  await page.keyboard.press('Enter')
+  await expect(card.getByRole('listitem')).toHaveCount(2)
+  await expect(card.getByRole('listitem').first()).toContainText(/2 × 139,99\sRSD/)
+  await expect(card.getByRole('listitem').last()).toContainText('Beta Market')
+  await expectNoViolations(page)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320)
+  await page.keyboard.press('Enter')
+  await expect(card.getByRole('list')).toBeHidden()
+})
+
+test('split basket is hidden for unavailable items and explains absent single-format comparison', async ({ page }) => {
+  await page.addInitScript((barcode) => {
+    localStorage.setItem('korpa', JSON.stringify([{ barcode, qty: 1 }]))
+  }, MILK)
+  await page.route(`${API}/api/basket`, (route) => route.fulfill({ json: { ...basket, split: null } }))
+  await page.goto('/korpa')
+  await expect(page.getByRole('heading', { name: 'Cela korpa' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Najjeftinije po stavci' })).toHaveCount(0)
+  await page.route(`${API}/api/basket`, (route) => route.fulfill({ json: {
+    ...basket, split: { ...basket.split, saving_vs_best_para: null },
+  } }))
+  await page.reload()
+  const card = page.getByRole('region', { name: 'Najjeftinije po stavci' })
+  await expect(card).toContainText('Nijedan format nema celu korpu')
+  await expectNoViolations(page)
+})
+
 test('script choice works from the keyboard and survives a reload', async ({ page }) => {
   await page.goto('/o-projektu')
   await page.getByRole('radio', { name: 'Latinica' }).focus()

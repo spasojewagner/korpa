@@ -60,6 +60,8 @@ export const summary: ProductsSummaryQuery = {
 
 export const basket: Schemas['BasketResponse'] = {
   as_of: asOf,
+  split: { total_para: 13999, saving_vs_best_para: 0, n_formats: 1,
+    items: [{ barcode: MILK, format: { id: 1, name: 'Alfa Hiper' }, price_para: 13999, list_date: '2026-11-20' }] },
   retailers: [
     { ...alfa, formats: [{ id: 1, name: 'Alfa Hiper', total_para: 13999, found_barcodes: [MILK], missing_barcodes: [],
       complete: true, rank: 1, list_date_min: '2026-11-20', list_date_max: '2026-11-20' }] },

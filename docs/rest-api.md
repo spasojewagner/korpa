@@ -52,6 +52,15 @@ barcode should be used against a live-data database.
   partial baskets rank by number found, then partial total. Formats are nested under retailers;
   retailer groups appear in the order of their best-ranked format. The explicit completeness
   flag and global rank preserve honest comparison even when one retailer has both kinds.
+  The response also includes `split`: the cheapest effective unit price for each requested
+  barcode, multiplied by its merged quantity for `total_para`. Each entry in `items` has
+  `barcode`, `format` (`id`, `name`), unit `price_para`, and `list_date`. Ties choose the format
+  name then id, independently of database row order. `n_formats` counts the chosen formats;
+  it does not optimize the number of stops and formats do not identify individual outlets.
+  `saving_vs_best_para` compares the split total to the cheapest **complete single format**,
+  and is null when no such format exists. The entire `split` is null when any requested
+  barcode has no current price anywhere. Zero-priced items remain valid. Travel costs are
+  excluded; the web card explains that buying across formats can mean visiting several stores.
 - **Categories:** code, published name, and catalog product count, including empty categories.
 - **Quality:** the latest ingest row per retailer, HTTP status, total/valid rows, errors,
   independent rule counts, deviations, profile, completion time, newest current list date,

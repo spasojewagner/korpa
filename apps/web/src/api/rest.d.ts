@@ -251,6 +251,7 @@ export interface components {
             as_of: string;
             /** Retailers */
             retailers: components["schemas"]["BasketRetailer"][];
+            split: components["schemas"]["BasketSplit"] | null;
         };
         /** BasketRetailer */
         BasketRetailer: {
@@ -262,6 +263,43 @@ export interface components {
             name: string;
             /** Slug */
             slug: string;
+        };
+        /** BasketSplit */
+        BasketSplit: {
+            /** Items */
+            items: components["schemas"]["BasketSplitItem"][];
+            /** N Formats */
+            n_formats: number;
+            /**
+             * Saving Vs Best Para
+             * @description Saving against the cheapest complete single format; null if none exists.
+             */
+            saving_vs_best_para: number | null;
+            /** Total Para */
+            total_para: number;
+        };
+        /** BasketSplitFormat */
+        BasketSplitFormat: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+        };
+        /** BasketSplitItem */
+        BasketSplitItem: {
+            /** Barcode */
+            barcode: string;
+            format: components["schemas"]["BasketSplitFormat"];
+            /**
+             * List Date
+             * Format: date
+             */
+            list_date: string;
+            /**
+             * Price Para
+             * @description Effective unit price, before basket quantity.
+             */
+            price_para: number;
         };
         /** CategoryItem */
         CategoryItem: {
