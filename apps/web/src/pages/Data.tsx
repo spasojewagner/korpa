@@ -14,17 +14,16 @@ const SITE = 'https://ai-korpa.vercel.app'
 function Stats() {
   const { tr } = usePageI18n()
   const query = useQuery({ queryKey: ['quality'], queryFn: fetchQuality })
-  if (!query.data) return <div aria-hidden="true" className="h-40 animate-pulse rounded-lg bg-paper-raised" />
-  const retailers = query.data.retailers.filter((retailer) => (retailer.rows_valid ?? 0) > 0)
+  const retailers = query.data?.retailers.filter((retailer) => (retailer.rows_valid ?? 0) > 0) ?? []
   const valid = retailers.reduce((sum, retailer) => sum + (retailer.rows_valid ?? 0), 0)
-  const total = query.data.retailers.reduce((sum, retailer) => sum + (retailer.rows_total ?? 0), 0)
+  const total = query.data?.retailers.reduce((sum, retailer) => sum + (retailer.rows_total ?? 0), 0) ?? 0
   const stats = [
-    [formatNumber(retailers.length), dataCopy.statRetailers],
-    [formatNumber(valid), dataCopy.statRows],
+    [query.data ? formatNumber(retailers.length) : '–', dataCopy.statRetailers],
+    [query.data ? formatNumber(valid) : '–', dataCopy.statRows],
     [total ? formatPercent(valid / total) : '–', dataCopy.statShare],
   ]
   return (
-    <section aria-labelledby="stats" className="rounded-lg bg-paper-raised p-6 sm:p-8">
+    <section aria-labelledby="stats" aria-busy={query.isPending} className="rounded-lg bg-paper-raised p-6 sm:p-8">
       <h2 id="stats" className="text-sm font-semibold uppercase tracking-wide text-ink-muted">{tr(dataCopy.statsLabel)}</h2>
       <dl className="mt-4 grid gap-6 sm:grid-cols-3">
         {stats.map(([value, label]) => (
@@ -34,7 +33,7 @@ function Stats() {
           </div>
         ))}
       </dl>
-      <p className="mt-4 text-sm text-ink-muted">{tr(dataCopy.statsSource).replace('{date}', formatDate(query.data.as_of))}</p>
+      <p className="mt-4 min-h-[1.5em] text-sm text-ink-muted">{query.data ? tr(dataCopy.statsSource).replace('{date}', formatDate(query.data.as_of)) : '\u00a0'}</p>
     </section>
   )
 }

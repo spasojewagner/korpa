@@ -83,7 +83,7 @@ export function RootLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <a className="skip-link" href="#main">{t('skip')}</a>
-      {dataArea ? <Suspense fallback={<div className="h-40 bg-brand-deep" />}><DataHeader /></Suspense> : <ShopHeader pathname={pathname} q={q} />}
+      {dataArea ? <Suspense fallback={<div className="h-[238px] bg-brand-deep sm:h-32" />}><DataHeader /></Suspense> : <ShopHeader pathname={pathname} q={q} />}
       <main id="main" tabIndex={-1} className={`flex-1 focus:outline-none ${fullBleed ? '' : 'wrap py-10'}`}>
         <Outlet />
       </main>
