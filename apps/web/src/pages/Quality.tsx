@@ -31,11 +31,11 @@ function QualityPage() {
   const query = useQuery({ queryKey: ['quality'], queryFn: fetchQuality })
   return (
     <>
-      <h1 className="text-2xl font-semibold">{t('qualityHeading')}</h1>
-      <p className="mt-4 max-w-3xl text-ink-soft">{t('qualityIntro')}</p>
+      <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('qualityHeading')}</h1>
+      <p className="mt-4 max-w-3xl text-lg text-ink-soft">{t('qualityIntro')}</p>
       <p className="mt-2 max-w-3xl text-ink-soft">{t('qualityAdjusted')}</p>
       <p className="mt-2 max-w-3xl text-ink-soft">{t('qualitySuspected')}</p>
-      <div className="mt-6 overflow-x-auto">
+      <div role="region" aria-label={t('qualityCaption')} tabIndex={0} className="mt-6 overflow-x-auto rounded-lg border border-line bg-white p-5">
         {query.isPending ? (
           <StateView kind="loading" lines={2} />
         ) : query.isError ? (
@@ -45,11 +45,11 @@ function QualityPage() {
           <table className="w-full min-w-[40rem] border-collapse text-left">
             <caption className="sr-only">{t('qualityCaption')}</caption>
             <thead>
-              <tr className="border-b border-ink-muted text-sm text-ink-soft">
+              <tr className="border-b border-line text-sm uppercase tracking-wide text-ink-muted">
                 <th scope="col" className="py-2 pr-4 font-semibold">{t('colRetailer')}</th>
                 <th scope="col" className="py-2 pr-4 font-semibold">{t('colStatus')}</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">{t('colRows')}</th>
-                <th scope="col" className="py-2 pr-4 font-semibold">{t('colList')}</th>
+                <th scope="col" className="py-2 pr-4 text-right font-semibold">{t('colRows')}</th>
+                <th scope="col" className="py-2 pr-4 text-right font-semibold">{t('colList')}</th>
                 <th scope="col" className="py-2 font-semibold">{t('colNotes')}</th>
               </tr>
             </thead>
@@ -60,12 +60,12 @@ function QualityPage() {
                   <tr key={retailer.slug} className="border-b border-line align-top">
                     <th scope="row" className="py-3 pr-4 font-semibold">{retailer.name}</th>
                     <td className="py-3 pr-4">{t(statusKey[retailer.status])}</td>
-                    <td className="py-3 pr-4 tabular-nums">
+                    <td className="py-3 pr-4 text-right tabular-nums">
                       {valid != null && total ? t('rowsOf', {
                         valid: formatNumber(valid), total: formatNumber(total), pct: formatPercent(valid / total),
                       }) : '—'}
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="py-3 pr-4 text-right tabular-nums">
                       {retailer.list_date ? (
                         <>
                           <time dateTime={retailer.list_date}>{formatDate(retailer.list_date)}</time>
