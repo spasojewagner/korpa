@@ -39,13 +39,13 @@ export function BasketSummary({ totals, headingLevel = 2, today }: BasketSummary
     <div className="flex flex-col gap-8">
       {complete.length > 0 && (
         <section aria-labelledby={completeId}>
-          <Heading id={completeId} className="mb-3 text-xl font-semibold">{t('basketComplete')}</Heading>
+          <Heading id={completeId} className="mb-3 font-display text-2xl">{t('basketComplete')}</Heading>
           <TotalsList totals={complete} cheapest={complete[0].totalPara} today={today} />
         </section>
       )}
       {partial.length > 0 && (
         <section aria-labelledby={partialId}>
-          <Heading id={partialId} className="mb-1 text-xl font-semibold">{t('basketPartial')}</Heading>
+          <Heading id={partialId} className="mb-1 font-display text-2xl">{t('basketPartial')}</Heading>
           <p className="mb-3 text-ink-soft">{t('basketPartialNote')}</p>
           <TotalsList totals={partial} today={today} />
         </section>
@@ -57,10 +57,13 @@ export function BasketSummary({ totals, headingLevel = 2, today }: BasketSummary
 function TotalsList({ totals, cheapest, today }: { totals: BasketTotal[]; cheapest?: number; today?: Date }) {
   const { t, tp } = useI18n()
   return (
-    <ol className="flex flex-col">
-      {totals.map((total) => (
-        <li key={total.key} className="flex items-start justify-between gap-4 border-b border-line py-3">
-          <div className="flex flex-col gap-1">
+    <ol className="flex flex-col gap-3">
+      {totals.map((total, index) => (
+        <li key={total.key} className={`grid items-start gap-4 rounded-lg border border-line p-5 ${
+          total.complete ? 'grid-cols-[auto_minmax(0,1fr)] sm:grid-cols-[auto_minmax(0,1fr)_auto]' : 'sm:grid-cols-[minmax(0,1fr)_auto]'} ${
+          total.totalPara === cheapest ? 'bg-brand-subtle' : total.complete ? 'bg-white' : 'bg-paper-raised'}`}>
+          {total.complete && <span aria-hidden="true" className="font-display text-2xl font-semibold text-brand tabular-nums">{index + 1}.</span>}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
             <span className="font-semibold">{total.retailer}</span>
             <span className="text-sm text-ink-soft">{total.format}</span>
             <span className="flex flex-wrap gap-2">
@@ -69,9 +72,9 @@ function TotalsList({ totals, cheapest, today }: { totals: BasketTotal[]; cheape
             </span>
             <SourceDate date={total.listDate} today={today} />
           </div>
-          <span className="text-right">
+          <span className={`${total.complete ? 'col-start-2 sm:col-start-auto' : ''} sm:text-right`}>
             <span className="sr-only">{t('colTotal')}: </span>
-            <strong className="text-lg font-semibold tabular-nums">{formatPrice(total.totalPara)}</strong>
+            <strong className={`font-display font-semibold tabular-nums ${total.complete ? 'text-2xl' : 'text-lg text-ink-soft'}`}>{formatPrice(total.totalPara)}</strong>
           </span>
         </li>
       ))}
