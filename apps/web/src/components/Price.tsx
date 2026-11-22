@@ -19,7 +19,7 @@ export function Price({ para, regularPara, unitPara, unit, size = 'md' }: PriceP
     <span className="inline-flex flex-col">
       <span className="block">
         {discounted && (
-          <del className="mr-2 text-sm text-ink-muted tabular-nums">
+          <del className="block text-sm text-ink-muted tabular-nums sm:mr-2 sm:inline-block">
             <span className="sr-only">{t('regularPrice')}: </span>
             {formatPrice(regularPara)}
           </del>

@@ -85,7 +85,7 @@ export function PriceComparison({ rows, unit, today }: { rows: FormatPrice[]; un
     <table className="w-full border-collapse text-left">
       <caption className="sr-only">{t('comparisonCaption')}</caption>
       <thead>
-        <tr className="border-b border-ink-muted text-sm text-ink-soft">
+        <tr className="border-b border-line text-sm uppercase tracking-wide text-ink-muted">
           <th scope="col" className="py-2 pr-4 font-semibold">{t('colFormat')}</th>
           <th scope="col" aria-sort="ascending" className="py-2 text-right font-semibold">{t('colPrice')}</th>
         </tr>
@@ -108,7 +108,7 @@ export function PriceComparison({ rows, unit, today }: { rows: FormatPrice[]; un
                 </span>
                 <SourceDate date={row.listDate} today={today} />
               </th>
-              <td className="py-3 text-right">
+              <td className="py-3 text-right tabular-nums">
                 <Price para={row.para} regularPara={row.regularPara} unitPara={row.unitPara} unit={unit} />
               </td>
             </tr>
@@ -142,7 +142,7 @@ export function Sparkline({ points, width = 240, height = 56 }: { points: MonthP
   return (
     <figure className="m-0 flex flex-col gap-1">
       <svg aria-hidden="true" focusable="false" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none"
-        className="h-14 w-full max-w-60 text-brand">
+        className="h-32 w-full text-brand">
         <path d={path} fill="none" stroke="currentColor" strokeWidth={2} vectorEffect="non-scaling-stroke" />
         <circle cx={x(points.length - 1)} cy={y(last.para)} r={3} fill="currentColor" />
       </svg>

@@ -31,9 +31,9 @@ function ProductPage() {
   if (!valid || (query.isSuccess && !product)) {
     return (
       <>
-        <h1 className="text-2xl font-semibold">{t('productNotFound')}</h1>
-        <p className="mt-4 text-ink-soft">{t('productNotFoundText')}</p>
-        <Link to="/pretraga" className="mt-4 inline-block text-brand underline underline-offset-2">{t('goToSearch')}</Link>
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{t('productNotFound')}</h1>
+        <p className="mt-4 text-lg text-ink-soft">{t('productNotFoundText')}</p>
+        <Link to="/pretraga" className="btn btn-primary mt-6">{t('goToSearch')}</Link>
       </>
     )
   }
@@ -56,10 +56,10 @@ function ProductView({ product }: { product: Product }) {
     requestAnimationFrame(() => actions.current?.querySelector('input')?.focus())
   }
   return (
-    <article className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold sm:text-3xl">{product.name}</h1>
-        <p className="text-ink-soft">
+    <article className="grid items-start gap-8 lg:grid-cols-[1.4fr_1fr]">
+      <header className="flex flex-col gap-3 border-b border-line pb-8 lg:col-span-2">
+        <h1 className="font-display text-3xl font-semibold sm:text-4xl">{product.name}</h1>
+        <p className="text-lg text-ink-soft">
           {[product.brand, product.unit, product.category.name].filter(Boolean).join(' · ')}
         </p>
         <p className="text-sm text-ink-muted">{t('barcode')}: <span className="tabular-nums">{product.barcode}</span></p>
@@ -67,19 +67,19 @@ function ProductView({ product }: { product: Product }) {
           {item ? (
             <>
               <QuantityStepper value={item.qty} name={product.name} onChange={(qty) => basket.setQty(product.barcode, qty)} />
-              <Link to="/korpa" className="text-brand underline underline-offset-2">{t('goToBasket')}</Link>
+              <Link to="/korpa" className="btn btn-secondary">{t('goToBasket')}</Link>
             </>
           ) : (
             <button type="button" onClick={add}
-              className="min-h-11 rounded-md bg-brand px-5 font-semibold text-white hover:bg-brand-hover">
+              className="btn btn-primary">
               {t('addToBasket')}
             </button>
           )}
         </div>
       </header>
 
-      <section aria-labelledby="prices">
-        <h2 id="prices" className="mb-3 text-xl font-semibold">{t('pricesHeading')}</h2>
+      <section aria-labelledby="prices" className="min-w-0 rounded-lg border border-line bg-white p-5">
+        <h2 id="prices" className="mb-5 font-display text-2xl">{t('pricesHeading')}</h2>
         <PriceComparison unit={product.unit} rows={product.prices.map((price) => ({
           formatId: price.format.id,
           retailer: price.format.retailer.name,
@@ -92,13 +92,13 @@ function ProductView({ product }: { product: Product }) {
         }))} />
       </section>
 
-      <section aria-labelledby="history">
-        <h2 id="history" className="mb-3 text-xl font-semibold">{t('historyHeading')}</h2>
+      <section aria-labelledby="history" className="min-w-0 rounded-lg border border-line bg-white p-5">
+        <h2 id="history" className="mb-5 font-display text-2xl">{t('historyHeading')}</h2>
         {history.length >= 2 ? <Sparkline points={history} /> : <p className="text-ink-soft">{t('noHistory')}</p>}
       </section>
 
       {product.names.length > 0 && (
-        <details className="rounded-lg bg-paper-raised p-4">
+        <details className="rounded-lg bg-paper-raised p-5 lg:col-span-2">
           <summary className="cursor-pointer font-semibold">{t('namesHeading')}</summary>
           <ul className="mt-3 flex flex-col gap-1 text-ink-soft">
             {product.names.map((name) => (
