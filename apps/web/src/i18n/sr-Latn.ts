@@ -89,7 +89,7 @@ export const copy = {
   goToBasket: 'Idi u korpu',
 
   basketHeading: 'Korpa',
-  basketEmpty: 'Korpa je prazna. Pronađite proizvode i dodajte ih.',
+  basketEmpty: 'Korpa je još prazna. Dodaj proizvode preko pomoćnika ili pretrage.',
   goToSearch: 'Idi na pretragu',
   basketItemsHeading: 'Proizvodi u korpi',
   remove: 'Ukloni',
