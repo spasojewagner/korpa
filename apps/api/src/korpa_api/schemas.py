@@ -188,6 +188,9 @@ class AiBasketItem(BaseModel):
     phrase: str
     query: str
     qty: int
+    proposed: bool = Field(
+        description="Suggested by the model for a goal, not named by the shopper"
+    )
     candidates: list[SearchItem]
 
 
@@ -195,6 +198,7 @@ class AiBasketResponse(BaseModel):
     as_of: date
     model: str
     items: list[AiBasketItem]
+    budget_para: int | None = Field(description="Budget the shopper stated, if any")
 
 
 class AiStatus(BaseModel):

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import { createI18n } from '../i18n/I18nProvider'
-import { AssistantError, assistantErrorMessage, assistantText, mergeBasketItems } from './ai-basket'
+import { AssistantError, assistantErrorMessage, assistantText, mergeBasketItems, selectedTotal } from './ai-basket'
 import { MAX_ITEMS } from './basket'
 
 describe('merge proposed basket items', () => {
@@ -41,3 +41,15 @@ describe('assistant error messages', () => {
     expect(assistantText(createI18n('cyrl'))('assistantCounter', { count: 12 })).toBe('12/300 знакова')
   })
 })
+
+describe('lowest total of the chosen products', () => {
+  test('counts quantity times the cheapest price of the chosen candidate; skipped items add nothing', () => {
+    const candidates = [{ barcode: 'a', min_effective_para: 12000 }, { barcode: 'b', min_effective_para: 9900 }]
+    expect(selectedTotal([
+      { qty: 2, selected: 'b', candidates },
+      { qty: 1, selected: '', candidates },
+      { qty: 3, selected: 'gone', candidates },
+    ])).toBe(19800)
+  })
+})
+

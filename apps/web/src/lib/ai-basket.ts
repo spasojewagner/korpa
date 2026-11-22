@@ -57,3 +57,11 @@ export function mergeBasketItems(current: BasketItem[], chosen: BasketItem[]): B
   }
   return merged.size > MAX_ITEMS ? null : [...merged.values()]
 }
+
+/** Lowest possible total of the chosen products: each at its cheapest format. A lower bound, not a chain total. */
+export function selectedTotal(items: { qty: number; selected: string; candidates: { barcode: string; min_effective_para: number }[] }[]): number {
+  return items.reduce((sum, item) => {
+    const chosen = item.candidates.find((candidate) => candidate.barcode === item.selected)
+    return chosen ? sum + item.qty * chosen.min_effective_para : sum
+  }, 0)
+}

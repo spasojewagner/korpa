@@ -1,7 +1,7 @@
 /** Copy for the basket assistant; only the /korpa chunk imports it. */
 export const assistantCopy = {
   assistantLabel: 'Napiši šta kupuješ',
-  assistantPlaceholder: 'npr. 2 mleka, hleb i desetak jaja',
+  assistantPlaceholder: 'npr. 2 mleka, hleb i desetak jaja, ili ručak za četvoro do 500 din',
   assistantSubmit: 'Predloži proizvode',
   assistantNote: 'Predlog pravi jezički model; cene su iz zvaničnih cenovnika. Proveri izbor pre dodavanja.',
   assistantCounter: '{count}/300 znakova',
@@ -16,4 +16,15 @@ export const assistantCopy = {
   assistantRateLimit: 'Previše zahteva. Pokušaj ponovo kasnije.',
   assistantFull: 'U korpi može biti najviše {max} proizvoda. Preskoči neki predlog ili ukloni proizvod iz korpe.',
   assistantAdded: 'Izabrani proizvodi su dodati u korpu.',
+  assistantIntro: 'Napiši spisak ili cilj. Pomoćnik predloži proizvode iz zvaničnih cenovnika, a ti biraš šta ide u korpu.',
+  assistantExamples: 'Probaj:',
+  assistantProposalNote: 'Ovo je predlog za tvoj cilj. Proizvodi i cene su iz cenovnika, a izbor je na tebi.',
+  assistantProposed: 'Predlog',
+  assistantBudget: 'Budžet',
+  assistantLowest: 'Najmanje za izabrano',
+  assistantLowestNote: 'Ako svaki proizvod kupiš tamo gde je najjeftiniji. Zbir po lancu vidiš u korpi posle dodavanja.',
+  assistantWithin: 'U okviru budžeta',
+  assistantOver: 'Preko budžeta za {amount}',
 } as const
+
+export const assistantExamples = ['2 mleka, hleb i jaja', 'ručak za četvoro do 500 din', 'doručak za dvoje', 'nešto slatko za decu'] as const
