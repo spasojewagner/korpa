@@ -89,4 +89,4 @@ function QualityPage() {
   )
 }
 
-export const Route = createLazyRoute('/kvalitet')({ component: () => <WithQuery><QualityPage /></WithQuery> })
+export const Route = createLazyRoute('/podaci/kvalitet')({ component: () => <WithQuery><QualityPage /></WithQuery> })

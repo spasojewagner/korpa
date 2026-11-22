@@ -192,4 +192,4 @@ function PriceIndexPage() {
   )
 }
 
-export const Route = createLazyRoute('/indeks')({ component: () => <WithQuery><PriceIndexPage /></WithQuery> })
+export const Route = createLazyRoute('/podaci/indeks')({ component: () => <WithQuery><PriceIndexPage /></WithQuery> })

@@ -1,6 +1,6 @@
 import { ApiError, type Schemas } from './api'
 import { MAX_ITEMS, MAX_QTY, type BasketItem } from './basket'
-import { assistantCopy } from '../i18n/sr-Latn'
+import { assistantCopy } from '../i18n/assistant'
 import type { I18n } from '../i18n/I18nProvider'
 
 export class AssistantError extends ApiError {

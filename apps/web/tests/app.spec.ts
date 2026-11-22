@@ -30,7 +30,7 @@ const h1 = (page: Page) => page.getByRole('heading', { level: 1 })
 
 test('search → product → basket ranks retailers', async ({ page }) => {
   await page.goto('/')
-  await expect(h1(page)).toContainText('Lakše')
+  await expect(h1(page)).toContainText('Ista korpa.')
   await expectNoViolations(page)
 
   await page.getByLabel('Pretraga proizvoda').fill('mleko')
@@ -82,7 +82,7 @@ test('script choice works from the keyboard and survives a reload', async ({ pag
   await expect(h1(page)).toHaveText('О пројекту')
 })
 
-for (const path of ['/pretraga', '/korpa', '/indeks', '/kvalitet', '/o-projektu', '/nepostoji']) {
+for (const path of ['/pretraga', '/korpa', '/indeks', '/kvalitet', '/podaci', '/podaci/api', '/o-projektu', '/nepostoji']) {
   test(`no accessibility violations on ${path}`, async ({ page }) => {
     await page.goto(path)
     await expect(h1(page)).toBeVisible()
@@ -96,6 +96,7 @@ for (const path of ['/pretraga', '/korpa', '/indeks', '/kvalitet', '/o-projektu'
 
 test('price index: overall value, categories, signals filter', async ({ page }) => {
   await page.goto('/indeks')
+  await expect(page).toHaveURL(/\/podaci\/indeks$/)
   await expect(h1(page)).toHaveText('Indeks cena')
   await expect(page.getByText(/^101,4$/)).toBeVisible()
   await expect(page.getByText('+1,4 %').first()).toBeVisible()
@@ -118,4 +119,17 @@ test('home categories open category browsing', async ({ page }) => {
   await expect(h1(page)).toHaveText('Mleko i mlečni proizvodi')
   await expect(page.getByText('Pronađena su 2 proizvoda')).toBeVisible()
   await expectNoViolations(page)
+})
+
+test('data area has its own navigation and keeps old addresses', async ({ page }) => {
+  await page.goto('/kvalitet')
+  await expect(page).toHaveURL(/\/podaci\/kvalitet$/)
+  const tabs = page.getByRole('navigation', { name: 'Meni podataka' })
+  await expect(tabs.getByRole('link', { name: 'Kvalitet' })).toHaveAttribute('aria-current', 'page')
+  await tabs.getByRole('link', { name: 'Pregled' }).click()
+  await expect(h1(page)).toHaveText('Podaci o cenama namirnica')
+  await expect(page.getByText('redova cena prošlo je proveru')).toBeVisible()
+  await page.getByRole('link', { name: 'Kupovina' }).click()
+  await expect(h1(page)).toContainText('Ista korpa.')
+  await expect(page.getByRole('navigation', { name: 'Glavni meni' })).toBeVisible()
 })
