@@ -1,3 +1,4 @@
+import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
@@ -23,6 +24,8 @@ from korpa_api.schemas import (
     SignalsParams,
     SignalsResponse,
 )
+
+logger = logging.getLogger("korpa.ai")
 
 router = APIRouter(prefix="/api")
 Database = Annotated[AsyncSession, Depends(session)]
@@ -86,4 +89,5 @@ async def basket_from_sentence(
     try:
         return await ai_basket(database, body.sentence, extractor, belgrade_today())
     except ModelError as exc:
+        logger.warning("AI basket: model call failed: %s", exc)
         raise HTTPException(503, "The AI model is unavailable") from exc

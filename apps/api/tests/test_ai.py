@@ -95,6 +95,23 @@ def test_gemini_request_shape_and_errors() -> None:
         asyncio.run(run(httpx.MockTransport(lambda r: httpx.Response(500, json={}))))
     with pytest.raises(ModelError):
         asyncio.run(run(httpx.MockTransport(lambda r: httpx.Response(200, json={"x": 1}))))
+    google_error = {
+        "error": {
+            "code": 404,
+            "status": "NOT_FOUND",
+            "message": "models/model-x is not found. Key AIzaSyA0123456789abcdefghijklmnop.",
+        }
+    }
+    with pytest.raises(ModelError) as caught:
+        asyncio.run(run(httpx.MockTransport(lambda r: httpx.Response(404, json=google_error))))
+    assert str(caught.value) == "HTTP 404 NOT_FOUND: models/model-x is not found. Key [key]."
+    thinking_only = {
+        "candidates": [
+            {"content": {"parts": [{"text": "...", "thought": True}]}, "finishReason": "MAX_TOKENS"}
+        ]
+    }
+    with pytest.raises(ModelError, match="finishReason=MAX_TOKENS"):
+        asyncio.run(run(httpx.MockTransport(lambda r: httpx.Response(200, json=thinking_only))))
 
 
 def test_extractor_requires_full_configuration(monkeypatch: pytest.MonkeyPatch) -> None:

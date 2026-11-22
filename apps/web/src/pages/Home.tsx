@@ -8,8 +8,8 @@ import { usePageMeta } from '../lib/meta'
 import { loadHome, useStatic, type HomeData } from './home-data'
 
 /** The hero film; until the files exist the still image is shown. Paths are relative to /public. */
-const HERO_VIDEO: { webm?: string; mp4?: string } = {}
-const HERO_POSTER = '/media/hero-1120.webp'
+const HERO_VIDEO: { webm?: string; mp4?: string } = { webm: '/media/hero.webm', mp4: '/media/hero.mp4' }
+const HERO_POSTER = '/media/hero-poster.webp'
 const HERO_SRCSET = '/media/hero-640.webp 640w, /media/hero-1120.webp 1120w'
 const HERO_SIZES = '(min-width: 1024px) 34rem, (min-width: 640px) 28rem, 92vw'
 
@@ -19,7 +19,8 @@ function HeroMedia() {
   const [playing, setPlaying] = useState(false)
   const hasVideo = Boolean(HERO_VIDEO.webm || HERO_VIDEO.mp4)
   useEffect(() => {
-    if (!hasVideo || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData
+    if (!hasVideo || saveData || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     video.current?.play().then(() => setPlaying(true)).catch(() => undefined)
   }, [hasVideo])
   const toggle = () => {
@@ -53,7 +54,7 @@ function HeroMedia() {
       </p>
       {hasVideo && (
         <button type="button" onClick={toggle} aria-pressed={!playing}
-          className="absolute top-3 right-3 min-h-11 rounded-full bg-white/90 px-4 text-sm font-semibold text-ink hover:bg-white">
+          className="absolute right-3 bottom-7 min-h-11 rounded-full bg-white/90 px-4 text-sm font-semibold text-ink hover:bg-white">
           {tr(playing ? homeCopy.pause : homeCopy.play)}
         </button>
       )}

@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from typing import Protocol
@@ -111,7 +112,7 @@ class GeminiExtractor:
             "contents": [{"role": "user", "parts": [{"text": user}]}],
             "generationConfig": {
                 "temperature": 0,
-                "maxOutputTokens": 1024,
+                "maxOutputTokens": 2048,
                 "responseFormat": {"text": {"mimeType": "APPLICATION_JSON", "schema": schema}},
             },
         }
@@ -123,11 +124,42 @@ class GeminiExtractor:
                 timeout=timeout,
             )
             response.raise_for_status()
-            parts = response.json()["candidates"][0]["content"]["parts"]
-            return "".join(part.get("text", "") for part in parts)
-        except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError) as exc:
-            # Never echo the response body into errors; the key travels in a header only.
+            payload = response.json()
+        except httpx.HTTPStatusError as exc:
+            raise ModelError(describe_http_error(exc.response)) from exc
+        except (httpx.HTTPError, ValueError) as exc:
             raise ModelError(type(exc).__name__) from exc
+        try:
+            candidate = payload["candidates"][0]
+            parts = candidate["content"]["parts"]
+            text = "".join(part.get("text", "") for part in parts if not part.get("thought"))
+        except (KeyError, IndexError, TypeError) as exc:
+            finish = (
+                payload.get("candidates", [{}])[0].get("finishReason")
+                if isinstance(payload, dict)
+                else None
+            )
+            raise ModelError(f"no text in the answer (finishReason={finish})") from exc
+        if not text:
+            raise ModelError(f"empty answer (finishReason={candidate.get('finishReason')})")
+        return text
+
+
+API_KEY = re.compile(r"AIza[0-9A-Za-z_\-]{20,}")
+
+
+def describe_http_error(response: httpx.Response) -> str:
+    """Status code plus the provider's short error status and message, safe to log.
+
+    The key travels in a header and is never in the message; any key-shaped text is masked anyway.
+    """
+    detail = ""
+    try:
+        error = response.json().get("error", {})
+        detail = f" {error.get('status', '')}: {str(error.get('message', ''))[:200]}"
+    except (ValueError, AttributeError):
+        pass
+    return API_KEY.sub("[key]", f"HTTP {response.status_code}{detail}".strip())
 
 
 def parse_extraction(text: str) -> Extraction:
