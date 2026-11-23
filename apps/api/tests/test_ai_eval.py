@@ -139,6 +139,144 @@ def test_live_requires_config_and_record_requires_live(tmp_path, monkeypatch, ca
     assert error.value.code == 2
 
 
+@pytest.mark.parametrize("status", [400, 429, 503])
+def test_live_failure_logs_provider_status_and_message(tmp_path, monkeypatch, capsys, status):
+    import httpx
+    from korpa_api.ai.llm import GeminiExtractor
+
+    labels, _ = write_inputs(tmp_path)
+    key = "AIzaSyA0123456789abcdefghijklmnop"
+
+    async def no_wait(seconds):
+        pass
+
+    monkeypatch.setattr(evaluate.asyncio, "sleep", no_wait)
+
+    def handler(request):
+        return httpx.Response(
+            status,
+            json={
+                "error": {"status": "PROVIDER_ERROR", "message": f"Provider explanation; key {key}"}
+            },
+        )
+
+    async def configured_failure(args):
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            monkeypatch.setattr(
+                evaluate, "configured_extractor", lambda: GeminiExtractor(key, "test-model", client)
+            )
+            await original_run(args)
+
+    original_run = evaluate.run
+    monkeypatch.setattr(evaluate, "run", configured_failure)
+    assert (
+        evaluate.main(["--live", "--phrases", str(labels), "--out", str(tmp_path / "out.md")]) == 2
+    )
+    error = capsys.readouterr().err
+    assert f"HTTP {status} PROVIDER_ERROR: Provider explanation; key [key]" in error
+    assert key not in error
+
+
+def test_unrelated_failures_keep_private_details_hidden(monkeypatch, capsys):
+    async def fail(args):
+        raise ValueError("postgresql://user:password@private-host/database")
+
+    monkeypatch.setattr(evaluate, "run", fail)
+    assert evaluate.main([]) == 2
+    assert capsys.readouterr().err == "Evaluation failed: ValueError\n"
+
+
+@pytest.mark.parametrize(
+    "failure", [400, 401, 403, 404, 429, 500, 502, 503, 504, "timeout", "network"]
+)
+def test_live_retries_only_transient_failures_and_records_once(tmp_path, monkeypatch, failure):
+    import httpx
+    from korpa_api.ai.llm import GeminiExtractor
+
+    labels, _ = write_inputs(tmp_path)
+    calls = []
+    waits = []
+    raw = '{"items": []}'
+
+    def handler(request):
+        calls.append(request)
+        if len(calls) == 1:
+            if failure == "timeout":
+                raise httpx.ReadTimeout("timeout", request=request)
+            if failure == "network":
+                raise httpx.ConnectError("connection lost", request=request)
+            return httpx.Response(failure, json={"error": {"message": "Temporarily unavailable"}})
+        return httpx.Response(200, json={"candidates": [{"content": {"parts": [{"text": raw}]}}]})
+
+    async def sleep(seconds):
+        waits.append(seconds)
+
+    original = evaluate.run
+
+    async def run(args):
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            monkeypatch.setattr(
+                evaluate,
+                "configured_extractor",
+                lambda: GeminiExtractor("test-key", "test-model", client),
+            )
+            await original(args)
+
+    monkeypatch.setattr(evaluate, "run", run)
+    monkeypatch.setattr(evaluate.asyncio, "sleep", sleep)
+    record = tmp_path / "record.jsonl"
+    report = tmp_path / "report.md"
+    result = evaluate.main(
+        ["--live", "--phrases", str(labels), "--record", str(record), "--out", str(report)]
+    )
+    if failure in {400, 401, 403, 404}:
+        assert result == 2 and len(calls) == 1 and waits == []
+        assert not report.exists()
+    else:
+        assert result == 0 and len(calls) == 4 and waits == [6, 6, 6]
+        rows = [json.loads(line) for line in record.read_text(encoding="utf-8").splitlines()]
+        assert [row["id"] for row in rows] == [1, 2, 3]
+        assert all(row["text"] == raw for row in rows)
+
+
+def test_live_retry_exhaustion_is_bounded(tmp_path, monkeypatch, capsys):
+    import httpx
+    from korpa_api.ai.llm import GeminiExtractor
+
+    labels, _ = write_inputs(tmp_path)
+    calls = []
+    waits = []
+
+    def handler(request):
+        calls.append(request)
+        return httpx.Response(
+            503, json={"error": {"status": "UNAVAILABLE", "message": "High demand"}}
+        )
+
+    async def sleep(seconds):
+        waits.append(seconds)
+
+    original = evaluate.run
+
+    async def run(args):
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            monkeypatch.setattr(
+                evaluate,
+                "configured_extractor",
+                lambda: GeminiExtractor("test-key", "test-model", client),
+            )
+            await original(args)
+
+    monkeypatch.setattr(evaluate, "run", run)
+    monkeypatch.setattr(evaluate.asyncio, "sleep", sleep)
+    assert (
+        evaluate.main(["--live", "--phrases", str(labels), "--out", str(tmp_path / "report.md")])
+        == 2
+    )
+    assert len(calls) == 4 and waits == [6, 12, 24]
+    assert "Evaluation failed: HTTP 503 UNAVAILABLE: High demand" in capsys.readouterr().err
+
+
 def test_live_records_raw_response_and_waits(tmp_path, monkeypatch):
     labels, _ = write_inputs(tmp_path)
     raw = ' {"items": [{"phrase": "bad", "query": "x", "qty": 0}]} '

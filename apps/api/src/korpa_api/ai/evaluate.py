@@ -10,17 +10,25 @@ from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+import httpx
 import sqlalchemy as sa
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from korpa_api import repository
-from korpa_api.ai.llm import ExtractedItem, ModelError, configured_extractor, parse_extraction
+from korpa_api.ai.llm import (
+    ExtractedItem,
+    Extractor,
+    ModelError,
+    configured_extractor,
+    parse_extraction,
+)
 from korpa_api.database import async_database_url
 from korpa_api.schemas import SearchParams
 from korpa_api.translit import normalize_query
 
 DATA = Path("docs/ai-eval")
+RETRY_DELAYS = (6, 12, 24)
 
 
 class EvaluationError(ValueError):
@@ -242,6 +250,28 @@ def render_report(results: list[Result], model: str, mode: str, as_of: date, dat
     return "\n".join(lines) + "\n"
 
 
+async def extract_with_retry(extractor: Extractor, phrase: Phrase) -> str:
+    for attempt in range(len(RETRY_DELAYS) + 1):
+        try:
+            return await extractor.extract_raw(phrase.sentence)
+        except ModelError as exc:
+            cause = exc.__cause__
+            transient = isinstance(cause, (httpx.TimeoutException, httpx.NetworkError)) or (
+                isinstance(cause, httpx.HTTPStatusError)
+                and cause.response.status_code in {429, 500, 502, 503, 504}
+            )
+            if not transient or attempt == len(RETRY_DELAYS):
+                raise
+            delay = RETRY_DELAYS[attempt]
+            print(
+                f"Phrase {phrase.id}: {exc}; retry {attempt + 1}/{len(RETRY_DELAYS)} "
+                f"in {delay} seconds",
+                file=sys.stderr,
+            )
+            await asyncio.sleep(delay)
+    raise AssertionError("unreachable")
+
+
 async def run(args: argparse.Namespace) -> None:
     extractor = configured_extractor() if args.live else None
     if args.live and extractor is None:
@@ -262,7 +292,7 @@ async def run(args: argparse.Namespace) -> None:
             if extractor:
                 if index:
                     await asyncio.sleep(6)
-                text = await extractor.extract_raw(phrase.sentence)
+                text = await extract_with_retry(extractor, phrase)
                 if record_file:
                     record_file.write(
                         Recording(id=phrase.id, text=text, model=model).model_dump_json() + "\n"
@@ -308,8 +338,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         asyncio.run(run(args))
     except (OSError, ValueError, ModelError, sa.exc.SQLAlchemyError) as exc:
-        # Never print model responses, credentials, database URLs or SQL parameters.
-        detail = str(exc) if isinstance(exc, EvaluationError) else type(exc).__name__
+        # ModelError already carries a sanitized provider status/message. Keep database
+        # and other exception details private (URLs and SQL parameters may contain secrets).
+        detail = str(exc) if isinstance(exc, (EvaluationError, ModelError)) else type(exc).__name__
         print(f"Evaluation failed: {detail}", file=sys.stderr)
         return 2
     return 0
