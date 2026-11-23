@@ -1,4 +1,4 @@
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { daysSince, formatDate, formatPrice } from '../lib/format'
 import { Icon } from './Icon'
 
@@ -13,7 +13,7 @@ export interface PriceProps {
 }
 
 export function Price({ para, regularPara, unitPara, unit, size = 'md' }: PriceProps) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const discounted = regularPara != null && regularPara > para
   return (
     <span className="inline-flex flex-col">
@@ -47,7 +47,7 @@ export interface SourceDateProps {
 
 /** "Cenovnik od 19.11.2026." with a visible warning when the list is older than `staleAfterDays`. */
 export function SourceDate({ date, staleAfterDays = 3, today }: SourceDateProps) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const stale = daysSince(date, today) > staleAfterDays
   return (
     <span className="text-sm text-ink-muted">

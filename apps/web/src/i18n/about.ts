@@ -1,5 +1,6 @@
 /** Copy for the About page; only its chunk imports it. */
 export const aboutCopy = {
+  staticDescription: 'Saznajte kako Korpa koristi otvorene cenovnike, odakle dolaze podaci, koja je licenca i kako prijaviti problem.',
   aboutHeading: 'O projektu',
   aboutWhat: 'Korpa je nezavisan, nekomercijalan projekat. Cenovnike namirnica koje trgovci po zakonu objavljuju kao otvorene podatke pretvara u alat za poređenje cena.',
   aboutNotHeading: 'Šta Korpa nije',

@@ -90,7 +90,6 @@ def test_discount_rule_edges(
     [
         {"discounted": None},
         {"disc_from": None},
-        {"disc_to": None},
         {"disc_from": AS_OF + timedelta(days=1)},
         {"disc_to": AS_OF - timedelta(days=1)},
         {"list_date": AS_OF + timedelta(days=1)},
@@ -157,7 +156,7 @@ def test_discount_inclusive_dates_large_money_and_export(
     )
 
 
-def test_name_variants_exact_names_share_and_export(
+def test_name_variants_distinct_names_share_and_export(
     client: TestClient,
     engine: Engine,
     monkeypatch: pytest.MonkeyPatch,
@@ -167,8 +166,8 @@ def test_name_variants_exact_names_share_and_export(
         c.execute(
             db.product_names.insert(),
             [
-                {"barcode": B1, "retailer_id": 1, "raw_name": "MLEKO"},
-                {"barcode": B1, "retailer_id": 2, "raw_name": "Mleko"},
+                {"barcode": B1, "retailer_id": 1, "raw_name": "Mleko 1 l"},
+                {"barcode": B1, "retailer_id": 2, "raw_name": "Mleko 2 l"},
                 {"barcode": B2, "retailer_id": 1, "raw_name": "Čokolada"},
                 {"barcode": B2, "retailer_id": 2, "raw_name": "Čokolada"},
             ],
@@ -181,8 +180,8 @@ def test_name_variants_exact_names_share_and_export(
             {
                 "barcode": B1,
                 "names": [
-                    {"retailer": "Povoljan", "name": "MLEKO"},
-                    {"retailer": "Delimičan", "name": "Mleko"},
+                    {"retailer": "Povoljan", "name": "Mleko 1 l"},
+                    {"retailer": "Delimičan", "name": "Mleko 2 l"},
                 ],
             }
         ],
@@ -246,4 +245,34 @@ def test_name_variants_empty_and_capped_deterministically(
         "barcodes": 0,
         "share_of_products": 0,
         "examples": [],
+    }
+
+
+def test_open_ended_discount_uses_latest_qualifying_rise(
+    client: TestClient, engine: Engine,
+) -> None:
+    current(engine, [14400])
+    changes(engine, [(90, 10000), (10, 12000), (3, 14400)])
+    discount(engine, discounted=12000, disc_to=None)
+    items = client.get("/api/signals?type=discount_after_jump").json()["items"]
+    assert len(items) == 1
+    assert items[0]["old_regular_para"] == 12000
+    assert items[0]["rise_date"] == (AS_OF - timedelta(days=3)).isoformat()
+
+
+@pytest.mark.parametrize("names", [
+    ("MLEKO 1L", "Mleko 1l"),
+    ("  Mleko   1l  ", "Mleko 1l"),
+    ("Mleko, 1l!", "Mleko 1l"),
+])
+def test_name_variants_ignore_case_whitespace_and_punctuation(
+    client: TestClient, engine: Engine, names: tuple[str, str],
+) -> None:
+    with engine.begin() as c:
+        c.execute(db.product_names.insert(), [
+            {"barcode": B1, "retailer_id": i, "raw_name": name}
+            for i, name in enumerate(names, 1)
+        ])
+    assert client.get("/api/quality").json()["name_variants"] == {
+        "barcodes": 0, "share_of_products": 0, "examples": [],
     }

@@ -2,8 +2,8 @@
 import { readFileSync } from 'node:fs'
 import { gzipSync } from 'node:zlib'
 
-// React DOM (67.4 KB) + TanStack Router (27.0 KB) are a measured floor of 94.4 KB; the app shell gets the rest.
-const BUDGET = 105 * 1024
+// Count the shell and Home's static dependency graph, without double-counting shared files.
+const BUDGET = 100 * 1024
 const dist = new URL('../dist/', import.meta.url)
 const manifest = JSON.parse(readFileSync(new URL('.vite/manifest.json', dist), 'utf8'))
 const files = new Set()
@@ -14,7 +14,11 @@ const walk = (key) => {
   for (const child of chunk.imports ?? []) walk(child)
 }
 walk('index.html')
-walk('src/pages/Home.tsx')
+// Home can be eager in the entry, or a separate dynamic entry.
+const home = Object.keys(manifest).find((key) =>
+  key === 'src/pages/Home.tsx' || (manifest[key].name === 'Home' && manifest[key].isDynamicEntry),
+)
+if (home) walk(home)
 let total = 0
 for (const file of files) {
   const size = gzipSync(readFileSync(new URL(file, dist))).length

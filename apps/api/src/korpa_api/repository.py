@@ -346,12 +346,16 @@ async def quality(session: AsyncSession, as_of: date) -> QualityResponse:
 
 
 async def name_variants(session: AsyncSession) -> NameVariants:
-    """Exact publisher-name differences, informational only; denominator is all products."""
+    """Normalized name differences; retain publisher spelling in informational examples."""
     names, retailers = db.product_names, db.retailers
+    normalized = sa.func.trim(sa.func.regexp_replace(
+        sa.func.regexp_replace(sa.func.lower(names.c.raw_name), "[[:punct:]]", "", "g"),
+        "[[:space:]]+", " ", "g",
+    ))
     variants = (
         sa.select(names.c.barcode)
         .group_by(names.c.barcode)
-        .having(sa.func.count(sa.distinct(names.c.raw_name.collate("C"))) > 1)
+        .having(sa.func.count(sa.distinct(normalized.collate("C"))) > 1)
         .cte("name_variants")
     )
     count = int(await session.scalar(sa.select(sa.func.count()).select_from(variants)) or 0)

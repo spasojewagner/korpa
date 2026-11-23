@@ -1,8 +1,9 @@
+import { pageCopy } from '../i18n/pages'
 import { useQuery } from '@tanstack/react-query'
 import { createLazyRoute } from '@tanstack/react-router'
 import { StateView } from '../components'
-import { useI18n } from '../i18n/I18nProvider'
-import type { CopyKey } from '../i18n/sr-Latn'
+import { usePageI18n } from '../i18n/usePageI18n'
+import type { PageKey as CopyKey } from '../i18n/usePageI18n'
 import { codeLabels } from '../i18n/quality-labels'
 import { ApiError, fetchQuality, type Schemas } from '../lib/api'
 import { formatDate, formatNumber, formatPercent } from '../lib/format'
@@ -14,7 +15,7 @@ const statusKey: Record<Schemas['QualityItem']['status'], CopyKey> = {
 }
 
 function Counts({ label, counts }: { label: string; counts: Record<string, number> }) {
-  const { tr } = useI18n()
+  const { tr } = usePageI18n()
   const entries = Object.entries(counts).filter(([, n]) => n > 0).sort(([, a], [, b]) => b - a)
   if (entries.length === 0) return null
   return (
@@ -26,8 +27,8 @@ function Counts({ label, counts }: { label: string; counts: Record<string, numbe
 }
 
 function QualityPage() {
-  const { t, tp } = useI18n()
-  usePageMeta(t('qualityHeading'))
+  const { t, tp, tr } = usePageI18n()
+  usePageMeta(t('qualityHeading'), tr(pageCopy.qualityDescription))
   const query = useQuery({ queryKey: ['quality'], queryFn: fetchQuality })
   return (
     <>

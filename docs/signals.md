@@ -8,7 +8,8 @@ rules remain as specified in `tasks/M4b.md`.
 `discount_after_jump` checks a product within the same retail format:
 
 - The current list is dated on or before `as_of`, its discounted price is set, and
-  `disc_from <= as_of <= disc_to`. Missing dates do not establish an active discount.
+  `disc_from <= as_of`, and `disc_to` is either absent (open-ended) or at least `as_of`.
+  A missing start date does not establish an active discount.
 - A consecutive pair of `price_changes` observations has a positive old regular price
   and a new regular price at least 120% and at most 300% of that old price.
 - The rise date is in `[disc_from - 60 days, disc_from)`. The preceding observation may
@@ -16,9 +17,9 @@ rules remain as specified in `tasks/M4b.md`.
 - The active discounted price is at least 98% of the regular price before that rise.
   Thus a discount less than 2% below the old price can still produce a signal.
 
-Integer prices are compared by cross multiplication before ratio rounding. Each qualifying
-rise produces a signal, using the existing order: rise date descending, exact rise ratio
-descending, barcode, type, format id. Multiple qualifying rises remain separate observations.
+Integer prices are compared by cross multiplication before ratio rounding. Only the latest qualifying
+rise per product and format produces a signal, using the existing order: rise date descending,
+exact rise ratio descending, barcode, type, format id.
 Rises above 3× are excluded from this signal; existing suspected-error counts are unchanged.
 
 `GET /api/signals?type=discount_after_jump` filters the new type. Unfiltered results include
@@ -46,7 +47,8 @@ absence of a signal does not establish that a discount is meaningful.
 `GET /api/quality` and `quality.json` include `name_variants`:
 
 - `barcodes`: number of barcodes with more than one distinct `product_names.raw_name`
-  across retailers. Compare exact strings, without trimming or case normalization.
+  across retailers after lower-casing, removing punctuation, collapsing whitespace and
+  trimming leading/trailing whitespace. Published names remain unchanged in examples.
 - `share_of_products`: this count divided by all rows in `products`, a fraction from 0 to 1;
   zero when there are no products. Products without retailer names remain in the denominator.
 - `examples`: up to five barcodes in ascending order, each with up to three distinct names

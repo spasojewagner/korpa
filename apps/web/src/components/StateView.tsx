@@ -1,4 +1,4 @@
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 
 export interface StateViewProps {
   kind: 'loading' | 'empty' | 'error' | 'offline'
@@ -10,7 +10,7 @@ export interface StateViewProps {
 }
 
 export function StateView({ kind, title, message, onRetry, lines = 3 }: StateViewProps) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   if (kind === 'loading') {
     return (
       <div role="status" aria-busy="true" className="flex flex-col gap-3 rounded-lg bg-paper-raised p-5">
@@ -25,14 +25,14 @@ export function StateView({ kind, title, message, onRetry, lines = 3 }: StateVie
   const body = message ?? (kind === 'empty' ? undefined : t('errorMessage'))
   return (
     <div role={kind === 'empty' ? 'status' : 'alert'} className="rounded-lg bg-paper-raised p-6">
-      <p className="font-display text-2xl font-semibold">{heading}</p>
+      <h2 className="font-display text-2xl font-semibold">{heading}</h2>
       {body && <p className="mt-2 text-ink-soft">{body}</p>}
-      {onRetry && kind !== 'empty' && (
+      {onRetry ? (
         <button type="button" onClick={onRetry}
           className="btn btn-primary mt-4">
           {t('retry')}
         </button>
-      )}
+      ) : <a href="/" className="btn btn-primary mt-4">{t('goHome')}</a>}
     </div>
   )
 }

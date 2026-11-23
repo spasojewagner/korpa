@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
-import { useI18n } from '../i18n/I18nProvider'
-import type { CopyKey } from '../i18n/sr-Latn'
+import { usePageI18n } from '../i18n/usePageI18n'
+import type { PageKey as CopyKey } from '../i18n/usePageI18n'
 import { Icon, type IconName } from './Icon'
 
 export type BadgeVariant = 'cheapest' | 'discount' | 'partial' | 'increase' | 'decrease'
@@ -15,7 +15,7 @@ const variants: Record<BadgeVariant, { className: string; icon: IconName; label:
 
 /** Status label: icon + text, never color alone. */
 export function Badge({ variant, children }: { variant: BadgeVariant; children?: ReactNode }) {
-  const { t } = useI18n()
+  const { t } = usePageI18n()
   const { className, icon, label } = variants[variant]
   return (
     <span className={`inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-sm font-semibold ${className}`}>

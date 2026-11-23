@@ -2,7 +2,7 @@ import { Link, createLazyRoute } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { Icon, type IconName } from '../components'
 import { dataCopy } from '../i18n/data'
-import { useI18n } from '../i18n/I18nProvider'
+import { usePageI18n } from '../i18n/usePageI18n'
 import { fetchQuality } from '../lib/api'
 import { formatDate, formatNumber, formatPercent } from '../lib/format'
 import { usePageMeta } from '../lib/meta'
@@ -12,19 +12,18 @@ const API = 'https://korpa-api.onrender.com'
 const SITE = 'https://ai-korpa.vercel.app'
 
 function Stats() {
-  const { tr } = useI18n()
+  const { tr } = usePageI18n()
   const query = useQuery({ queryKey: ['quality'], queryFn: fetchQuality })
-  if (!query.data) return <div aria-hidden="true" className="h-40 animate-pulse rounded-lg bg-paper-raised" />
-  const retailers = query.data.retailers.filter((retailer) => (retailer.rows_valid ?? 0) > 0)
+  const retailers = query.data?.retailers.filter((retailer) => (retailer.rows_valid ?? 0) > 0) ?? []
   const valid = retailers.reduce((sum, retailer) => sum + (retailer.rows_valid ?? 0), 0)
-  const total = query.data.retailers.reduce((sum, retailer) => sum + (retailer.rows_total ?? 0), 0)
+  const total = query.data?.retailers.reduce((sum, retailer) => sum + (retailer.rows_total ?? 0), 0) ?? 0
   const stats = [
-    [formatNumber(retailers.length), dataCopy.statRetailers],
-    [formatNumber(valid), dataCopy.statRows],
+    [query.data ? formatNumber(retailers.length) : '–', dataCopy.statRetailers],
+    [query.data ? formatNumber(valid) : '–', dataCopy.statRows],
     [total ? formatPercent(valid / total) : '–', dataCopy.statShare],
   ]
   return (
-    <section aria-labelledby="stats" className="rounded-lg bg-paper-raised p-6 sm:p-8">
+    <section aria-labelledby="stats" aria-busy={query.isPending} className="rounded-lg bg-paper-raised p-6 sm:p-8">
       <h2 id="stats" className="text-sm font-semibold uppercase tracking-wide text-ink-muted">{tr(dataCopy.statsLabel)}</h2>
       <dl className="mt-4 grid gap-6 sm:grid-cols-3">
         {stats.map(([value, label]) => (
@@ -34,13 +33,13 @@ function Stats() {
           </div>
         ))}
       </dl>
-      <p className="mt-4 text-sm text-ink-muted">{tr(dataCopy.statsSource).replace('{date}', formatDate(query.data.as_of))}</p>
+      <p className="mt-4 min-h-[1.5em] text-sm text-ink-muted">{query.data ? tr(dataCopy.statsSource).replace('{date}', formatDate(query.data.as_of)) : '\u00a0'}</p>
     </section>
   )
 }
 
 function Card({ to, icon, title, text }: { to: '/podaci/indeks' | '/podaci/kvalitet' | '/podaci/api' | '/o-projektu'; icon: IconName; title: string; text: string }) {
-  const { tr } = useI18n()
+  const { tr } = usePageI18n()
   return (
     <li>
       <Link to={to} className="card-link flex h-full flex-col gap-3 rounded-lg border border-line bg-white p-6">
@@ -58,8 +57,8 @@ function Card({ to, icon, title, text }: { to: '/podaci/indeks' | '/podaci/kvali
 }
 
 function Overview() {
-  const { t, tr } = useI18n()
-  usePageMeta(t('navData'))
+  const { t, tr } = usePageI18n()
+  usePageMeta(t('navData'), tr(dataCopy.overviewDescription))
   return (
     <div className="flex flex-col gap-10">
       <div className="max-w-3xl">
@@ -99,8 +98,8 @@ function Code({ children }: { children: string }) {
 }
 
 function ApiPage() {
-  const { tr } = useI18n()
-  usePageMeta(tr(dataCopy.apiTitle))
+  const { tr } = usePageI18n()
+  usePageMeta(tr(dataCopy.apiTitle), tr(dataCopy.apiDescription))
   const link = 'font-semibold text-brand underline underline-offset-2'
   return (
     <article className="flex max-w-3xl flex-col gap-10">

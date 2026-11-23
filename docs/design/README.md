@@ -8,8 +8,8 @@ Not a government look: no coats of arms, flags, state colors or official-style s
 2. **Every number has a date.** "Cenovnik od 19.11.2026." next to (or directly under) every price or total.
 3. **Color is never the only signal.** "Najjeftinije", "Sniženo", "Poskupelo" are always icon + text.
 4. **Honest comparisons.** A partial basket is never ranked next to a complete one without saying so.
-5. **Light pages.** Home under 105 KB JS (gzip): React DOM + TanStack Router are a measured floor of 94.4 KB, so the
-   app shell keeps to ~10 KB. Every other page is its own chunk; no chart library; charts are small hand-written SVG.
+5. **Light pages.** Home and the shared shell stay under 100 KB JS (gzip), counting static imports once.
+   Every other page is its own chunk; no chart library; charts are small hand-written SVG.
 
 ## Color (tokens in `apps/web/src/styles/theme.css`)
 | Token | Hex | Use | Contrast on `paper` |
@@ -37,7 +37,8 @@ Not a government look: no coats of arms, flags, state colors or official-style s
   `Intl.NumberFormat('sr-Latn-RS', { style: 'currency', currency: 'RSD' })` → "129,99 RSD". Never format in components.
 - Dates: `DD.MM.YYYY.` ("19.11.2026."), Europe/Belgrade.
 - Unit price: "259,98 RSD/kg" next to the price on product and comparison views.
-- All UI copy lives in `src/i18n/sr-Latn.ts` (keys, no copy inside components). Cyrillic is produced by
+- Shared UI copy lives in `src/i18n/sr-Latn.ts`; page-only copy lives in lazy modules
+  such as `home.ts`, `data.ts` and `pages.ts` (no copy inside components). Cyrillic is produced by
   transliteration at runtime. UI copy and category names are transliterated; **product names and brands are shown
   exactly as the retailer published them** (they are data, e.g. "Coca-Cola" must stay as is).
 

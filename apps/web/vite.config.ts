@@ -7,7 +7,7 @@ const headers = Object.fromEntries(vercel.headers.find((rule) => rule.source ===
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  build: { manifest: true },
+  build: { manifest: true, minify: 'terser', terserOptions: { compress: { passes: 2 } } },
   preview: { headers, strictPort: true },
   test: { environment: 'jsdom', include: ['src/**/*.test.{ts,tsx}'] },
 })
