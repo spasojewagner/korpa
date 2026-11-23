@@ -308,8 +308,9 @@ def main(argv: list[str] | None = None) -> int:
     try:
         asyncio.run(run(args))
     except (OSError, ValueError, ModelError, sa.exc.SQLAlchemyError) as exc:
-        # Never print model responses, credentials, database URLs or SQL parameters.
-        detail = str(exc) if isinstance(exc, EvaluationError) else type(exc).__name__
+        # ModelError already carries a sanitized provider status/message. Keep database
+        # and other exception details private (URLs and SQL parameters may contain secrets).
+        detail = str(exc) if isinstance(exc, (EvaluationError, ModelError)) else type(exc).__name__
         print(f"Evaluation failed: {detail}", file=sys.stderr)
         return 2
     return 0

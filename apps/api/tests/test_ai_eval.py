@@ -139,6 +139,48 @@ def test_live_requires_config_and_record_requires_live(tmp_path, monkeypatch, ca
     assert error.value.code == 2
 
 
+@pytest.mark.parametrize("status", [400, 429, 503])
+def test_live_failure_logs_provider_status_and_message(tmp_path, monkeypatch, capsys, status):
+    import httpx
+    from korpa_api.ai.llm import GeminiExtractor
+
+    labels, _ = write_inputs(tmp_path)
+    key = "AIzaSyA0123456789abcdefghijklmnop"
+
+    def handler(request):
+        return httpx.Response(
+            status,
+            json={
+                "error": {"status": "PROVIDER_ERROR", "message": f"Provider explanation; key {key}"}
+            },
+        )
+
+    async def configured_failure(args):
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            monkeypatch.setattr(
+                evaluate, "configured_extractor", lambda: GeminiExtractor(key, "test-model", client)
+            )
+            await original_run(args)
+
+    original_run = evaluate.run
+    monkeypatch.setattr(evaluate, "run", configured_failure)
+    assert (
+        evaluate.main(["--live", "--phrases", str(labels), "--out", str(tmp_path / "out.md")]) == 2
+    )
+    error = capsys.readouterr().err
+    assert f"HTTP {status} PROVIDER_ERROR: Provider explanation; key [key]" in error
+    assert key not in error
+
+
+def test_unrelated_failures_keep_private_details_hidden(monkeypatch, capsys):
+    async def fail(args):
+        raise ValueError("postgresql://user:password@private-host/database")
+
+    monkeypatch.setattr(evaluate, "run", fail)
+    assert evaluate.main([]) == 2
+    assert capsys.readouterr().err == "Evaluation failed: ValueError\n"
+
+
 def test_live_records_raw_response_and_waits(tmp_path, monkeypatch):
     labels, _ = write_inputs(tmp_path)
     raw = ' {"items": [{"phrase": "bad", "query": "x", "qty": 0}]} '
