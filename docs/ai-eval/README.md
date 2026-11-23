@@ -33,8 +33,12 @@ Invalid model output is scored as an empty extraction and counted in the report.
 
 An explicitly requested live evaluation uses `--live` and requires `LLM_PROVIDER=gemini`,
 `LLM_API_KEY`, and `LLM_MODEL`. Add `--record PATH` to save the actual raw responses, with the model
-name, for later replay. Calls are sequential with at least six seconds between them. A transport
-failure stops the command; recordings already written are retained. Never commit a key.
+name, for later replay. Calls are sequential with at least six seconds between them. Temporary
+HTTP 429/500/502/503/504, network and timeout failures retry the same sentence up to three
+times, after 6, 12 and 24 seconds. Each retry logs the sanitized provider status/message.
+Permanent errors and exhausted retries stop the command with the error detail; recordings
+already written are retained. Only successful responses are recorded, once per sentence.
+Never commit a key.
 
 `--database` additionally requires `DATABASE_URL` and runs the normal repository search for every
 extracted query in a read-only transaction. Top-1 and top-5 use all expected items as the denominator;
