@@ -77,9 +77,12 @@ forwarded headers; the hosting proxy must supply the correct client address to A
 
 ## Manual live evaluation
 
-The **AI evaluation** workflow accepts only a manual dispatch. It uses the existing
-`LLM_API_KEY`, `LLM_MODEL` and `DATABASE_URL` secrets, sets `LLM_PROVIDER=gemini`, and
-runs extraction plus read-only database retrieval. `live.jsonl` and `results-live.md`
+The **AI evaluation** workflow accepts only a manual dispatch and offers `groq` (default)
+or `gemini`. Groq requires its own `GROQ_API_KEY` repository secret and defaults to
+`openai/gpt-oss-20b`; Gemini uses the existing `LLM_API_KEY` and `LLM_MODEL` secrets.
+An optional model input overrides the selected provider's model. Both use `DATABASE_URL`
+for read-only database retrieval. Missing Groq credentials never fall back to the Gemini key.
+See [evaluation setup and pacing](ai-eval/README.md). `live.jsonl` and `results-live.md`
 are uploaded as `live-evaluation`; partial recordings are retained on failure. It does
 not commit results. Only the maintainer should dispatch this workflow after reviewing
 model quota and database access. Adding any new secret or paid service needs approval.

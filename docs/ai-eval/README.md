@@ -31,14 +31,45 @@ Each JSONL row contains `id` and raw model `text`; optional `model` metadata ide
 Recorded mode needs neither network nor keys. Missing, duplicate or unexpected ids fail the command.
 Invalid model output is scored as an empty extraction and counted in the report.
 
-An explicitly requested live evaluation uses `--live` and requires `LLM_PROVIDER=gemini`,
+An explicitly requested live evaluation uses `--live` and requires `LLM_PROVIDER=gemini` or `groq`,
 `LLM_API_KEY`, and `LLM_MODEL`. Add `--record PATH` to save the actual raw responses, with the model
-name, for later replay. Calls are sequential with at least six seconds between them. Temporary
+name, for later replay. Calls are sequential: Gemini pauses six seconds, Groq thirty seconds
+between sentences by default. `--interval-seconds 6..60` overrides that interval. Temporary
 HTTP 429/500/502/503/504, network and timeout failures retry the same sentence up to three
-times, after 6, 12 and 24 seconds. Each retry logs the sanitized provider status/message.
+times, after 6, 12 and 24 seconds. A numeric `Retry-After` can extend a wait up to 300 seconds;
+a longer quota-reset wait stops with a clear message instead of calling too early.
+Each retry logs the sanitized provider status/message.
 Permanent errors and exhausted retries stop the command with the error detail; recordings
 already written are retained. Only successful responses are recorded, once per sentence.
 Never commit a key.
+
+## Groq on the free plan
+
+Use `openai/gpt-oss-20b` with `LLM_PROVIDER=groq`, your Groq key in `LLM_API_KEY`, and
+that model ID in `LLM_MODEL`. The existing async HTTP client is used without a new dependency.
+Basket extraction and checked index notes use the same configured provider. There is no
+automatic provider fallback, so a report never silently combines models.
+
+The request uses strict JSON Schema. Optional fields become nullable and objects are closed
+on a copy of the schema; the application's validation and output contracts remain unchanged.
+Truncated/refused responses fail explicitly. References:
+[structured output](https://console.groq.com/docs/structured-outputs) and
+[rate limits](https://console.groq.com/docs/rate-limits).
+
+The documented free-plan limits for this model on 2026-11-24 are 30 requests/minute,
+1,000/day, 8,000 tokens/minute and 200,000/day; the account's actual limits take precedence.
+The conservative default spacing reduces request/token bursts. Other account traffic and
+daily quotas can still prevent completion; no code can guarantee free-tier capacity.
+Completed recordings survive failure. Recorded replay never calls a provider.
+
+In GitHub Actions choose **AI evaluation → Run workflow → provider: groq**. Add the
+repository secret `GROQ_API_KEY` from your free Groq account first; never paste it into a
+report, commit or chat. Leave the model input blank to use `openai/gpt-oss-20b`, or supply
+another Groq model supporting strict structured output. Missing `GROQ_API_KEY` fails before
+any API request; it never sends the Gemini key to Groq. The Gemini choice continues to use
+the existing `LLM_API_KEY` and `LLM_MODEL` secrets. `DATABASE_URL` is shared for read-only retrieval.
+The workflow remains manual and has a sixty-minute timeout for throttled runs. It does not
+enable billing or change production's provider configuration.
 
 `--database` additionally requires `DATABASE_URL` and runs the normal repository search for every
 extracted query in a read-only transaction. Top-1 and top-5 use all expected items as the denominator;

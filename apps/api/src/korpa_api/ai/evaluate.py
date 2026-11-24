@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+import math
 import os
 import re
 import sys
@@ -19,6 +20,7 @@ from korpa_api import repository
 from korpa_api.ai.llm import (
     ExtractedItem,
     Extractor,
+    GroqExtractor,
     ModelError,
     configured_extractor,
     parse_extraction,
@@ -29,6 +31,7 @@ from korpa_api.translit import normalize_query
 
 DATA = Path("docs/ai-eval")
 RETRY_DELAYS = (6, 12, 24)
+MAX_RETRY_WAIT = 300
 
 
 class EvaluationError(ValueError):
@@ -263,6 +266,19 @@ async def extract_with_retry(extractor: Extractor, phrase: Phrase) -> str:
             if not transient or attempt == len(RETRY_DELAYS):
                 raise
             delay = RETRY_DELAYS[attempt]
+            if isinstance(cause, httpx.HTTPStatusError):
+                value = cause.response.headers.get("retry-after", "")
+                try:
+                    requested = float(value)
+                except ValueError:
+                    requested = 0
+                if math.isfinite(requested) and requested > MAX_RETRY_WAIT:
+                    raise EvaluationError(
+                        f"{exc}; Retry-After exceeds {MAX_RETRY_WAIT} seconds. "
+                        "Retry after the provider quota resets; completed recordings are retained."
+                    ) from exc
+                if math.isfinite(requested) and requested > 0:
+                    delay = max(delay, math.ceil(requested))
             print(
                 f"Phrase {phrase.id}: {exc}; retry {attempt + 1}/{len(RETRY_DELAYS)} "
                 f"in {delay} seconds",
@@ -275,12 +291,13 @@ async def extract_with_retry(extractor: Extractor, phrase: Phrase) -> str:
 async def run(args: argparse.Namespace) -> None:
     extractor = configured_extractor() if args.live else None
     if args.live and extractor is None:
-        raise EvaluationError("--live requires LLM_PROVIDER=gemini, LLM_API_KEY and LLM_MODEL")
+        raise EvaluationError("--live requires LLM_PROVIDER=gemini|groq, LLM_API_KEY and LLM_MODEL")
     if args.database and not os.environ.get("DATABASE_URL", "").strip():
         raise EvaluationError("--database requires DATABASE_URL")
     phrases = read_phrases(args.phrases)
     recordings = {} if args.live else read_recordings(args.recorded, phrases)
     results: list[Result] = []
+    interval = args.interval_seconds or (30 if isinstance(extractor, GroqExtractor) else 6)
     as_of = datetime.now(ZoneInfo("Europe/Belgrade")).date()
     model = (
         extractor.model if extractor else ", ".join(sorted({r.model for r in recordings.values()}))
@@ -291,7 +308,7 @@ async def run(args: argparse.Namespace) -> None:
         for index, phrase in enumerate(phrases):
             if extractor:
                 if index:
-                    await asyncio.sleep(6)
+                    await asyncio.sleep(interval)
                 text = await extract_with_retry(extractor, phrase)
                 if record_file:
                     record_file.write(
@@ -328,6 +345,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--database", action="store_true", help="also evaluate catalog retrieval")
     parser.add_argument("--out", type=Path, default=DATA / "results.md")
     parser.add_argument("--phrases", type=Path, default=DATA / "phrases.jsonl")
+    parser.add_argument(
+        "--interval-seconds",
+        type=int,
+        choices=range(6, 61),
+        metavar="6..60",
+        help="pause between live sentences (default: groq 30, gemini 6)",
+    )
     args = parser.parse_args(argv)
     if args.record and not args.live:
         parser.error("--record requires --live")

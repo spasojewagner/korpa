@@ -2,6 +2,17 @@ name: AI evaluation
 
 on:
   workflow_dispatch:
+    inputs:
+      provider:
+        description: Model provider
+        type: choice
+        options: [groq, gemini]
+        default: groq
+        required: true
+      model:
+        description: Model ID (blank uses the selected provider default)
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -9,7 +20,7 @@ permissions:
 jobs:
   evaluate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
@@ -18,11 +29,20 @@ jobs:
       - run: uv sync --frozen
       - name: Evaluate live extraction and database retrieval
         env:
-          LLM_PROVIDER: gemini
+          LLM_PROVIDER: ${{ inputs.provider }}
           LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
-          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LLM_MODEL: ${{ inputs.model || (inputs.provider == 'groq' && 'openai/gpt-oss-20b' || secrets.LLM_MODEL) }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-        run: uv run python -m korpa_api.ai.evaluate --live --database --record live.jsonl --out results-live.md
+        run: |
+          if [ "$LLM_PROVIDER" = groq ]; then
+            if [ -z "$GROQ_API_KEY" ]; then
+              echo '::error::Set the GROQ_API_KEY repository secret before using groq.'
+              exit 2
+            fi
+            export LLM_API_KEY="$GROQ_API_KEY"
+          fi
+          uv run python -m korpa_api.ai.evaluate --live --database --record live.jsonl --out results-live.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
