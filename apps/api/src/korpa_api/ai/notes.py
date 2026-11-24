@@ -62,7 +62,8 @@ BANNED_WORDS = ("zbog", "usled", "jer ", "oÄekuj", "verovatno", "prognoz", "biÄ
 
 
 class JsonModel(Protocol):
-    model: str
+    @property
+    def model(self) -> str: ...
 
     async def generate_json(
         self, system: str, user: str, schema: dict[str, object], timeout: float = 10

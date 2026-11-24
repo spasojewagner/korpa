@@ -2,6 +2,7 @@
 
 import argparse
 import asyncio
+import math
 import os
 import re
 import sys
@@ -19,6 +20,7 @@ from korpa_api import repository
 from korpa_api.ai.llm import (
     ExtractedItem,
     Extractor,
+    GroqExtractor,
     ModelError,
     configured_extractor,
     parse_extraction,
@@ -29,6 +31,7 @@ from korpa_api.translit import normalize_query
 
 DATA = Path("docs/ai-eval")
 RETRY_DELAYS = (6, 12, 24)
+MAX_RETRY_WAIT = 300
 
 
 class EvaluationError(ValueError):
@@ -52,6 +55,7 @@ class Recording(BaseModel):
     id: int
     text: str
     model: str = "unknown (recording has no model metadata)"
+    provider: str | None = None
 
 
 def contains_terms(terms: list[str], target: str) -> bool:
@@ -186,7 +190,14 @@ def cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ").replace("\r", " ")
 
 
-def render_report(results: list[Result], model: str, mode: str, as_of: date, database: bool) -> str:
+def render_report(
+    results: list[Result],
+    model: str,
+    mode: str,
+    as_of: date,
+    database: bool,
+    providers: set[str] | None = None,
+) -> str:
     lines = ["# Basket extraction evaluation", ""]
     if mode == "recorded":
         lines += [
@@ -206,6 +217,12 @@ def render_report(results: list[Result], model: str, mode: str, as_of: date, dat
         "| Metric | Overall | No items expected |",
         "|---|---:|---:|",
     ]
+    if providers:
+        lines.insert(2, "- Providers: " + ", ".join(sorted(providers)))
+    if providers and len(providers) > 1:
+        lines.insert(
+            3, "- Mixed-provider failover run; these are not single-model benchmark scores."
+        )
     overall = metrics(results, database)
     empty = metrics([r for r in results if not r.phrase.expected], database)
 
@@ -263,6 +280,19 @@ async def extract_with_retry(extractor: Extractor, phrase: Phrase) -> str:
             if not transient or attempt == len(RETRY_DELAYS):
                 raise
             delay = RETRY_DELAYS[attempt]
+            if isinstance(cause, httpx.HTTPStatusError):
+                value = cause.response.headers.get("retry-after", "")
+                try:
+                    requested = float(value)
+                except ValueError:
+                    requested = 0
+                if math.isfinite(requested) and requested > MAX_RETRY_WAIT:
+                    raise EvaluationError(
+                        f"{exc}; Retry-After exceeds {MAX_RETRY_WAIT} seconds. "
+                        "Retry after the provider quota resets; completed recordings are retained."
+                    ) from exc
+                if math.isfinite(requested) and requested > 0:
+                    delay = max(delay, math.ceil(requested))
             print(
                 f"Phrase {phrase.id}: {exc}; retry {attempt + 1}/{len(RETRY_DELAYS)} "
                 f"in {delay} seconds",
@@ -275,27 +305,38 @@ async def extract_with_retry(extractor: Extractor, phrase: Phrase) -> str:
 async def run(args: argparse.Namespace) -> None:
     extractor = configured_extractor() if args.live else None
     if args.live and extractor is None:
-        raise EvaluationError("--live requires LLM_PROVIDER=gemini, LLM_API_KEY and LLM_MODEL")
+        raise EvaluationError(
+            "--live requires LLM_PROVIDER=gemini|groq|auto, LLM_API_KEY and "
+            "LLM_MODEL; auto also requires GROQ_API_KEY"
+        )
     if args.database and not os.environ.get("DATABASE_URL", "").strip():
         raise EvaluationError("--database requires DATABASE_URL")
     phrases = read_phrases(args.phrases)
     recordings = {} if args.live else read_recordings(args.recorded, phrases)
     results: list[Result] = []
+    interval = args.interval_seconds or (30 if isinstance(extractor, GroqExtractor) else 6)
     as_of = datetime.now(ZoneInfo("Europe/Belgrade")).date()
-    model = (
-        extractor.model if extractor else ", ".join(sorted({r.model for r in recordings.values()}))
-    )
+    used_models = set() if extractor else {r.model for r in recordings.values()}
+    providers = set() if extractor else {r.provider for r in recordings.values() if r.provider}
     # Flush each raw response so interrupted live runs retain completed calls.
     record_file = args.record.open("w", encoding="utf-8") if args.record else None
     try:
         for index, phrase in enumerate(phrases):
             if extractor:
                 if index:
-                    await asyncio.sleep(6)
+                    await asyncio.sleep(interval)
                 text = await extract_with_retry(extractor, phrase)
+                model = extractor.model
+                provider = getattr(extractor, "provider", None)
+                used_models.add(model)
+                if provider:
+                    providers.add(provider)
                 if record_file:
                     record_file.write(
-                        Recording(id=phrase.id, text=text, model=model).model_dump_json() + "\n"
+                        Recording(
+                            id=phrase.id, text=text, model=model, provider=provider
+                        ).model_dump_json(exclude_none=True)
+                        + "\n"
                     )
                     record_file.flush()
             else:
@@ -314,7 +355,14 @@ async def run(args: argparse.Namespace) -> None:
         await retrieve(results, as_of)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
-        render_report(results, model, "live" if args.live else "recorded", as_of, args.database),
+        render_report(
+            results,
+            ", ".join(sorted(used_models)),
+            "live" if args.live else "recorded",
+            as_of,
+            args.database,
+            providers,
+        ),
         encoding="utf-8",
     )
 
@@ -328,6 +376,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--database", action="store_true", help="also evaluate catalog retrieval")
     parser.add_argument("--out", type=Path, default=DATA / "results.md")
     parser.add_argument("--phrases", type=Path, default=DATA / "phrases.jsonl")
+    parser.add_argument(
+        "--interval-seconds",
+        type=int,
+        choices=range(6, 61),
+        metavar="6..60",
+        help="pause between live sentences (default: groq 30, gemini 6)",
+    )
     args = parser.parse_args(argv)
     if args.record and not args.live:
         parser.error("--record requires --live")

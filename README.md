@@ -161,6 +161,14 @@ In PowerShell replace `export ...` with
 only once. Tests apply migrations and clear their own tables between cases; never point the
 test URL at a shared database.
 
+## AI configuration
+
+AI basket extraction and checked index notes support `LLM_PROVIDER=gemini`, `groq`, or
+`auto`. Automatic mode uses separate Gemini and Groq keys and switches on rate/quota or
+temporary provider failures, with independent cooldowns. The manual evaluation workflow
+defaults to automatic mode and records the provider/model for each response.
+See [evaluation configuration](docs/ai-eval/README.md).
+
 ## MCP
 
 The read-only Streamable HTTP endpoint is `https://korpa-api.onrender.com/mcp/`

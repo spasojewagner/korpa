@@ -77,9 +77,19 @@ forwarded headers; the hosting proxy must supply the correct client address to A
 
 ## Manual live evaluation
 
-The **AI evaluation** workflow accepts only a manual dispatch. It uses the existing
-`LLM_API_KEY`, `LLM_MODEL` and `DATABASE_URL` secrets, sets `LLM_PROVIDER=gemini`, and
-runs extraction plus read-only database retrieval. `live.jsonl` and `results-live.md`
+The **AI evaluation** workflow accepts only a manual dispatch and defaults to `auto`:
+Gemini and Groq are both configured and requests switch providers on quota/temporary failures.
+Explicit single-provider `groq` and `gemini` modes remain available. Groq requires its
+own `GROQ_API_KEY` repository secret and defaults to
+`openai/gpt-oss-20b`; Gemini uses the existing `LLM_API_KEY` and `LLM_MODEL` secrets.
+The model input overrides Gemini in auto mode, or the selected single provider;
+`groq_model` selects the backup model in auto mode. Both use `DATABASE_URL`
+for read-only database retrieval. Missing Groq credentials never fall back to the Gemini key.
+See [evaluation setup and pacing](ai-eval/README.md). `live.jsonl` and `results-live.md`
 are uploaded as `live-evaluation`; partial recordings are retained on failure. It does
 not commit results. Only the maintainer should dispatch this workflow after reviewing
 model quota and database access. Adding any new secret or paid service needs approval.
+
+For the deployed API to use both services, configure Render with `LLM_PROVIDER=auto`,
+the Gemini key/model in `LLM_API_KEY`/`LLM_MODEL`, and a separate `GROQ_API_KEY`.
+`GROQ_MODEL` is optional. GitHub secrets do not configure Render automatically.

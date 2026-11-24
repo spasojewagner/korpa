@@ -5,7 +5,7 @@ import os
 import re
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError
@@ -80,11 +80,16 @@ class ModelError(RuntimeError):
 
 
 class Extractor(Protocol):
-    model: str
+    @property
+    def model(self) -> str: ...
 
     async def extract(self, sentence: str) -> Extraction: ...
 
     async def extract_raw(self, sentence: str) -> str: ...
+
+    async def generate_json(
+        self, system: str, user: str, schema: dict[str, object], timeout: float = 10
+    ) -> str: ...
 
 
 @dataclass
@@ -95,6 +100,7 @@ class GeminiExtractor:
     model: str
     client: httpx.AsyncClient
     base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    provider: ClassVar[str] = "gemini"
 
     async def extract(self, sentence: str) -> Extraction:
         return parse_extraction(await self.extract_raw(sentence))
@@ -126,7 +132,7 @@ class GeminiExtractor:
             response.raise_for_status()
             payload = response.json()
         except httpx.HTTPStatusError as exc:
-            raise ModelError(describe_http_error(exc.response)) from exc
+            raise ModelError(describe_http_error(exc.response, self.api_key)) from exc
         except (httpx.HTTPError, ValueError) as exc:
             raise ModelError(type(exc).__name__) from exc
         try:
@@ -145,10 +151,91 @@ class GeminiExtractor:
         return text
 
 
-API_KEY = re.compile(r"AIza[0-9A-Za-z_\-]{20,}")
+def strict_json_schema(node: object) -> object:
+    """Close objects and represent optional properties with null, without mutating input."""
+    if isinstance(node, list):
+        return [strict_json_schema(value) for value in node]
+    if not isinstance(node, dict):
+        return node
+    result = {key: strict_json_schema(value) for key, value in node.items()}
+    properties = result.get("properties")
+    if isinstance(properties, dict):
+        required = result.get("required", [])
+        for name, value in properties.items():
+            if isinstance(required, list) and name not in required:
+                properties[name] = {"anyOf": [value, {"type": "null"}]}
+        result["required"] = list(properties)
+        result["additionalProperties"] = False
+    return result
 
 
-def describe_http_error(response: httpx.Response) -> str:
+@dataclass
+class GroqExtractor:
+    """Structured chat completions; the same extraction parser and checked notes apply."""
+
+    api_key: str
+    model: str
+    client: httpx.AsyncClient
+    base_url: str = "https://api.groq.com/openai/v1"
+    provider: ClassVar[str] = "groq"
+
+    async def extract(self, sentence: str) -> Extraction:
+        return parse_extraction(await self.extract_raw(sentence))
+
+    async def extract_raw(self, sentence: str) -> str:
+        return await self.generate_json(PROMPT, sentence, SCHEMA)
+
+    async def generate_json(
+        self, system: str, user: str, schema: dict[str, object], timeout: float = 10
+    ) -> str:
+        body = {
+            "model": self.model,
+            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
+            "temperature": 0,
+            "max_completion_tokens": 2048,
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "korpa_response",
+                    "strict": True,
+                    "schema": strict_json_schema(schema),
+                },
+            },
+        }
+        try:
+            response = await self.client.post(
+                f"{self.base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json=body,
+                timeout=timeout,
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except httpx.HTTPStatusError as exc:
+            raise ModelError(describe_http_error(exc.response, self.api_key)) from exc
+        except (httpx.HTTPError, ValueError) as exc:
+            raise ModelError(type(exc).__name__) from exc
+        try:
+            choice = payload["choices"][0]
+            message = choice["message"]
+            text = message["content"]
+            finish = choice.get("finish_reason")
+            refusal = message.get("refusal")
+        except (KeyError, IndexError, TypeError, AttributeError) as exc:
+            raise ModelError("no text in the answer") from exc
+        if refusal:
+            raise ModelError("model refused the request")
+        if finish != "stop":
+            raise ModelError(f"incomplete answer (finishReason={finish})")
+        if not isinstance(text, str) or not text.strip():
+            raise ModelError("empty answer")
+        return text
+
+
+API_KEY = re.compile(r"AIza[0-9A-Za-z_\-]{20,}|gsk_[0-9A-Za-z_\-]{8,}")
+
+
+def describe_http_error(response: httpx.Response, api_key: str = "") -> str:
     """Status code plus the provider's short error status and message, safe to log.
 
     The key travels in a header and is never in the message; any key-shaped text is masked anyway.
@@ -156,10 +243,14 @@ def describe_http_error(response: httpx.Response) -> str:
     detail = ""
     try:
         error = response.json().get("error", {})
-        detail = f" {error.get('status', '')}: {str(error.get('message', ''))[:200]}"
+        status = error.get("status") or error.get("code") or error.get("type") or ""
+        detail = f" {status}: {error.get('message', '')}"
     except (ValueError, AttributeError):
         pass
-    return API_KEY.sub("[key]", f"HTTP {response.status_code}{detail}".strip())
+    detail = f"HTTP {response.status_code}{detail}".strip()
+    if api_key:
+        detail = detail.replace(api_key, "[key]")
+    return API_KEY.sub("[key]", detail).replace("\r", " ").replace("\n", " ")[:400]
 
 
 def parse_extraction(text: str) -> Extraction:
@@ -199,11 +290,34 @@ def configured_extractor() -> Extractor | None:
     return configured_model()
 
 
-def configured_model() -> GeminiExtractor | None:
-    """The Gemini client from LLM_PROVIDER, LLM_API_KEY and LLM_MODEL, or None if one is unset."""
+def configured_model() -> Extractor | None:
+    """Select a single provider or explicitly enabled automatic failover."""
     provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
     key = os.environ.get("LLM_API_KEY", "").strip()
     model = os.environ.get("LLM_MODEL", "").strip()
-    if provider != "gemini" or not key or not model:
+    if not key or not model:
         return None
-    return GeminiExtractor(api_key=key, model=model, client=_client())
+    if provider == "gemini":
+        return GeminiExtractor(api_key=key, model=model, client=_client())
+    if provider == "groq":
+        return GroqExtractor(api_key=key, model=model, client=_client())
+    if provider == "auto":
+        groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+        groq_model = os.environ.get("GROQ_MODEL", "").strip() or "openai/gpt-oss-20b"
+        if groq_key and groq_model:
+            return _configured_failover(key, model, groq_key, groq_model)
+    return None
+
+
+@lru_cache(maxsize=1)
+def _configured_failover(
+    gemini_key: str, gemini_model: str, groq_key: str, groq_model: str
+) -> Extractor:
+    from korpa_api.ai.failover import FailoverExtractor, Provider
+
+    return FailoverExtractor(
+        [
+            Provider("gemini", GeminiExtractor(gemini_key, gemini_model, _client()), 6),
+            Provider("groq", GroqExtractor(groq_key, groq_model, _client()), 30),
+        ]
+    )
