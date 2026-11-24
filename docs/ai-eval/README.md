@@ -106,3 +106,14 @@ when enabled, followed by id order. CI checks successful execution, with no mini
 
 Goal sentences (a meal or an occasion instead of products) may return items with `proposed: true`.
 They are suggestions the shopper confirms, so the evaluation drops them and scores only named products.
+
+## Published live evidence
+
+The [original live report](results-live.md), dated 2026-11-24, comes from successful
+[run 45417014920](https://github.com/spasojewagner/korpa/actions/runs/45417014920),
+[artifact 14933583105](https://github.com/spasojewagner/korpa/actions/runs/45417014920/artifacts/14933583105),
+commit `8863481928925b9959f9ae5a3ad85da52590ed44` (merged in PR #40).
+It is a mixed-provider run with database retrieval enabled, not a single-model benchmark.
+[Raw responses](live.jsonl), [verification](verification.json), [failover log](failover-log.txt) and
+[source/hash register](../launch/evidence/README.md#evaluation-check) preserve its provenance.
+The report is copied unchanged; recorded replay alone cannot reproduce its database retrieval scores.

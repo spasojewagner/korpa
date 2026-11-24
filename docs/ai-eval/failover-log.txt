@@ -1,0 +1,23 @@
+2026-11-24T14:42:24.3800666Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:43:18.4862212Z gemini unavailable: ReadTimeout; trying alternate provider
+2026-11-24T14:44:04.5560954Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:44:38.2403034Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:45:32.5456298Z gemini unavailable: ReadTimeout; trying alternate provider
+2026-11-24T14:46:04.3288410Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:46:50.4590551Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:47:21.5031914Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:48:16.8371293Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:49:15.2654200Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:50:33.1082660Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:51:04.0358825Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:51:11.5871235Z groq unavailable: HTTP 400 json_validate_failed: Failed to validate JSON. Please adjust your prompt. See 'failed_generation' for more details.; trying alternate provider
+2026-11-24T14:51:58.0606140Z gemini unavailable: ReadTimeout; trying alternate provider
+2026-11-24T14:52:38.0965490Z gemini unavailable: ReadTimeout; trying alternate provider
+2026-11-24T14:53:17.9439788Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:53:57.9798941Z gemini unavailable: ReadTimeout; trying alternate provider
+2026-11-24T14:54:36.9321812Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:55:22.1601422Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:56:01.3164079Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider
+2026-11-24T14:56:41.3622511Z gemini unavailable: ReadTimeout; trying alternate provider
+2026-11-24T14:57:21.4086360Z gemini unavailable: ReadTimeout; trying alternate provider
+2026-11-24T14:57:52.1902852Z gemini unavailable: HTTP 503 UNAVAILABLE: This model is currently experiencing high demand. Spikes in demand are usually temporary. Please try again later.; trying alternate provider

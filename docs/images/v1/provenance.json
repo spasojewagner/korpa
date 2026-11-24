@@ -1,0 +1,72 @@
+[
+  {
+    "file": "home.png",
+    "url": "https://ai-korpa.vercel.app/",
+    "captured_at": "2026-11-24T15:39:19.829Z",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "data": "Production responses, no interception, no model requests"
+  },
+  {
+    "file": "search.png",
+    "url": "https://ai-korpa.vercel.app/pretraga?q=mleko",
+    "captured_at": "2026-11-24T15:39:21.080Z",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "data": "Production responses, no interception, no model requests"
+  },
+  {
+    "file": "basket.png",
+    "url": "https://ai-korpa.vercel.app/korpa",
+    "captured_at": "2026-11-24T15:39:22.170Z",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "data": "Two products added with production search buttons; no model request"
+  },
+  {
+    "file": "basket-split.png",
+    "url": "https://ai-korpa.vercel.app/korpa",
+    "captured_at": "2026-11-24T15:39:22.367Z",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "data": "Element screenshot of expanded cheapest-per-item section, same basket and actual production response; no model request"
+  },
+  {
+    "file": "index.png",
+    "url": "https://ai-korpa.vercel.app/podaci/indeks",
+    "captured_at": "2026-11-24T15:39:23.258Z",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "data": "Production responses, no interception, no model requests"
+  },
+  {
+    "file": "quality.png",
+    "url": "https://ai-korpa.vercel.app/podaci/kvalitet",
+    "captured_at": "2026-11-24T15:39:24.083Z",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "data": "Production responses, no interception, no model requests"
+  },
+  {
+    "file": "api.png",
+    "url": "https://ai-korpa.vercel.app/podaci/api",
+    "captured_at": "2026-11-24T15:39:24.878Z",
+    "viewport": {
+      "width": 1440,
+      "height": 1050
+    },
+    "data": "Production responses, no interception, no model requests"
+  }
+]

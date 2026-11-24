@@ -1,0 +1,18 @@
+{
+  "run_url": "https://github.com/spasojewagner/korpa/actions/runs/45417014920",
+  "branch": "feat/groq-evaluation",
+  "commit": "8863481928925b9959f9ae5a3ad85da52590ed44",
+  "mode": "auto",
+  "status": "success",
+  "responses": 50,
+  "providers": {
+    "gemini": 29,
+    "groq": 21
+  },
+  "models": {
+    "gemini-3.5-flash-lite": 29,
+    "openai/gpt-oss-20b": 21
+  },
+  "recovered_failures": 23,
+  "rate_limit_429_events": 0
+}

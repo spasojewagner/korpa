@@ -1,0 +1,9 @@
+# Preserve the bytes used by the evidence register across operating systems.
+ai-eval/results-live.md -text
+ai-eval/live.jsonl -text
+ai-eval/verification.json -text
+ai-eval/failover-log.txt -text
+launch/evidence/2026-11-24/quality.json -text
+launch/evidence/2026-11-24/index.json -text
+launch/evidence/2026-11-24/categories.json -text
+launch/evidence/2026-11-24/lighthouse-scores.md -text
