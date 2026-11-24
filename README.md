@@ -163,10 +163,11 @@ test URL at a shared database.
 
 ## AI configuration
 
-AI basket extraction and checked index notes support `LLM_PROVIDER=gemini` or `groq`,
-using `LLM_API_KEY` and `LLM_MODEL`. The manual evaluation workflow also offers Groq's
-free-plan setup with a separate `GROQ_API_KEY` secret, conservative pacing and rate-limit
-backoff. See [evaluation configuration](docs/ai-eval/README.md).
+AI basket extraction and checked index notes support `LLM_PROVIDER=gemini`, `groq`, or
+`auto`. Automatic mode uses separate Gemini and Groq keys and switches on rate/quota or
+temporary provider failures, with independent cooldowns. The manual evaluation workflow
+defaults to automatic mode and records the provider/model for each response.
+See [evaluation configuration](docs/ai-eval/README.md).
 
 ## MCP
 

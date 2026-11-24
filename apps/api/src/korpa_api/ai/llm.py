@@ -5,7 +5,7 @@ import os
 import re
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import Protocol
+from typing import ClassVar, Protocol
 
 import httpx
 from pydantic import BaseModel, Field, ValidationError
@@ -80,11 +80,16 @@ class ModelError(RuntimeError):
 
 
 class Extractor(Protocol):
-    model: str
+    @property
+    def model(self) -> str: ...
 
     async def extract(self, sentence: str) -> Extraction: ...
 
     async def extract_raw(self, sentence: str) -> str: ...
+
+    async def generate_json(
+        self, system: str, user: str, schema: dict[str, object], timeout: float = 10
+    ) -> str: ...
 
 
 @dataclass
@@ -95,6 +100,7 @@ class GeminiExtractor:
     model: str
     client: httpx.AsyncClient
     base_url: str = "https://generativelanguage.googleapis.com/v1beta"
+    provider: ClassVar[str] = "gemini"
 
     async def extract(self, sentence: str) -> Extraction:
         return parse_extraction(await self.extract_raw(sentence))
@@ -171,6 +177,7 @@ class GroqExtractor:
     model: str
     client: httpx.AsyncClient
     base_url: str = "https://api.groq.com/openai/v1"
+    provider: ClassVar[str] = "groq"
 
     async def extract(self, sentence: str) -> Extraction:
         return parse_extraction(await self.extract_raw(sentence))
@@ -283,8 +290,8 @@ def configured_extractor() -> Extractor | None:
     return configured_model()
 
 
-def configured_model() -> GeminiExtractor | GroqExtractor | None:
-    """Select the provider from explicit configuration; never switch providers silently."""
+def configured_model() -> Extractor | None:
+    """Select a single provider or explicitly enabled automatic failover."""
     provider = os.environ.get("LLM_PROVIDER", "").strip().lower()
     key = os.environ.get("LLM_API_KEY", "").strip()
     model = os.environ.get("LLM_MODEL", "").strip()
@@ -294,4 +301,23 @@ def configured_model() -> GeminiExtractor | GroqExtractor | None:
         return GeminiExtractor(api_key=key, model=model, client=_client())
     if provider == "groq":
         return GroqExtractor(api_key=key, model=model, client=_client())
+    if provider == "auto":
+        groq_key = os.environ.get("GROQ_API_KEY", "").strip()
+        groq_model = os.environ.get("GROQ_MODEL", "").strip() or "openai/gpt-oss-20b"
+        if groq_key and groq_model:
+            return _configured_failover(key, model, groq_key, groq_model)
     return None
+
+
+@lru_cache(maxsize=1)
+def _configured_failover(
+    gemini_key: str, gemini_model: str, groq_key: str, groq_model: str
+) -> Extractor:
+    from korpa_api.ai.failover import FailoverExtractor, Provider
+
+    return FailoverExtractor(
+        [
+            Provider("gemini", GeminiExtractor(gemini_key, gemini_model, _client()), 6),
+            Provider("groq", GroqExtractor(groq_key, groq_model, _client()), 30),
+        ]
+    )

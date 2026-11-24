@@ -55,6 +55,7 @@ class Recording(BaseModel):
     id: int
     text: str
     model: str = "unknown (recording has no model metadata)"
+    provider: str | None = None
 
 
 def contains_terms(terms: list[str], target: str) -> bool:
@@ -189,7 +190,14 @@ def cell(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ").replace("\r", " ")
 
 
-def render_report(results: list[Result], model: str, mode: str, as_of: date, database: bool) -> str:
+def render_report(
+    results: list[Result],
+    model: str,
+    mode: str,
+    as_of: date,
+    database: bool,
+    providers: set[str] | None = None,
+) -> str:
     lines = ["# Basket extraction evaluation", ""]
     if mode == "recorded":
         lines += [
@@ -209,6 +217,12 @@ def render_report(results: list[Result], model: str, mode: str, as_of: date, dat
         "| Metric | Overall | No items expected |",
         "|---|---:|---:|",
     ]
+    if providers:
+        lines.insert(2, "- Providers: " + ", ".join(sorted(providers)))
+    if providers and len(providers) > 1:
+        lines.insert(
+            3, "- Mixed-provider failover run; these are not single-model benchmark scores."
+        )
     overall = metrics(results, database)
     empty = metrics([r for r in results if not r.phrase.expected], database)
 
@@ -291,7 +305,10 @@ async def extract_with_retry(extractor: Extractor, phrase: Phrase) -> str:
 async def run(args: argparse.Namespace) -> None:
     extractor = configured_extractor() if args.live else None
     if args.live and extractor is None:
-        raise EvaluationError("--live requires LLM_PROVIDER=gemini|groq, LLM_API_KEY and LLM_MODEL")
+        raise EvaluationError(
+            "--live requires LLM_PROVIDER=gemini|groq|auto, LLM_API_KEY and "
+            "LLM_MODEL; auto also requires GROQ_API_KEY"
+        )
     if args.database and not os.environ.get("DATABASE_URL", "").strip():
         raise EvaluationError("--database requires DATABASE_URL")
     phrases = read_phrases(args.phrases)
@@ -299,9 +316,8 @@ async def run(args: argparse.Namespace) -> None:
     results: list[Result] = []
     interval = args.interval_seconds or (30 if isinstance(extractor, GroqExtractor) else 6)
     as_of = datetime.now(ZoneInfo("Europe/Belgrade")).date()
-    model = (
-        extractor.model if extractor else ", ".join(sorted({r.model for r in recordings.values()}))
-    )
+    used_models = set() if extractor else {r.model for r in recordings.values()}
+    providers = set() if extractor else {r.provider for r in recordings.values() if r.provider}
     # Flush each raw response so interrupted live runs retain completed calls.
     record_file = args.record.open("w", encoding="utf-8") if args.record else None
     try:
@@ -310,9 +326,17 @@ async def run(args: argparse.Namespace) -> None:
                 if index:
                     await asyncio.sleep(interval)
                 text = await extract_with_retry(extractor, phrase)
+                model = extractor.model
+                provider = getattr(extractor, "provider", None)
+                used_models.add(model)
+                if provider:
+                    providers.add(provider)
                 if record_file:
                     record_file.write(
-                        Recording(id=phrase.id, text=text, model=model).model_dump_json() + "\n"
+                        Recording(
+                            id=phrase.id, text=text, model=model, provider=provider
+                        ).model_dump_json(exclude_none=True)
+                        + "\n"
                     )
                     record_file.flush()
             else:
@@ -331,7 +355,14 @@ async def run(args: argparse.Namespace) -> None:
         await retrieve(results, as_of)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(
-        render_report(results, model, "live" if args.live else "recorded", as_of, args.database),
+        render_report(
+            results,
+            ", ".join(sorted(used_models)),
+            "live" if args.live else "recorded",
+            as_of,
+            args.database,
+            providers,
+        ),
         encoding="utf-8",
     )
 
