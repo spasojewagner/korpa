@@ -1,0 +1,282 @@
+[
+  {
+    "slug": "aksa-d-o-o",
+    "name": "Aksa d.o.o",
+    "dataset_id": "6ad4c219024e6f2e2b3576dd",
+    "url": "https://aksa.keprom.rs/cene_proizvoda_aksa.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "aman-d-o-o",
+    "name": "Aman d.o.o.",
+    "dataset_id": "68f5fbaf18e768ba3e8ccc41",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_AMAN%20DOO.csv?sv=2025-07-05&spr=https&st=2026-10-14T11%3A04%3A33Z&se=2040-12-31T12%3A04%3A00Z&sr=b&sp=r&sig=YS0tjYdECfbCZNJpDrcjhG74bGKqbS%2BrKXxsVlNCqeg%3D",
+    "license": "sodl"
+  },
+  {
+    "slug": "bb-trade-doo",
+    "name": "BB Trade doo",
+    "dataset_id": "68f0bd4bc3bf9b275a23b63d",
+    "url": "https://cenovnicisvi.persu.rs/cene-proizvoda-bbtradedoo.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "beltorg-doo-1",
+    "name": "Beltorg DOO",
+    "dataset_id": "68f73e230d9e360e4cf10781",
+    "url": "https://svetofor.rs/wp-content/uploads/prices/cene_proizvoda_Beltorg_DOO.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "brico-s-doo",
+    "name": "BRICO S DOO",
+    "dataset_id": "6a329a1969e6025495f2d2b6",
+    "url": "https://data.gov.rs/s/resources/brico-s-doo-cenovnik/20261124-032949/cene-proizvoda-bricos-20261124.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "delhaize-serbia-doo-beograd",
+    "name": "DELHAIZE SERBIA DOO BEOGRAD",
+    "dataset_id": "68f203a18b8ba3a1d826fa77",
+    "url": "https://tsmdelhaizeserbia.delhaize.rs/PublicDoc/cene_proizvoda_Delhaize.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "domaca-trgovina-doo",
+    "name": "Domaca trgovina doo",
+    "dataset_id": "68f64811016706e99b09ebaa",
+    "url": "https://data.gov.rs/s/resources/cenovnici-proizvoda-prema-pravilniku-o-uslovima-sadrzaju-i-nacinu-objavljivanja-cenovnika-domaca-trgovina-doo/20261124-143005/cene-proizvoda-domaca-trgovina-doo.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "drustvo-za-proizvodnju-promet-i-usluge-vum-d-o-o",
+    "name": "Društvo za proizvodnju promet i usluge \"Vum\" d.o.o.",
+    "dataset_id": "68f0cb4c473fd5be39741c8a",
+    "url": "https://vumdoo.com/cene/cene_proizvoda_vumdoo.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "drustvo-za-proizvodnju-trgovinu-i-usluge-zam-doo-indjija",
+    "name": "ДРУШТВО ЗА ПРОИЗВОДЊУ ТРГОВИНУ И УСЛУГЕ ЗАМ ДОО ИНЂИЈА",
+    "dataset_id": "6a95786c969fd18a398df81b",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_ZAM%20d.o.o..csv?sv=2025-07-05&spr=https&st=2026-10-14T11%3A05%3A37Z&se=2040-12-31T12%3A05%3A00Z&sr=b&sp=r&sig=FHWSHd1fxauQlqi8T%2FJ5YrVFmzzbDA570y3Zq8J%2Fv4Q%3D&rscc=no-cache",
+    "license": "sodl"
+  },
+  {
+    "slug": "fortuna-market-doo",
+    "name": "Fortuna Market DOO",
+    "dataset_id": "68f0d21516cc6e3ab2f67feb",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_Fortuna%20Market%20d.o.o..csv?sv=2025-07-05&spr=https&st=2026-10-12T12%3A05%3A47Z&se=2040-12-31T13%3A05%3A00Z&sr=b&sp=r&sig=%2BjXm2NOLeevB2bn5LMykqB7VkhtOF5ypn%2BvXlsZaoU0%3D",
+    "license": "sodl"
+  },
+  {
+    "slug": "gomex-doo",
+    "name": "Gomex DOO",
+    "dataset_id": "68f76ce9f9a700f329626af1",
+    "url": "https://aswcene.gomex.rs/upload/cene_proizvoda_gomex.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "idea-marketi-doo",
+    "name": "IDEA MARKETI doo",
+    "dataset_id": "68f61c62dc53a8c8410427f1",
+    "url": "https://ideacenovnici.blob.core.windows.net/cenovnici/drzavni/cene_proizvoda_ideamarketi.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "industrija-mesa-matijevic",
+    "name": "Industrija mesa Matijević",
+    "dataset_id": "6a9693b2c9f1a56f4a0a58e3",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_INDUSTRIJA%20MESA%20MATIJEVIC%20D.O.O.%20NOVI%20SAD.csv?sv=2025-07-05&spr=https&st=2026-10-15T09%3A57%3A22Z&se=2040-12-31T10%3A57%3A00Z&sr=b&sp=r&sig=6ur4ZsnsOuo85XxGOx8zVVdosgaC34Q5SFlGC%2BiWSY4%3D&rscc=no-cache",
+    "license": "sodl"
+  },
+  {
+    "slug": "konovo-doo",
+    "name": "Konovo doo",
+    "dataset_id": "6a693202d31a9dd3073aaf73",
+    "url": "https://konovo.rs/wp-content/uploads/cenovnik/cene_proizvoda_konovo.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "leon-conditors-doo",
+    "name": "Leon Conditors DOO",
+    "dataset_id": "68f1db0682d3fdfbdceeabcb",
+    "url": "https://www.leon.co.rs/cenovnik/cene-proizvoda-leon.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "lidl",
+    "name": "Lidl",
+    "dataset_id": "68f61917f9daecc02d803b84",
+    "url": "https://www.lidl.rs/explore/assets/webPriceData/rs/cene_proizvoda_Lidl.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "luki-komerc-d-o-o",
+    "name": "Луки комерц Д.О.О.",
+    "dataset_id": "6a91d391dfc7b0e00c8ba69c",
+    "url": "https://luki.co.rs/cene_proizvoda_luki_komerc.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "medius-d-o-o-nova-pazova",
+    "name": "Medius d.o.o. Nova Pazova",
+    "dataset_id": "68f1e9c9bf0b963346b3ec67",
+    "url": "https://medius.rs/razmena/cene_proizvoda_medius.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "metalac-proleter-drustvo-sa-ogranicenom-odgovornoscu-gornji-milanovac",
+    "name": "Metalac Proleter društvo sa ograničenom odgovornošću Gornji Milanovac",
+    "dataset_id": "68f6247336713478b5f0b41e",
+    "url": "https://mojproleter.rs/wp-content/uploads/proleter-cenovnici/cene_proizvoda_metalacproleterdoo.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "metro-cash-carry-doo-beograd",
+    "name": "METRO Cash&Carry doo Beograd",
+    "dataset_id": "6a96d3a0338fe94f9cc9a03f",
+    "url": "https://data.gov.rs/s/resources/cenovnici-proizvoda-prema-pravilniku-o-uslovima-sadrzaju-i-nacinu-objavljivanja-cenovnika-metro/20261124-061922/cene-proizvoda-metro.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "mikromarket-ns-doo",
+    "name": "Микромаркет НС доо",
+    "dataset_id": "6a91479eb4a953ef65792ebb",
+    "url": "https://mikromarket.rs/cenovnik/cene_proizvoda_mikromarketns.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "planeta-sport",
+    "name": "Planeta Sport",
+    "dataset_id": "6acca84dc60236a1e2681a41",
+    "url": "https://portal.planeta.services/api/media/price-reporting/cene_proizvoda_planetasport.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "prima-nova-doo",
+    "name": "Prima Nova doo",
+    "dataset_id": "68f1494cd6490c4b117147a8",
+    "url": "https://primanova.rs/cene-proizvoda-primanova-zlatantrag.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "privredno-drustvo-za-promet-i-usluge-cutura-plus-doo-prokuplje",
+    "name": "Привредно друштво за промет и услуге ЧУТУРА ПЛУС ДОО Прокупље",
+    "dataset_id": "6a95778e969fd18a398df81a",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_%C4%8Cutura%20plus%20DOO.csv?sv=2025-07-05&spr=https&st=2026-10-12T12%3A03%3A53Z&se=2040-12-31T13%3A03%3A00Z&sr=b&sp=r&sig=5aFSUD3pS812ZsYOa5mks2hDzLDZPbOFYwoMb5wY4hY%3D",
+    "license": "sodl"
+  },
+  {
+    "slug": "proizvodno-trgovinsko-preduzece-euro-sa-m-doo-lipolist",
+    "name": "Proizvodno-trgovinsko preduzeće Euro Ša M doo Lipolist ",
+    "dataset_id": "6a96d0735e7226a81822c10a",
+    "url": "https://eurosam.rs/cenovnik/cene_proizvoda_eurosam.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "qvattro-company",
+    "name": "Qvattro Company ",
+    "dataset_id": "68f8cbfd1d835c729727825d",
+    "url": "https://prodavnicasunce.rs/cenovnik/cene_proizvoda_QVATTRO_COMPANY.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "ric-doo-prokuplje",
+    "name": "RIČ doo Prokuplje",
+    "dataset_id": "6a95ed3adf0d645f96b6f3de",
+    "url": "https://www.podaci.ric.rs/cenovnici/cene_proizvoda_ric.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "ros-produkt-servis",
+    "name": "ROS PRODUKT SERVIS",
+    "dataset_id": "68f63caac71fb2e0ef7e3008",
+    "url": "https://merers.rs/cenovnici/preuzmi/cene_proizvoda_ROS_PRODUKT_SERVIS_DOO.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "senta-promet-doo",
+    "name": "SENTA-PROMET DOO",
+    "dataset_id": "68f0dc6db3f7fb17ff95ca18",
+    "url": "https://spmarketi.com/public/cene_proizvoda_senta-promet.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "soulfood-doo-beograd",
+    "name": "Soulfood doo Beograd",
+    "dataset_id": "6a96d3b8dae37c041253526c",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_SOULFOOD%20D.O.O..csv?sv=2025-07-05&spr=https&st=2026-10-21T11%3A17%3A21Z&se=2040-12-31T12%3A17%3A00Z&sr=b&sp=r&sig=hhlFJDP00xtsBH8UfGa%2B248glK7Fx8kyW%2FhvnyicqtY%3D&rscc=no-cache",
+    "license": "sodl"
+  },
+  {
+    "slug": "statovac",
+    "name": "Statovac",
+    "dataset_id": "6a0aecd5c320c889bd9a2a96",
+    "url": "https://data.gov.rs/s/resources/cenovnici-statovac/20261122-033030/cene-proizvoda-kengur.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "sumadija-market-d-o-o",
+    "name": "Šumadija market d.o.o.",
+    "dataset_id": "68f5e4299d6fcc3cc9908790",
+    "url": "https://sumadijamarket.rs/must/output/cene_proizvoda_sumadijamarket.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "tekijanka-doo-tekija",
+    "name": "Tekijanka doo Tekija",
+    "dataset_id": "68f5d1099d6fcc3cc990878f",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_TEKIJANKA%20D.O.O.%20TEKIJA.csv?sv=2025-07-05&spr=https&st=2026-10-15T10%3A07%3A59Z&se=2040-12-31T11%3A07%3A00Z&sr=b&sp=r&sig=IY%2BmVIAp6BqnObaItCpd2OKGLbD2h7G29zfARBMCeVI%3D&rscc=no-cache",
+    "license": "sodl"
+  },
+  {
+    "slug": "transkom-94-1",
+    "name": "Transkom 94",
+    "dataset_id": "6ab64f4f3de7520f1f4b65a0",
+    "url": "https://transkom94.rs/biznisoft/cene_proizvoda_transkom94.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "trgovinsko-preduzece-morava-doo-kragujevac",
+    "name": "TRGOVINSKO PREDUZEĆE MORAVA DOO,KRAGUJEVAC",
+    "dataset_id": "6a95a581ae8e3148428344fa",
+    "url": "https://cene.tpmorava.rs/cenovnici/cene_proizvoda_moravadoo.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "trnava-promet-doo-kragujevac",
+    "name": "Trnava Promet DOO Kragujevac",
+    "dataset_id": "6a966df9df96e5f1eddf8d0a",
+    "url": "https://cene.trnava.co.rs/cenovnik/cene_proizvoda_trnava_promet_doo.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "veropoulos-doo",
+    "name": "Veropoulos doo",
+    "dataset_id": "68f0d59ff413b4011f0f9e12",
+    "url": "https://lpfr.blob.core.windows.net/cene/cene_proizvoda_Veropoulos%20d.o.o..csv?sv=2025-07-05&spr=https&st=2026-10-19T09%3A30%3A45Z&se=2040-12-31T10%3A30%3A00Z&sr=b&sp=r&sig=smS9O9ae7%2FJOI7dFKORgN4mSm34ZnMKhl9yeQ%2FaMji8%3D&rscc=no-cache",
+    "license": "sodl"
+  },
+  {
+    "slug": "vp-dima",
+    "name": "VP DIMA",
+    "dataset_id": "6a95aa4568bb7d8ad44b1e7d",
+    "url": "https://vpdima.rs/cenovnik/cene_proizvoda_vpdima.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "yuhor-d-o-o",
+    "name": "YUHOR D.O.O.",
+    "dataset_id": "6ad9fd914432daa976576a1a",
+    "url": "https://tadelspace.com/yuhor/cene_proizvoda_yuhor.csv",
+    "license": "sodl"
+  },
+  {
+    "slug": "zemljoradnicka-zadruga-trgovina-trlic",
+    "name": "Земљорадничка задруга Трговина Трлић",
+    "dataset_id": "6a966879df96e5f1eddf8d08",
+    "url": "https://rd.melany.rs/temp/trlic/opendata/cene_proizvoda_zz_trgovina_trlic.csv",
+    "license": "sodl"
+  }
+]

@@ -1,0 +1,599 @@
+[
+  {
+    "slug": "aksa-d-o-o",
+    "observed_at": "2026-11-24T15:30:11.610667+00:00",
+    "deployed_errors": {
+      "download": 1
+    },
+    "source": {
+      "slug": "aksa-d-o-o",
+      "name": "Aksa d.o.o",
+      "dataset_id": "6ad4c219024e6f2e2b3576dd",
+      "url": "https://aksa.keprom.rs/cene_proizvoda_aksa.csv",
+      "license": "sodl"
+    },
+    "http_status": 200,
+    "sha256": "ab2b226fb0bec096032575d7d27120193fed1d5d31bc06a6e408941de134bef2",
+    "header": [
+      "KATEGORIJA",
+      "NAZIV KATEGORIJE",
+      "Naziv proizvoda",
+      "Robna marka",
+      "Barkod proizvoda",
+      "Jedinica mere",
+      "Naziv trgovca - formata",
+      "Datum cenovnika",
+      "Redovna cena",
+      "Cena po jedinici mere",
+      "Snižena cena",
+      "Datum početka sniženja",
+      "Datum kraja sniženja",
+      "Stopa PDV",
+      "VRSTA_CENOVNIKA"
+    ],
+    "row_example": {
+      "physical_line": 2,
+      "fields": [
+        "1",
+        "Mleko, mlečni i mešoviti proizvodi, jaja",
+        "Alpro napitak badem 1l",
+        "ALPRO",
+        "5411188110835",
+        "l",
+        "Aksa - maloprodaja",
+        "01-09-2026",
+        "479.00",
+        "479.00",
+        "",
+        "",
+        "",
+        "20",
+        "MESECNI_PRESEK"
+      ]
+    },
+    "report": {
+      "rows_total": 36674,
+      "rows_valid": 36666,
+      "errors": {
+        "price": 8
+      },
+      "sample_lines": {
+        "price": [
+          1718,
+          6294,
+          10870,
+          15456,
+          20042
+        ]
+      },
+      "errors_by_rule": {
+        "price": 8
+      },
+      "deviations": {
+        "list_type_ascii": 36674
+      },
+      "profile": "compat-2026-11.3",
+      "retries": 0
+    },
+    "failing_row_example": {
+      "physical_line": 1718,
+      "fields": [
+        "21",
+        "Lična higijena i kozmetika",
+        "A-derma Exomega Control krema 400ml",
+        "A-DERMA",
+        "3282770149685",
+        "l",
+        "Aksa - maloprodaja",
+        "01-09-2026",
+        "2849.00",
+        "",
+        "",
+        "",
+        "",
+        "20",
+        "MESECNI_PRESEK"
+      ]
+    }
+  },
+  {
+    "slug": "brico-s-doo",
+    "observed_at": "2026-11-24T15:30:15.564828+00:00",
+    "deployed_errors": {
+      "header": 32652
+    },
+    "source": {
+      "slug": "brico-s-doo",
+      "name": "BRICO S DOO",
+      "dataset_id": "6a329a1969e6025495f2d2b6",
+      "url": "https://data.gov.rs/s/resources/brico-s-doo-cenovnik/20261124-032949/cene-proizvoda-bricos-20261124.csv",
+      "license": "sodl"
+    },
+    "http_status": 200,
+    "sha256": "5339542f70930a9c7e58af7411fc3081381e3c21a1efbb09770965d66a62003e",
+    "header": [
+      "KATEGORIJA",
+      "NAZIV KATEGORIJE",
+      "Naziv proizvoda",
+      "Robna marka",
+      "Barkod proizvoda",
+      "Jedinica mere",
+      "Naziv trgovca - formata*",
+      "Datum cenovnika",
+      "Redovna cena",
+      "Cena po jedinici mere",
+      "Snižena cena",
+      "Datum početka sniženja",
+      "Datum kraja sniženja",
+      "Stopa PDV"
+    ],
+    "row_example": {
+      "physical_line": 2,
+      "fields": [
+        "10000",
+        "GVOŽĐURIJA",
+        "ZAVRŠETAK SRCE METALNO 10MM, 2KOM",
+        "RM NIJE DEFINISANA",
+        "3233690186748",
+        "kom",
+        "BRICO S DOO NOVI SAD",
+        "24.11.2026",
+        "179",
+        "",
+        "",
+        "",
+        "",
+        "20"
+      ]
+    },
+    "report": {
+      "rows_total": 32652,
+      "rows_valid": 0,
+      "errors": {
+        "header": 32652
+      },
+      "sample_lines": {
+        "header": [
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "header": 32652
+      },
+      "deviations": {},
+      "profile": "compat-2026-11.3",
+      "retries": 0
+    }
+  },
+  {
+    "slug": "konovo-doo",
+    "observed_at": "2026-11-24T15:30:28.942034+00:00",
+    "deployed_errors": {
+      "header": 9883
+    },
+    "source": {
+      "slug": "konovo-doo",
+      "name": "Konovo doo",
+      "dataset_id": "6a693202d31a9dd3073aaf73",
+      "url": "https://konovo.rs/wp-content/uploads/cenovnik/cene_proizvoda_konovo.csv",
+      "license": "sodl"
+    },
+    "http_status": 200,
+    "sha256": "52f268ef1a66f4c0bf439161838f6a200856c7387c709973c9b34f35c52ac7ea",
+    "header": [
+      "Kategorija",
+      "Naziv kategorije",
+      "Naziv proizvoda",
+      "Robna marka",
+      "Barkod proizvoda",
+      "Jedinica mere",
+      "Naziv trgovca - formata",
+      "Datum cenovnika",
+      "Redovna cena",
+      "Cena po jedinici mere",
+      "Snižena cena",
+      "Datum početka sniženja",
+      "Datum kraja sniženja",
+      "Stopa PDV",
+      "Šifra proizvoda"
+    ],
+    "row_example": {
+      "physical_line": 2,
+      "fields": [
+        "17",
+        "Tableti i Oprema za Tablete",
+        "Tablet MeanIT X30 10.1, 1280x800, Quad Core, 5.000mAh, 2GB/16GB",
+        "",
+        "3858890342680",
+        "kom",
+        "Konovo",
+        "24-11-2026",
+        "12750.00",
+        "12750.00",
+        "",
+        "",
+        "",
+        "20",
+        "G-43816"
+      ]
+    },
+    "report": {
+      "rows_total": 9885,
+      "rows_valid": 0,
+      "errors": {
+        "header": 9885
+      },
+      "sample_lines": {
+        "header": [
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "header": 9885
+      },
+      "deviations": {},
+      "profile": "compat-2026-11.3",
+      "retries": 0
+    }
+  },
+  {
+    "slug": "leon-conditors-doo",
+    "observed_at": "2026-11-24T15:30:29.693205+00:00",
+    "deployed_errors": {
+      "download": 1
+    },
+    "source": {
+      "slug": "leon-conditors-doo",
+      "name": "Leon Conditors DOO",
+      "dataset_id": "68f1db0682d3fdfbdceeabcb",
+      "url": "https://www.leon.co.rs/cenovnik/cene-proizvoda-leon.csv",
+      "license": "sodl"
+    },
+    "http_status": 200,
+    "sha256": "f9926787e41b18043bcfcc55cb86c1a11bf6250d7baf1ed11b067ef16dbfcc4a",
+    "header": [
+      "KATEGORIJA",
+      "NAZIV KATEGORIJE",
+      "Naziv proizvoda",
+      "Robna marka",
+      "Barkod proizvoda",
+      "Jedinica mere",
+      "Naziv trgovca - formata",
+      "Datum cenovnika",
+      "Redovna cena",
+      "Cena po jedinici mere",
+      "Snižena cena",
+      "Datum početka sniženja",
+      "Datum kraja sniženja",
+      "Stopa PDV",
+      "VRSTA_CENOVNIKA"
+    ],
+    "row_example": {
+      "physical_line": 2,
+      "fields": [
+        "2",
+        "BEZALKOHOLNA PIĆA, KAFA, ČAJ",
+        "L.CAJ FUZE TEA BRESKVA PET 500ML",
+        "RM NIJE DEFINISANA",
+        "5449000235770",
+        "kom",
+        "LEON CONDITORS",
+        "01-09-2026",
+        "87.99",
+        "87.99",
+        "0",
+        "",
+        "",
+        "20",
+        "MESECNI_PRESEK"
+      ]
+    },
+    "report": {
+      "rows_total": 9671,
+      "rows_valid": 805,
+      "errors": {
+        "discount": 8862,
+        "unit": 4
+      },
+      "sample_lines": {
+        "discount": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "unit": [
+          1851,
+          4320,
+          6674,
+          9017
+        ]
+      },
+      "errors_by_rule": {
+        "discount": 8866,
+        "unit": 4
+      },
+      "deviations": {
+        "list_type_ascii": 9671,
+        "price_decimals": 8860,
+        "unit_alias": 3
+      },
+      "profile": "compat-2026-11.3",
+      "retries": 0
+    }
+  },
+  {
+    "slug": "qvattro-company",
+    "observed_at": "2026-11-24T15:30:30.902810+00:00",
+    "deployed_errors": {
+      "nul_character": 24455,
+      "date": 4265,
+      "barcode": 45,
+      "discount": 1026
+    },
+    "source": {
+      "slug": "qvattro-company",
+      "name": "Qvattro Company ",
+      "dataset_id": "68f8cbfd1d835c729727825d",
+      "url": "https://prodavnicasunce.rs/cenovnik/cene_proizvoda_QVATTRO_COMPANY.csv",
+      "license": "sodl"
+    },
+    "http_status": 200,
+    "sha256": "0e219f6952cf0ba4d8b0b12c2563e4cc0aa40a29ee560cbc1a1f47f83026ca6e",
+    "header": [
+      "KATEGORIJA",
+      "NAZIV KATEGORIJE",
+      "Naziv proizvoda",
+      "Robna marka",
+      "Barkod proizvoda",
+      "Jedinica mere",
+      "Naziv trgovca - format",
+      "Datum cenovnika",
+      "Redovna cena",
+      "Cena po jedinici mere",
+      "Snižena cena",
+      "Datum početka sniženja",
+      "Datum kraja sniženja",
+      "Stopa PDV",
+      "VRSTA_CENOVNIKA"
+    ],
+    "row_example": {
+      "physical_line": 2,
+      "fields": [
+        "1",
+        "Mleko, mlečni i mešoviti proizvodi, jaja",
+        "Gauda 45%mm 1kg Imlek",
+        "IMLEK AD",
+        "0000002800004",
+        "KG",
+        "QVATTRO COMPANY",
+        "01-09-2026",
+        "1399.99",
+        "1399.99",
+        "0.00",
+        "\u0000",
+        "\u0000",
+        "20",
+        "MESECNI_PRESEK"
+      ]
+    },
+    "report": {
+      "rows_total": 29791,
+      "rows_valid": 0,
+      "errors": {
+        "nul_character": 24455,
+        "date": 4265,
+        "barcode": 45,
+        "discount": 1026
+      },
+      "sample_lines": {
+        "nul_character": [
+          2,
+          3,
+          6,
+          7,
+          8
+        ],
+        "date": [
+          4,
+          5,
+          9,
+          11,
+          12
+        ],
+        "barcode": [
+          1485,
+          2713,
+          3077,
+          3406,
+          4254
+        ],
+        "discount": [
+          22120,
+          22127,
+          22128,
+          22132,
+          22134
+        ]
+      },
+      "errors_by_rule": {
+        "nul_character": 24500,
+        "date": 28765,
+        "barcode": 45,
+        "price": 4,
+        "unit": 12,
+        "required_text": 1,
+        "discount": 1026
+      },
+      "deviations": {
+        "header_alias": 1,
+        "list_type_ascii": 29791,
+        "unit_case": 28365
+      },
+      "profile": "compat-2026-11.3",
+      "retries": 0
+    }
+  },
+  {
+    "slug": "ric-doo-prokuplje",
+    "observed_at": "2026-11-24T15:30:37.959733+00:00",
+    "deployed_errors": {
+      "vat": 31846,
+      "unit": 51
+    },
+    "source": {
+      "slug": "ric-doo-prokuplje",
+      "name": "RIČ doo Prokuplje",
+      "dataset_id": "6a95ed3adf0d645f96b6f3de",
+      "url": "https://www.podaci.ric.rs/cenovnici/cene_proizvoda_ric.csv",
+      "license": "sodl"
+    },
+    "http_status": 200,
+    "sha256": "1f8be43421fbe7cf9c6da9d93e3a66020b63f2edd43b1b036e42e416f62fc428",
+    "header": [
+      "KATEGORIJA",
+      "NAZIV KATEGORIJE",
+      "Naziv proizvoda",
+      "Robna marka",
+      "Barkod proizvoda",
+      "Jedinica mere",
+      "Naziv trgovca - formata",
+      "Datum cenovnika",
+      "Redovna cena",
+      "Cena po jedinici mere",
+      "Snižena cena",
+      "Datum početka sniženja",
+      "Datum kraja sniženja",
+      "Stopa PDV",
+      "VRSTA_CENOVNIKA"
+    ],
+    "row_example": {
+      "physical_line": 2,
+      "fields": [
+        "21",
+        "Lična higijena i kozmetika",
+        "Vlaz.maramice Kosili plave flip-top 70/1",
+        "",
+        "8606012144231",
+        "kom",
+        "RIČ",
+        "01-09-2026",
+        "224.99",
+        "",
+        "",
+        "",
+        "",
+        "20.00",
+        "MESECNI_PRESEK"
+      ]
+    },
+    "report": {
+      "rows_total": 31897,
+      "rows_valid": 0,
+      "errors": {
+        "vat": 31846,
+        "unit": 51
+      },
+      "sample_lines": {
+        "vat": [
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "unit": [
+          1782,
+          1814,
+          2829,
+          3141,
+          3360
+        ]
+      },
+      "errors_by_rule": {
+        "vat": 31897,
+        "price": 31863,
+        "unit": 51
+      },
+      "deviations": {
+        "list_type_ascii": 31897,
+        "unit_case": 383,
+        "unit_alias": 101
+      },
+      "profile": "compat-2026-11.3",
+      "retries": 0
+    }
+  },
+  {
+    "slug": "statovac",
+    "observed_at": "2026-11-24T15:30:40.954682+00:00",
+    "deployed_errors": {
+      "header": 32636
+    },
+    "source": {
+      "slug": "statovac",
+      "name": "Statovac",
+      "dataset_id": "6a0aecd5c320c889bd9a2a96",
+      "url": "https://data.gov.rs/s/resources/cenovnici-statovac/20261122-033030/cene-proizvoda-kengur.csv",
+      "license": "sodl"
+    },
+    "http_status": 200,
+    "sha256": "c17a3fb4e3a42e8ac596acc931774b99c5774377394c637baaacc95e61d2ebf3",
+    "header": [
+      "КАТЕГОРИЈА",
+      "НАЗИВ КАТЕГОРИЈЕ",
+      "Назив производа",
+      "Робна марка",
+      "Баркод производа",
+      "Јединица мере",
+      "Назив трговца – формата",
+      "Датум ценовника",
+      "Редовна цена",
+      "Цена по јединици мере",
+      "Снижена цена",
+      "Датум почетка снижења",
+      "Датум краја снижења",
+      "Стопа ПДВ",
+      "ВРСТА_ЦЕНОВНИКА"
+    ],
+    "row_example": {
+      "physical_line": 2,
+      "fields": [
+        "2",
+        "Безалкохолна пића, кафа, чај",
+        "Brainrot Soda, gazirano bezalkoholno piće bez šećera, Six Seven, blue, 250ml",
+        "",
+        "8600828436238",
+        "л",
+        "Кенгур – малопродаја (сви малопродајни објекти)",
+        "01-09-2026",
+        "360.00",
+        "1440.00",
+        "",
+        "",
+        "",
+        "20",
+        "МЕСЕЧНИ_ПРЕСЕК"
+      ]
+    },
+    "report": {
+      "rows_total": 32636,
+      "rows_valid": 0,
+      "errors": {
+        "header": 32636
+      },
+      "sample_lines": {
+        "header": [
+          0
+        ]
+      },
+      "errors_by_rule": {
+        "header": 32636
+      },
+      "deviations": {},
+      "profile": "compat-2026-11.3",
+      "retries": 0
+    }
+  }
+]

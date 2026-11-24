@@ -1,0 +1,67 @@
+[
+  {
+    "report": "0.json",
+    "sha256": "71f89e834d83dfcac75bf5415af59a0b7d4d8e9a4d6d36d97f8ce542b1723c4f",
+    "fetchTime": "2026-11-24T14:15:37.878Z",
+    "requestedUrl": "http://127.0.0.1:4174/",
+    "lighthouseVersion": "13.6.0",
+    "scores": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    }
+  },
+  {
+    "report": "1.json",
+    "sha256": "cba509ab41d402bc4a3c5e89286790fccb05da186d6e34e05617f9516555df0f",
+    "fetchTime": "2026-11-24T14:15:45.077Z",
+    "requestedUrl": "http://127.0.0.1:4174/pretraga?q=mleko",
+    "lighthouseVersion": "13.6.0",
+    "scores": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    }
+  },
+  {
+    "report": "2.json",
+    "sha256": "beb8e90b003ce704ccfa9a183a73e9d9b336a7ce4fa295e3f4da70f3023dd2ad",
+    "fetchTime": "2026-11-24T14:15:51.797Z",
+    "requestedUrl": "http://127.0.0.1:4174/korpa",
+    "lighthouseVersion": "13.6.0",
+    "scores": {
+      "performance": 0.99,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    }
+  },
+  {
+    "report": "3.json",
+    "sha256": "35b492c96146b19bf4cb9e4cfab1fdc02669754641a33ccd37c5809b4fc5e4db",
+    "fetchTime": "2026-11-24T14:15:58.331Z",
+    "requestedUrl": "http://127.0.0.1:4174/podaci",
+    "lighthouseVersion": "13.6.0",
+    "scores": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    }
+  },
+  {
+    "report": "4.json",
+    "sha256": "ba13f98ac9d123472dd044a5c27ed7fe3496703fd3664eac4105eff2726cf584",
+    "fetchTime": "2026-11-24T14:16:05.033Z",
+    "requestedUrl": "http://127.0.0.1:4174/podaci/indeks",
+    "lighthouseVersion": "13.6.0",
+    "scores": {
+      "performance": 1,
+      "accessibility": 1,
+      "best-practices": 1,
+      "seo": 1
+    }
+  }
+]

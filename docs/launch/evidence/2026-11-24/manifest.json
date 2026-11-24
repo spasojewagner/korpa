@@ -1,0 +1,27 @@
+{
+  "captured_at": "2026-11-24T15:30:09.980567+00:00",
+  "sources": {
+    "quality": {
+      "url": "https://ai-korpa.vercel.app/data/quality.json",
+      "sha256": "93fa9a9260fc1c15e2f4ab2ccbe2361649ca91fe94d955b1b6339800873c7ae0"
+    },
+    "index": {
+      "url": "https://ai-korpa.vercel.app/data/index.json",
+      "sha256": "4bf6285ec5ec9d1c635614ef0c4b509c4e0a294eab1a3af5abe0bf21f8640ac1"
+    },
+    "categories": {
+      "url": "https://ai-korpa.vercel.app/data/categories.json",
+      "sha256": "69edadda47979d8805c1930e5b1ee6a41c1112b8d387181fbe1d03e156fd4172"
+    }
+  },
+  "evaluation": {
+    "run_url": "https://github.com/spasojewagner/korpa/actions/runs/45417014920",
+    "artifact_url": "https://github.com/spasojewagner/korpa/actions/runs/45417014920/artifacts/14933583105",
+    "files": {
+      "results-live.md": "5d2ccff04a134c01471f295ad8011bdedb684c724e4b429579360393adcfcba8",
+      "verification.json": "5ccd39cd718e9fec8286ffd2626e5447f69c3f6edecb93062139a05fe5cd0a9d",
+      "live.jsonl": "af68c7535c2a5dcd75fea5e17235b34f19cb29c161cc47d56da2f78768ccc2ec",
+      "failover-log.txt": "92322fda87a659227f44513d34a9018517cc390ac5a8bf232ab6565627fbe2b0"
+    }
+  }
+}
